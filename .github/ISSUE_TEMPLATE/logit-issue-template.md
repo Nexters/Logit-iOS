@@ -7,15 +7,6 @@ assignees: LimJaeHyeon9298
 
 ---
 
----
-name: Logit Issue Template
-about: Create a issue about Tasks.
-title: ''
-labels: ''
-assignees: LimJaeHyeon9298
-
----
-
 ## 🫧 About
 <!--무엇에 관한 이슈인지 소개해주세요.-->
 - 
