@@ -154,16 +154,28 @@ enum LogitFont {
             return 100
         }
     }
+    
+    var fontSize: CGFloat {
+            return baseFontSize.adjusted
+        }
 
     // 실제 lineHeight 계산
     var lineHeight: CGFloat {
-        return (baseFontSize * lineHeightPercent / 100)
+        return (baseFontSize * lineHeightPercent / 100).adjusted
     }
-    
     
     var letterSpacing: CGFloat {
         return 0
     }
+    
+    var font: Font {
+          return .custom(fontWeight.fontName, size: fontSize)
+      }
+      
+      var uiFont: UIFont {
+          return UIFont(name: fontWeight.fontName, size: fontSize)
+              ?? .systemFont(ofSize: fontSize, weight: fontWeight.uiFontWeight)
+      }
 }
 
 //MARK: - PretendardWeight

@@ -19,8 +19,4 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView()
-}
 
-//print("hi")
