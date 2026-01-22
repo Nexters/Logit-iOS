@@ -80,3 +80,28 @@ enum LogitFont {
         }
     }
 }
+
+enum PretendardWeight {
+    case bold
+    case semiBold
+    case medium
+    case regular
+
+    var fontName: String {
+        switch self {
+        case .bold: return "Pretendard-Bold"
+        case .semiBold: return "Pretendard-SemiBold"
+        case .medium: return "Pretendard-Medium"
+        case .regular: return "Pretendard-Regular"
+        }
+    }
+    
+    var uiFontWeight: UIFont.Weight {
+        switch self {
+        case .bold: return .bold
+        case .semiBold: return .semibold
+        case .medium: return .medium
+        case .regular: return .regular
+        }
+    }
+}
