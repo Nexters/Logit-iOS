@@ -79,8 +79,94 @@ enum LogitFont {
             return 12
         }
     }
+    
+    private var fontWeight: PretendardWeight {
+        switch self {
+        // Bold
+        case .headLine1_bold, .title1_bold, .title2_bold,
+             .body1_bold, .body3_bold, .body5_bold, .body7_bold, .body9_bold:
+            return .bold
+            
+        // SemiBold
+        case .title2_semibold, .title3_semibold,
+             .body3_semibold, .body4_semibold, .body5_semibold, .body7_semibold, .body9_semibold:
+            return .semiBold
+            
+        // Medium
+        case .body5_medium, .body6_meduim, .body8_medium, .label1_medium:
+            return .medium
+            
+        // Regular
+        case .body2_regular, .body3_regular, .body5_regular_150, .body5_regular_140,
+             .body6_regular, .body7_regular_160, .body7_regular_140, .body8_regular, .body9_regular:
+            return .regular
+        }
+    }
+    
+    private var lineHeightPercent: CGFloat {
+        switch self {
+        // Headline
+        case .headLine1_bold:
+            return 140
+            
+        // Title
+        case .title1_bold, .title2_bold, .title3_semibold:
+            return 140
+        case .title2_semibold:
+            return 120
+            
+        // Body
+        case .body1_bold:
+            return 140
+        case .body2_regular:
+            return 150
+        case .body3_bold, .body3_semibold, .body3_regular:
+            return 140
+        case .body4_semibold:
+            return 100
+        case .body5_bold, .body5_semibold:
+            return 140
+        case .body5_medium:
+            return 120
+        case .body5_regular_150:
+            return 150
+        case .body5_regular_140:
+            return 140
+        case .body6_regular:
+            return 180
+        case .body6_meduim:
+            return 140
+        case .body7_bold, .body7_semibold:
+            return 140
+        case .body7_regular_160:
+            return 160
+        case .body7_regular_140:
+            return 140
+        case .body8_medium:
+            return 150
+        case .body8_regular:
+            return 120
+        case .body9_bold, .body9_semibold, .body9_regular:
+            return 140
+            
+        // Label
+        case .label1_medium:
+            return 100
+        }
+    }
+
+    // 실제 lineHeight 계산
+    var lineHeight: CGFloat {
+        return (baseFontSize * lineHeightPercent / 100)
+    }
+    
+    
+    var letterSpacing: CGFloat {
+        return 0
+    }
 }
 
+//MARK: - PretendardWeight
 enum PretendardWeight {
     case bold
     case semiBold
