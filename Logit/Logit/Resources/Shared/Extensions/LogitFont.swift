@@ -30,7 +30,7 @@ enum LogitFont {
     case body5_regular_150
     case body5_regular_140
     case body6_regular
-    case body6_meduim
+    case body6_medium
     case body7_bold
     case body7_semibold
     case body7_regular_160
@@ -69,7 +69,7 @@ enum LogitFont {
             return 17
         case .body5_bold, .body5_semibold, .body5_medium, .body5_regular_150, .body5_regular_140:
             return 16
-        case .body6_regular, .body6_meduim:
+        case .body6_regular, .body6_medium:
             return 15
         case .body7_bold, .body7_semibold, .body7_regular_160, .body7_regular_140:
             return 14
@@ -93,7 +93,7 @@ enum LogitFont {
             return .semiBold
             
         // Medium
-        case .body5_medium, .body6_meduim, .body8_medium, .label1_medium:
+        case .body5_medium, .body6_medium, .body8_medium, .label1_medium:
             return .medium
             
         // Regular
@@ -134,7 +134,7 @@ enum LogitFont {
             return 140
         case .body6_regular:
             return 180
-        case .body6_meduim:
+        case .body6_medium:
             return 140
         case .body7_bold, .body7_semibold:
             return 140
