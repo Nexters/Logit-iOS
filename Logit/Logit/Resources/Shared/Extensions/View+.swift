@@ -12,3 +12,16 @@ extension View {
         modifier(TypographyModifier(font: font))
     }
 }
+
+/// 그라디언트 배경색 지정
+extension View {
+    func gradientFill(_ style: GradientStyle) -> some View {
+        self.background(style.gradient)
+    }
+}
+
+extension ShapeStyle where Self == LinearGradient {
+    static func gradient(_ style: GradientStyle) -> LinearGradient {
+        style.gradient
+    }
+}
