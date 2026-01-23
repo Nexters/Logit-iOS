@@ -23,7 +23,7 @@ struct LogitApp: App {
                         }
                     }
             } else {
-                ContentView()
+                LoginView()
             }
             
         }
