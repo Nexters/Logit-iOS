@@ -11,7 +11,7 @@ import SwiftUI
 struct LogitApp: App {
     var body: some Scene {
         WindowGroup {
-            ColorTestView()
+            SplashView()
         }
     }
 }
