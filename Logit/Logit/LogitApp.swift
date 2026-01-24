@@ -9,9 +9,23 @@ import SwiftUI
 
 @main
 struct LogitApp: App {
+    @State private var isShowingSplash = true
+    
     var body: some Scene {
         WindowGroup {
-            ColorTestView()
+            if isShowingSplash {
+                SplashView()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            withAnimation {
+                                isShowingSplash = false
+                            }
+                        }
+                    }
+            } else {
+                LoginView()
+            }
+            
         }
     }
 }
