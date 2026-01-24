@@ -1,0 +1,64 @@
+//
+//  AppState.swift
+//  Logit
+//
+//  Created by 임재현 on 1/24/26.
+//
+
+import SwiftUI
+
+@MainActor
+class AppState: ObservableObject {
+    @Published var appPhase: AppPhase = .splash
+    
+    enum AppPhase {
+        case splash
+        case login
+        case termsAgreement
+        case main
+    }
+    
+    // Mock용 상태
+    private var mockAccessToken: String?
+    private var mockIsRegistrationComplete: Bool = false
+    
+    func checkAuthenticationStatus() {
+        // Splash 후 자동 로그인 체크
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let token = self.mockAccessToken {
+                // 토큰이 있으면 회원가입 완료 여부 확인
+                self.appPhase = self.mockIsRegistrationComplete ? .main : .termsAgreement
+            } else {
+                // 토큰이 없으면 로그인 화면
+                self.appPhase = .login
+            }
+        }
+    }
+    
+    // Mock 로그인 (기존 유저)
+    func mockLoginExistingUser() {
+        mockAccessToken = "mock_token_existing"
+        mockIsRegistrationComplete = true
+        appPhase = .main
+    }
+    
+    // Mock 로그인 (신규 유저)
+    func mockLoginNewUser() {
+        mockAccessToken = "mock_token_new"
+        mockIsRegistrationComplete = false
+        appPhase = .termsAgreement
+    }
+    
+    // 회원가입 완료
+    func completeRegistration() {
+        mockIsRegistrationComplete = true
+        appPhase = .main
+    }
+    
+    // 로그아웃
+    func logout() {
+        mockAccessToken = nil
+        mockIsRegistrationComplete = false
+        appPhase = .login
+    }
+}
