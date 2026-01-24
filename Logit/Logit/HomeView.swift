@@ -12,6 +12,10 @@ struct HomeView: View {
         VStack(spacing: 0) {
             
             HomeHeaderView()
+            ExperienceTypeSection()
+                .padding(.top, 22)
+            
+            Spacer()
             
         }
     }
@@ -35,5 +39,23 @@ struct HomeHeaderView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 20)
         .padding(.top, 2)
+        .background(.red)
+    }
+}
+
+struct ExperienceTypeSection: View {
+    var body: some View {
+        
+        VStack(alignment: .leading, spacing: 12) {
+            Text("로짓님의 경험 유형")
+                .typo(.body3_bold)
+                .foregroundStyle(.black)
+            
+            RoundedRectangle(cornerRadius: 20)
+                .fill(GradientStyle.experienceCard.gradient)
+                .frame(height: 155)
+               
+        }
+        .padding(.horizontal, 20)
     }
 }
