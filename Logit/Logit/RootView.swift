@@ -24,16 +24,16 @@ struct RootView: View {
             case .login:
                 LoginView()
                 
-            case .termsAgreement:
-                Rectangle()
-                     .background(.black)
-               // TermsAgreementView()
-                
             case .main:
                Rectangle()
                     .background(.red)
                // MainTabView()
             }
+        }
+        .sheet(isPresented: $appState.isShowingSignUpSheet) {
+            SignUpBottomSheetView()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)     
         }
     }
 }
