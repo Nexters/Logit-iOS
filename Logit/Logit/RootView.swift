@@ -25,9 +25,7 @@ struct RootView: View {
                 LoginView()
                 
             case .main:
-               Rectangle()
-                    .background(.red)
-               // MainTabView()
+                MainTabView()
             }
         }
         .sheet(isPresented: $appState.isShowingSignUpSheet) {

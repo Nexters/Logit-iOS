@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct LogitApp: App {
-    @StateObject private var appState = AppState(mockScenario: .newUser)
+    @StateObject private var appState = AppState(mockScenario: .existingUser)
     
     var body: some Scene {
         WindowGroup {
