@@ -20,7 +20,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Text("0")
+            HomeView()
                 .tabItem {
                     Image(systemName: selectedTab == .home ? "house.fill" : "house")
                     Text("홈")
