@@ -20,41 +20,41 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Text("0")
+            HomeView()
                 .tabItem {
-                    Image(systemName: selectedTab == .home ? "house.fill" : "house")
+                    Image(selectedTab == .home ? "home_selected" : "home")
                     Text("홈")
                 }
                 .tag(Tab.home)
             
             Text("1")
                 .tabItem {
-                    Image(systemName: selectedTab == .search ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                    Image(selectedTab == .search ? "file_selected" : "file")
                     Text("검색")
                 }
                 .tag(Tab.search)
             
             Text("2")
                 .tabItem {
-                    Image(systemName: selectedTab == .add ? "plus.circle.fill" : "plus.circle")
+                    Image(selectedTab == .add ? "plus_selected" : "plus")
                     Text("추가")
                 }
                 .tag(Tab.add)
             
             Text("3")
                 .tabItem {
-                    Image(systemName: selectedTab == .activity ? "bell.fill" : "bell")
-                    Text("알림")
+                    Image(selectedTab == .activity ? "folder_selected" : "folder")
+                    Text("경험")
                 }
                 .tag(Tab.activity)
             
             Text("4")
                 .tabItem {
-                    Image(systemName: selectedTab == .profile ? "person.fill" : "person")
-                    Text("프로필")
+                    Image(selectedTab == .profile ? "report_selected" : "report")
+                    Text("리포트")
                 }
                 .tag(Tab.profile)
         }
-        .tint(.blue)  // 선택된 탭 색상
+        .tint(.secondary100)  // 선택된 탭 색상
     }
 }

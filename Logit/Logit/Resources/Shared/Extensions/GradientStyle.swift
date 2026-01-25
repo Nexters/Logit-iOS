@@ -11,6 +11,7 @@ enum GradientStyle {
     case logo
     case empty100
     case empty200
+    case experienceCard
     
     var gradient: LinearGradient {
         switch self {
@@ -39,6 +40,17 @@ enum GradientStyle {
                 colors: [
                     Color(red: 0.83, green: 0.87, blue: 1),
                     Color(red: 0.85, green: 0.95, blue: 0.97)
+                ],
+                startPoint: UnitPoint(x: 1, y: -0.08),
+                endPoint: UnitPoint(x: 0.21, y: 0.71)
+            )
+            
+        case .experienceCard: 
+            return LinearGradient(
+                stops: [
+                    Gradient.Stop(color: Color(red: 0.88, green: 0.9, blue: 1), location: 0.00),
+                    Gradient.Stop(color: Color(red: 0.92, green: 0.96, blue: 1), location: 0.50),
+                    Gradient.Stop(color: Color(red: 0.9, green: 0.98, blue: 0.98), location: 1.00),
                 ],
                 startPoint: UnitPoint(x: 1, y: -0.08),
                 endPoint: UnitPoint(x: 0.21, y: 0.71)
