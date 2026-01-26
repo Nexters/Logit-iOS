@@ -47,7 +47,7 @@ struct MainTabView: View {
         }
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $appState.isShowingAddFlow) {
-            Text("Add Flow 시작!")
+            AddFlowCoordinator()
                 .presentationDetents([.large])
         }
     }
