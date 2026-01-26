@@ -11,6 +11,7 @@ import SwiftUI
 class AppState: ObservableObject {
     @Published var appPhase: AppPhase = .splash
     @Published var isShowingSignUpSheet: Bool = false
+    @Published var isShowingAddFlow: Bool = false
     
     enum AppPhase {
         case splash
@@ -90,5 +91,9 @@ class AppState: ObservableObject {
         mockAccessToken = nil
         mockIsRegistrationComplete = false
         appPhase = .login
+    }
+    
+    func startAddFlow() {
+        isShowingAddFlow = true
     }
 }

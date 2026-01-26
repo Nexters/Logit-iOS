@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProjectListSection: View {
+    @EnvironmentObject var appState: AppState
     let hasProjects: Bool
     
     var body: some View {
@@ -34,6 +35,8 @@ struct ProjectListSection: View {
 }
 
 struct ProjectEmptyView: View {
+    @EnvironmentObject var appState: AppState
+    
     var body: some View {
         VStack(spacing: 0) {
             Image("app_status_empty2")
@@ -47,7 +50,7 @@ struct ProjectEmptyView: View {
                 .padding(.top, 16.adjustedLayout)
             
             Button {
-                // 버튼 액션
+                appState.startAddFlow()
             } label: {
                 Text("자기소개서 작성")
                     .typo(.body6_medium)
