@@ -41,7 +41,7 @@ struct CustomNavigationBar: View {
             
             // 타이틀
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .typo(.semibold_17)
                 .foregroundColor(.black)
             
             Spacer()
