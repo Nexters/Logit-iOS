@@ -12,6 +12,11 @@ class AddFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
     
     // Navigation 함수들
+    
+    func navigateToCoverLetterQuestions() {
+        path.append(AddFlowRoute.coverLetterQuestions)
+    }
+    
     func navigateToApplicationInfo() {
         path.append(AddFlowRoute.applicationInfo)
     }
@@ -32,8 +37,7 @@ class AddFlowViewModel: ObservableObject {
         switch route {
         case .applicationInfo:
             // TODO: 실제 View로 교체
-            Text("지원정보 입력 화면")
-                .navigationTitle("지원 정보")
+            EmptyView()
             
         case .coverLetterQuestions:
             Text("자기소개서 문항 화면")

@@ -13,29 +13,19 @@ struct AddFlowCoordinator: View {
     
     var body: some View {
         NavigationStack(path: $viewModel.path) {
-            VStack(spacing: 20) {
-                Text("Add Flow 시작!")
-                    .font(.title)
-                
-                Button("지원정보 입력으로") {
-                    viewModel.navigateToApplicationInfo()
+            
+            ApplicationInfoView()
+                .navigationDestination(for: AddFlowRoute.self) { route in
+                    viewModel.destination(for: route)
                 }
-                
-                Button("취소") {
-                    dismiss()
-                }
-            }
-            .navigationDestination(for: AddFlowRoute.self) { route in
-                viewModel.destination(for: route)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") {
-                        dismiss()
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("취소") {
+                            dismiss()
+                        }
                     }
                 }
-            }
         }
         .environmentObject(viewModel)
         .presentationDetents([.large])
