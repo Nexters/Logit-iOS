@@ -11,50 +11,114 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
     
     enum Tab {
-        case home
-        case search
-        case add
-        case activity
-        case profile
+        case home, search, add, activity, profile
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Image(selectedTab == .home ? "home_selected" : "home")
-                    Text("홈")
+        ZStack {
+            // 컨텐츠
+            VStack(spacing: 0) {
+                // 선택된 탭에 따른 뷰
+                Group {
+                    switch selectedTab {
+                    case .home:
+                        HomeView()
+                    case .search:
+                        Text("검색")
+                    case .add:
+                        Text("추가")
+                    case .activity:
+                        Text("경험")
+                    case .profile:
+                        Text("리포트")
+                    }
                 }
-                .tag(Tab.home)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             
-            Text("1")
-                .tabItem {
-                    Image(selectedTab == .search ? "file_selected" : "file")
-                    Text("검색")
-                }
-                .tag(Tab.search)
-            
-            Text("2")
-                .tabItem {
-                    Image(selectedTab == .add ? "plus_selected" : "plus")
-                    Text("추가")
-                }
-                .tag(Tab.add)
-            
-            Text("3")
-                .tabItem {
-                    Image(selectedTab == .activity ? "folder_selected" : "folder")
-                    Text("경험")
-                }
-                .tag(Tab.activity)
-            
-            Text("4")
-                .tabItem {
-                    Image(selectedTab == .profile ? "report_selected" : "report")
-                    Text("리포트")
-                }
-                .tag(Tab.profile)
+            // Custom TabBar
+            VStack {
+                Spacer()
+                CustomTabBar(selectedTab: $selectedTab)
+            }
         }
-        .tint(.secondary100)  // 선택된 탭 색상
+        .ignoresSafeArea(.keyboard)
+    }
+}
+
+struct CustomTabBar: View {
+    @Binding var selectedTab: MainTabView.Tab
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            TabBarItem(
+                icon: selectedTab == .home ? "home_selected" : "home",
+                title: "홈",
+                isSelected: selectedTab == .home
+            ) {
+                selectedTab = .home
+            }
+            
+            TabBarItem(
+                icon: selectedTab == .search ? "file_selected" : "file",
+                title: "검색",
+                isSelected: selectedTab == .search
+            ) {
+                selectedTab = .search
+            }
+            
+            TabBarItem(
+                icon: selectedTab == .add ? "plus_selected" : "plus",
+                title: "추가",
+                isSelected: selectedTab == .add
+            ) {
+                selectedTab = .add
+            }
+            
+            TabBarItem(
+                icon: selectedTab == .activity ? "folder_selected" : "folder",
+                title: "경험",
+                isSelected: selectedTab == .activity
+            ) {
+                selectedTab = .activity
+            }
+            
+            TabBarItem(
+                icon: selectedTab == .profile ? "report_selected" : "report",
+                title: "리포트",
+                isSelected: selectedTab == .profile
+            ) {
+                selectedTab = .profile
+            }
+        }
+        .frame(height: 49)
+        .background(
+            .white
+        )
+    }
+}
+
+struct TabBarItem: View {
+    let icon: String
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 25, height: 25)
+                
+                Text(title)
+                    .font(.system(size: 10)) // TODO: - medium 10으로 교체 해야함
+                    .foregroundStyle(isSelected ? .black : .primary400)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
