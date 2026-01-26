@@ -76,11 +76,11 @@ struct PageIndicator: View {
     var body: some View {
         HStack(spacing: 0) {
             Text("\(currentPage)")
-                .typo(.body7_bold)
+                .typo(.bold_14)
                 .foregroundColor(.black)
             
             Text("/\(totalPages)")
-                .typo(.body7_regular_140)
+                .typo(.regular_14_140)
                 .foregroundColor(.gray)
         }
         .padding(.horizontal, 10)

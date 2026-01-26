@@ -11,7 +11,7 @@ struct ExperienceTypeSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12.adjustedLayout) {
             Text("로짓님의 경험 유형")
-                .typo(.body3_bold)
+                .typo(.bold_18)
                 .foregroundStyle(.black)
             
             TabView {
