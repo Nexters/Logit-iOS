@@ -18,15 +18,8 @@ struct AddFlowCoordinator: View {
                 .navigationDestination(for: AddFlowRoute.self) { route in
                     viewModel.destination(for: route)
                 }
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("취소") {
-                            dismiss()
-                        }
-                    }
-                }
         }
+        .navigationBarHidden(true)
         .environmentObject(viewModel)
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
