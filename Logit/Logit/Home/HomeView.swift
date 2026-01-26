@@ -15,10 +15,10 @@ struct HomeView: View {
             
             HomeHeaderView()
             ExperienceTypeSection()
-                .padding(.top, 22)
+                .padding(.top, 22.adjustedLayout)
             
             ProjectListSection(hasProjects: hasProjects)
-                .padding(.top, 43)
+                .padding(.top, 43.adjustedLayout)
             
             Spacer()
             
