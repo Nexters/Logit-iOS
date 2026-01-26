@@ -20,11 +20,11 @@ struct HomeHeaderView: View {
             Image("app_user")
                 .resizable()
                 .scaledToFit()
-                .frame(size: 35.2)
+                .frame(size: 35.2.adjustedLayout)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 20)
-        .padding(.top, 2)
+        .padding(.vertical, 8.adjustedLayout)
+        .padding(.horizontal, 20.adjustedLayout)
+        .padding(.top, 2.adjustedLayout)
         .background(.white)
     }
 }

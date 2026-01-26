@@ -11,7 +11,7 @@ struct ProjectListSection: View {
     let hasProjects: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8.adjustedLayout) {
             // 헤더
             HStack {
                 Text("프로젝트 목록")
@@ -19,28 +19,13 @@ struct ProjectListSection: View {
                     .foregroundStyle(.black)
                 
                 Spacer()
-//
-//                if hasProjects {
-//                    Button {
-//                        // 전체보기 액션
-//                    } label: {
-//                        HStack(spacing: 4) {
-//                            Text("전체보기")
-//                                .typo(.body5_medium)
-//                                .foregroundStyle(.gray200)
-//
-//                            Image(systemName: "chevron.right")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.gray200)
-//                        }
-//                    }
-//                }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 20.adjustedLayout)
             
             // 컨텐츠
             if hasProjects {
                 ProjectListView()
+                    .padding(.top, 8.adjustedLayout)
             } else {
                 ProjectEmptyView()
             }
@@ -50,20 +35,38 @@ struct ProjectListSection: View {
 
 struct ProjectEmptyView: View {
     var body: some View {
-        VStack {
-            Image("app_status_empty")
+        VStack(spacing: 0) {
+            Image("app_status_empty2")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 150,height: 117)
+                .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
+            
+            Text("자기소개서를 생성해보세요")
+                .typo(.body6_medium)
+                .foregroundStyle(.gray100)
+                .padding(.top, 16.adjustedLayout)
+            
+            Button {
+                // 버튼 액션
+            } label: {
+                Text("자기소개서 작성")
+                    .typo(.body6_medium)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24.adjustedLayout)
+                    .padding(.vertical, 7.5.adjustedLayout)
+                    .background(.primary100)
+                    .cornerRadius(8.adjustedLayout)
+            }
+            .padding(.top, 17.adjustedLayout)
         }
-        .frame(maxWidth: .infinity,maxHeight: .infinity)
-        .padding(.vertical, 60)
+        .offset(y: -10.adjustedLayout)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 60.adjustedLayout)
         .background(.white)
-        .cornerRadius(16)
-        .padding(.horizontal, 20)
+        .cornerRadius(16.adjustedLayout)
+        .padding(.horizontal, 20.adjustedLayout)
     }
 }
-
 
 struct ProjectListView: View {
     // 나중에 실제 데이터로 교체
@@ -87,7 +90,7 @@ struct ProjectListView: View {
                 if index < mockProjects.count - 1 {
                     Divider()
                         .background(Color.gray100)
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 20.adjustedLayout)
                 }
             }
         }
@@ -99,11 +102,11 @@ struct ProjectCardCell: View {
     let date: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12.adjustedLayout) {
             // 세로 막대기 (태그)
-            RoundedRectangle(cornerRadius: 2)
-                .fill(Color.blue)
-                .frame(width: 3, height: 24)
+            RoundedRectangle(cornerRadius: 2.adjustedLayout)
+                .fill(.primary70)
+                .frame(width: 3.adjustedWidth, height: 24.adjustedHeight)
             
             // 타이틀
             Text(title)
@@ -118,9 +121,8 @@ struct ProjectCardCell: View {
                 .typo(.body7_regular_140)
                 .foregroundStyle(.gray100)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 17.5)
+        .padding(.horizontal, 20.adjustedLayout)
+        .padding(.vertical, 17.5.adjustedLayout)
         .background(Color.white)
     }
 }
-

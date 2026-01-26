@@ -25,16 +25,16 @@ struct ExperienceCardView: View {
                     Image(imageName)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 125, height: 125)
-                        .padding(.top, 20)
-                        .padding(.bottom, 10)
-                        .padding(.trailing, 10.33)
+                        .frame(width: 125.adjustedLayout, height: 125.adjustedLayout)
+                        .padding(.top, 20.adjustedLayout)
+                        .padding(.bottom, 10.adjustedLayout)
+                        .padding(.trailing, 10.33.adjustedLayout)
                 }
                 Spacer()
             }
             
             // 텍스트 영역 (왼쪽)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2.adjustedLayout) {
                 Text(title)
                     .typo(.body3_semibold)
                 
@@ -44,8 +44,8 @@ struct ExperienceCardView: View {
                 
                 Spacer()
             }
-            .padding(.top, 20)
-            .padding(.leading, 20)
+            .padding(.top, 20.adjustedLayout)
+            .padding(.leading, 20.adjustedLayout)
             .frame(maxWidth: .infinity, alignment: .leading)
             
             // 페이지 인디케이터 (왼쪽 하단)
@@ -55,21 +55,22 @@ struct ExperienceCardView: View {
                     Text("\(currentPage) / \(totalPages)")
                         .typo(.body7_semibold)
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 17)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, 17.adjustedLayout)
+                        .padding(.vertical, 3.adjustedLayout)
                         .background(
                             Capsule()
                                 .fill(Color.black.opacity(0.2))
                         )
-                        .padding(.bottom, 18.91)
-                        .padding(.leading, 20)
+                        .padding(.bottom, 18.91.adjustedLayout)
+                        .padding(.leading, 20.adjustedLayout)
                     
                     Spacer()
                 }
             }
         }
+        .frame(height: 155.adjustedHeight)
         .background(backgroundStyle.style)
-        .cornerRadius(20)
+        .cornerRadius(20.adjustedLayout)
     }
 }
 

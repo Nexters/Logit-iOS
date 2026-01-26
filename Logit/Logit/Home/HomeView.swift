@@ -8,17 +8,17 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var hasProjects: Bool = false
+    @State private var hasProjects: Bool = true
     
     var body: some View {
         VStack(spacing: 0) {
             
             HomeHeaderView()
             ExperienceTypeSection()
-                .padding(.top, 22)
+                .padding(.top, 22.adjustedLayout)
             
             ProjectListSection(hasProjects: hasProjects)
-                .padding(.top, 43)
+                .padding(.top, 43.adjustedLayout)
             
             Spacer()
             

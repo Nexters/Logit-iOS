@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ExperienceTypeSection: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12.adjustedLayout) {
             Text("로짓님의 경험 유형")
                 .typo(.body3_bold)
                 .foregroundStyle(.black)
@@ -90,8 +90,8 @@ struct ExperienceTypeSection: View {
                 
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 155)
+            .frame(height: 155.adjustedHeight)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 20.adjustedLayout)
     }
 }
