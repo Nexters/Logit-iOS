@@ -50,12 +50,31 @@ struct ProjectListSection: View {
 
 struct ProjectEmptyView: View {
     var body: some View {
-        VStack {
-            Image("app_status_empty")
+        VStack(spacing: 0) {
+            Image("app_status_empty2")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 150,height: 117)
+                .frame(width: 80,height: 80)
+            
+            Text("자기소개서를 생성해보세요")
+                .typo(.body6_medium)
+                .foregroundStyle(.gray100)
+                .padding(.top, 16)
+            
+            Button {
+                // 버튼 액션
+            } label: {
+                Text("자기소개서 작성")
+                    .typo(.body6_medium)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 7.5)
+                    .background(.primary100)
+                    .cornerRadius(8)
+            }
+            .padding(.top, 17)
         }
+        .offset(y: -10)
         .frame(maxWidth: .infinity,maxHeight: .infinity)
         .padding(.vertical, 60)
         .background(.white)
