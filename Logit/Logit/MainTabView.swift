@@ -46,9 +46,8 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $appState.isShowingAddFlow) {
+        .fullScreenCover(isPresented: $appState.isShowingAddFlow) {
             AddFlowCoordinator()
-                .presentationDetents([.large])
         }
     }
 }
