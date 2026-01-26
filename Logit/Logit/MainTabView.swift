@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var appState: AppState
     @State private var selectedTab: Tab = .home
     
     enum Tab {
@@ -26,7 +27,7 @@ struct MainTabView: View {
                     case .search:
                         Text("검색")
                     case .add:
-                        Text("추가")
+                        EmptyView()
                     case .activity:
                         Text("경험")
                     case .profile:
@@ -39,15 +40,22 @@ struct MainTabView: View {
             // Custom TabBar
             VStack {
                 Spacer()
-                CustomTabBar(selectedTab: $selectedTab)
+                CustomTabBar(selectedTab: $selectedTab) {
+                    appState.startAddFlow()
+                }
             }
         }
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $appState.isShowingAddFlow) {
+            Text("Add Flow 시작!")
+                .presentationDetents([.large])
+        }
     }
 }
 
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
+    let onAddTapped: () -> Void
     
     var body: some View {
         HStack(spacing: 0) {
@@ -72,7 +80,7 @@ struct CustomTabBar: View {
                 title: "추가",
                 isSelected: selectedTab == .add
             ) {
-                selectedTab = .add
+                onAddTapped()
             }
             
             TabBarItem(

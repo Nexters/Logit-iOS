@@ -93,7 +93,7 @@ class AppState: ObservableObject {
         appPhase = .login
     }
     
-    func stardAddFlow() {
+    func startAddFlow() {
         isShowingAddFlow = true
     }
 }
