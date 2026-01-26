@@ -22,6 +22,13 @@ struct ApplicationInfoView: View {
                 }
             )
             
+            HStack {
+                PageIndicator(currentPage: 1, totalPages: 2)
+                    .padding(.leading, 20)
+                Spacer()
+            }
+            .padding(.top, 12)
+            
             // 컨텐츠
             ScrollView {
                 VStack(spacing: 20) {
@@ -52,5 +59,29 @@ struct ApplicationInfoView: View {
             }
         }
         .navigationBarHidden(true)
+    }
+}
+
+
+struct PageIndicator: View {
+    let currentPage: Int
+    let totalPages: Int
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Text("\(currentPage)")
+                .typo(.body7_bold)
+                .foregroundColor(.black)
+            
+            Text("/\(totalPages)")
+                .typo(.body7_regular_140)
+                .foregroundColor(.gray)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.primary20)
+        )
     }
 }
