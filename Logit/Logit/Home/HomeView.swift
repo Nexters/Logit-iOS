@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var hasProjects: Bool = false
+    @State private var hasProjects: Bool = true
     
     var body: some View {
         VStack(spacing: 0) {

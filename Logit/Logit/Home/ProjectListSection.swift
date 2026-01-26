@@ -41,6 +41,7 @@ struct ProjectListSection: View {
             // 컨텐츠
             if hasProjects {
                 ProjectListView()
+                    .padding(.top, 8)
             } else {
                 ProjectEmptyView()
             }
@@ -121,7 +122,7 @@ struct ProjectCardCell: View {
         HStack(spacing: 12) {
             // 세로 막대기 (태그)
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color.blue)
+                .fill(.primary70)
                 .frame(width: 3, height: 24)
             
             // 타이틀
