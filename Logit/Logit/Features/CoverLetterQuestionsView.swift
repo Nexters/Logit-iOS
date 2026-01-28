@@ -41,6 +41,28 @@ struct CoverLetterQuestionsView: View {
                             questionTitle: $questionTitle,
                             characterLimit: $characterLimit
                         )
+                        
+                        // 추가하기 버튼
+                        Button {
+                            // TODO: 문항 추가 액션
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image("plus_selected")
+                                    .frame(size: 18)
+                                
+                                Text("추가하기")
+                                    .typo(.medium_15)
+                                    .foregroundColor(.gray300)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 11.5)
+                            .background(Color.primary50)
+                            .cornerRadius(8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     .padding(.top, 24)
                     
