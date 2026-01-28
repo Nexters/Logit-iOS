@@ -42,8 +42,8 @@ class AddFlowViewModel: ObservableObject {
         case .coverLetterQuestions:
             CoverLetterQuestionsView()
             
-        case .workspace(let id):
-            CoverLetterWorkspaceView()
+        case .workspace(let questions):
+            CoverLetterWorkspaceView(questions: questions)
             
 
         }

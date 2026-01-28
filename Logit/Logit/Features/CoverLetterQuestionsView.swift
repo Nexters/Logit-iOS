@@ -89,7 +89,7 @@ struct CoverLetterQuestionsView: View {
                     
                     Button {
                         // TODO: 완료 액션
-                        viewModel.navigateToCoverLetterWorkspace(questions: [])
+                        viewModel.navigateToCoverLetterWorkspace(questions: questions)
                     } label: {
                         Text("프로젝트 생성")
                             .typo(.bold_18)
