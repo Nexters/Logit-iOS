@@ -89,6 +89,7 @@ struct CoverLetterQuestionsView: View {
                     
                     Button {
                         // TODO: 완료 액션
+                        viewModel.navigateToCoverLetterWorkspace(questions: [])
                     } label: {
                         Text("프로젝트 생성")
                             .typo(.bold_18)
@@ -174,7 +175,7 @@ struct QuestionInputRow: View {
     }
 }
 
-struct QuestionItem: Identifiable {
+struct QuestionItem: Identifiable,Hashable {
     let id = UUID()
     var title: String = ""
     var characterLimit: String = ""

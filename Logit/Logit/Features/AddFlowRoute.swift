@@ -10,5 +10,5 @@ import Foundation
 enum AddFlowRoute: Hashable {
     case applicationInfo // 지원 정보 입력
     case coverLetterQuestions // 자소서 문항
-    case questionDetails(String) // 상세문항 (q1,q2...)
+    case workspace([QuestionItem]) // 상세문항 (q1,q2...)
 }
