@@ -13,7 +13,7 @@ struct CoverLetterQuestionsView: View {
     
     @State private var questions: [QuestionItem] = [QuestionItem()]
     
-    private let maxQuestionsCount = 5 // 최대 문항 개수 
+    private let maxQuestionsCount = 5 // 최대 문항 개수
     
     var body: some View {
         VStack(spacing: 0) {
@@ -38,10 +38,17 @@ struct CoverLetterQuestionsView: View {
                         .padding(.top, 3)
                     
                     VStack(spacing: 20) {
-                        ForEach($questions) { $question in
+                        ForEach(Array(questions.enumerated()), id: \.element.id) { index, question in
                             QuestionInputRow(
-                                questionTitle: $question.title,
-                                characterLimit: $question.characterLimit
+                                questionNumber: index + 1,
+                                questionTitle: Binding(
+                                    get: { questions[index].title },
+                                    set: { questions[index].title = $0 }
+                                ),
+                                characterLimit: Binding(
+                                    get: { questions[index].characterLimit },
+                                    set: { questions[index].characterLimit = $0 }
+                                )
                             )
                         }
                         
@@ -77,7 +84,7 @@ struct CoverLetterQuestionsView: View {
                     Button {
                         // TODO: 완료 액션
                     } label: {
-                        Text("완료")
+                        Text("프로젝트 생성")
                             .typo(.bold_18)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -97,6 +104,7 @@ struct CoverLetterQuestionsView: View {
 }
 
 struct QuestionInputRow: View {
+    let questionNumber: Int
     @Binding var questionTitle: String
     @Binding var characterLimit: String
     @FocusState private var focusedField: Field?
@@ -108,7 +116,7 @@ struct QuestionInputRow: View {
     var body: some View {
         HStack(spacing: 8) {
             // 문항 제목 입력
-            TextField("문항 제목", text: $questionTitle)
+            TextField("\(questionNumber)번 문항", text: $questionTitle)
                 .font(.system(size: 15))
                 .padding(.horizontal, 18)
                 .frame(height: 44)
@@ -125,7 +133,7 @@ struct QuestionInputRow: View {
             
             // 글자 수 제한 입력
             HStack(spacing: 4) {
-                TextField("300", text: $characterLimit)
+                TextField("글자수", text: $characterLimit)
                     .font(.system(size: 15))
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
