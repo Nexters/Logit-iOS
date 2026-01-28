@@ -40,8 +40,7 @@ class AddFlowViewModel: ObservableObject {
             EmptyView()
             
         case .coverLetterQuestions:
-            Text("자기소개서 문항 화면")
-                .navigationTitle("자기소개서 문항")
+            CoverLetterQuestionsView()
             
         case .questionDetails(let id):
             Text("문항 상세: \(id)")
