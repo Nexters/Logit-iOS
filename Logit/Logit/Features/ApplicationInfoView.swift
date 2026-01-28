@@ -136,6 +136,7 @@ struct InputFieldView: View {
     let maxLength: Int?
     var isLarge: Bool? = false
     @Binding var text: String
+    @FocusState private var isFocused: Bool
     
     init(
         title: String,
@@ -155,7 +156,6 @@ struct InputFieldView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 타이틀 + 필수 표시 + 글자수
             HStack(spacing: 2) {
                 Text(title)
                     .typo(.medium_16)
@@ -182,49 +182,52 @@ struct InputFieldView: View {
                 }
             }
             
-            // 조건부 렌더링
             if isLarge == true {
-                // 큰 사이즈 - TextEditor
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $text)
-                        .typo(.regular_15)
+                        .font(.system(size: 15))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .frame(height: 90)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
+                        .focused($isFocused)
                         .onChange(of: text) { oldValue, newValue in
                             if let maxLength = maxLength, newValue.count > maxLength {
                                 text = String(newValue.prefix(maxLength))
                             }
                         }
                     
-                    // Placeholder
                     if text.isEmpty {
                         Text(placeholder)
-                            .typo(.regular_15)
+                            .font(.system(size: 15))
                             .foregroundColor(.gray100)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
+                            .padding(.leading, 19)
+                            .padding(.top, 16)
                             .allowsHitTesting(false)
                     }
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray100, lineWidth: 1)
+                        .stroke(
+                            isFocused ? Color.primary100 : Color.gray100,
+                            lineWidth: 1
+                        )
                 )
-                
             } else {
-                // 기본 사이즈 - TextField
                 TextField(placeholder, text: $text)
-                    .typo(.regular_15)
+                    .font(.system(size: 15))
                     .padding(.horizontal, 18)
                     .frame(height: 44)
                     .background(Color.clear)
+                    .focused($isFocused)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray100, lineWidth: 1)
+                            .stroke(
+                                isFocused ? Color.primary100 : Color.gray100,
+                                lineWidth: 1
+                            )
                     )
                     .onChange(of: text) { oldValue, newValue in
                         if let maxLength = maxLength, newValue.count > maxLength {
