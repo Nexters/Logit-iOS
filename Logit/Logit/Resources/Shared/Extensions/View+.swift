@@ -82,6 +82,11 @@ extension View {
         }
     }
     
+    /// 키보드 위 여백 공간
+    public func scrollToMinDistance(minDisntance: CGFloat) -> some View {
+        ModifiedContent(content: self, modifier: KeyboardAware(minDisntance: minDisntance))
+    }
+    
     // MARK: - Corner Radius
     
     /// 특정 코너만 radius

@@ -11,7 +11,6 @@ struct ApplicationInfoView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
     
-    // 입력 필드 상태
     @State private var companyName: String = ""
     @State private var position: String = ""
     @State private var department: String = ""
@@ -19,35 +18,27 @@ struct ApplicationInfoView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 커스텀 NavigationBar
             CustomNavigationBar(
                 title: "프로젝트 생성",
                 showBackButton: true,
-                onBackTapped: {
-                    dismiss()
-                }
+                onBackTapped: { dismiss() }
             )
             
-            VStack(alignment: .leading, spacing: 0) {
-                // 페이지 인디케이터
-                PageIndicator(currentPage: 1, totalPages: 2)
-                    .padding(.top, 16)
-                
-                // 타이틀
-                Text("지원기업 정보 입력")
-                    .typo(.bold_18)
-                    .padding(.top, 13.25)
-                
-                // 서브타이틀
-                Text("지원하는 기업의 정보를 알려주세요")
-                    .typo(.regular_15)
-                    .foregroundColor(.gray300)
-                    .padding(.top, 3)
-                
-                // 스크롤 컨텐츠
-                ScrollView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    PageIndicator(currentPage: 1, totalPages: 2)
+                        .padding(.top, 16)
+                    
+                    Text("지원기업 정보 입력")
+                        .typo(.bold_18)
+                        .padding(.top, 13.25)
+                    
+                    Text("지원하는 기업의 정보를 알려주세요")
+                        .typo(.regular_15)
+                        .foregroundColor(.gray300)
+                        .padding(.top, 3)
+                    
                     VStack(spacing: 20) {
-                        // 기업명 (필수)
                         InputFieldView(
                             title: "기업명",
                             placeholder: "회사명을 입력해주세요",
@@ -55,7 +46,6 @@ struct ApplicationInfoView: View {
                             text: $companyName
                         )
                         
-                        // 직무명 (필수)
                         InputFieldView(
                             title: "직무명",
                             placeholder: "직무를 입력해주세요",
@@ -63,7 +53,6 @@ struct ApplicationInfoView: View {
                             text: $position
                         )
                         
-                        // 채용 공고 (필수)
                         InputFieldView(
                             title: "채용 공고",
                             placeholder: "부서를 입력해주세요",
@@ -71,7 +60,6 @@ struct ApplicationInfoView: View {
                             text: $department
                         )
                         
-                        // 기업 인재상 (선택)
                         InputFieldView(
                             title: "기업 인재상",
                             placeholder: "경력을 입력해주세요",
@@ -80,31 +68,36 @@ struct ApplicationInfoView: View {
                         )
                     }
                     .padding(.top, 24)
+                    
+                    Rectangle()
+                        .frame(minHeight: 132)
+                        .foregroundStyle(.clear)
+                    
+                    Button {
+                        viewModel.navigateToCoverLetterQuestions()
+                    } label: {
+                        Text("다음으로")
+                            .typo(.bold_18)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(isFormValid ? Color.primary100 : Color.gray100)
+                            .cornerRadius(12)
+                    }
+                    .disabled(!isFormValid)
+                    
+                    .padding(.bottom, 10)
                 }
-                
-                // 다음 버튼
-                Button {
-                    viewModel.navigateToCoverLetterQuestions()
-                } label: {
-                    Text("다음으로")
-                        .typo(.bold_18)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(isFormValid ? Color.primary100 : Color.gray100)
-                        .cornerRadius(12)
-                }
-                .disabled(!isFormValid)
-                .padding(.top, 24)
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
+            .scrollToMinDistance(minDisntance: 32)
         }
         .navigationBarHidden(true)
+        .dismissKeyboardOnTap()
     }
     
-    // 폼 유효성 검사
     private var isFormValid: Bool {
-        !companyName.isEmpty && !position.isEmpty
+        !companyName.isEmpty && !position.isEmpty && !department.isEmpty
     }
 }
 
