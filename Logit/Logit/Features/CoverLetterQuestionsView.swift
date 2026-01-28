@@ -11,8 +11,9 @@ struct CoverLetterQuestionsView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
     
-    @State private var questionTitle: String = ""
-    @State private var characterLimit: String = ""
+    @State private var questions: [QuestionItem] = [QuestionItem()]
+    
+    private let maxQuestionsCount = 5 // 최대 문항 개수 
     
     var body: some View {
         VStack(spacing: 0) {
@@ -37,32 +38,36 @@ struct CoverLetterQuestionsView: View {
                         .padding(.top, 3)
                     
                     VStack(spacing: 20) {
-                        QuestionInputRow(
-                            questionTitle: $questionTitle,
-                            characterLimit: $characterLimit
-                        )
-                        
-                        // 추가하기 버튼
-                        Button {
-                            // TODO: 문항 추가 액션
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image("plus_selected")
-                                    .frame(size: 18)
-                                
-                                Text("추가하기")
-                                    .typo(.medium_15)
-                                    .foregroundColor(.gray300)
-                                
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 11.5)
-                            .background(Color.primary50)
-                            .cornerRadius(8)
-                            .contentShape(Rectangle())
+                        ForEach($questions) { $question in
+                            QuestionInputRow(
+                                questionTitle: $question.title,
+                                characterLimit: $question.characterLimit
+                            )
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        
+                        // 추가하기 버튼 (최대 개수 미만일 때만 표시)
+                        if questions.count < maxQuestionsCount {
+                            Button {
+                                questions.append(QuestionItem())
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image("plus_selected")
+                                        .frame(size: 18)
+                                    
+                                    Text("추가하기")
+                                        .typo(.medium_15)
+                                        .foregroundColor(.gray300)
+                                    
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 11.5)
+                                .background(Color.primary50)
+                                .cornerRadius(8)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
                     }
                     .padding(.top, 24)
                     
@@ -152,4 +157,10 @@ struct QuestionInputRow: View {
             )
         }
     }
+}
+
+struct QuestionItem: Identifiable {
+    let id = UUID()
+    var title: String = ""
+    var characterLimit: String = ""
 }
