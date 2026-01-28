@@ -15,6 +15,12 @@ struct CoverLetterQuestionsView: View {
     
     private let maxQuestionsCount = 5 // 최대 문항 개수
     
+    private var isFormValid: Bool {
+         questions.allSatisfy { question in
+             !question.title.isEmpty && !question.characterLimit.isEmpty
+         }
+     }
+    
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
@@ -89,9 +95,10 @@ struct CoverLetterQuestionsView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.primary100)
+                            .background(isFormValid ? Color.primary100 : Color.gray100)
                             .cornerRadius(12)
                     }
+                    .disabled(!isFormValid)
                     .padding(.bottom, 10)
                 }
                 .padding(.horizontal, 20)
@@ -154,7 +161,7 @@ struct QuestionInputRow: View {
                     .foregroundColor(.black)
                     .padding(.trailing, 18)
             }
-            .frame(width: 82)
+            .frame(width: 100)
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
