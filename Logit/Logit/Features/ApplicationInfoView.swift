@@ -43,6 +43,7 @@ struct ApplicationInfoView: View {
                             title: "기업명",
                             placeholder: "회사명을 입력해주세요",
                             isRequired: true,
+                            maxLength: 100,
                             text: $companyName
                         )
                         
@@ -50,6 +51,7 @@ struct ApplicationInfoView: View {
                             title: "직무명",
                             placeholder: "직무를 입력해주세요",
                             isRequired: true,
+                            maxLength: 100,
                             text: $position
                         )
                         
@@ -57,6 +59,7 @@ struct ApplicationInfoView: View {
                             title: "채용 공고",
                             placeholder: "부서를 입력해주세요",
                             isRequired: true,
+                            maxLength: 3000,
                             text: $department
                         )
                         
@@ -64,14 +67,14 @@ struct ApplicationInfoView: View {
                             title: "기업 인재상",
                             placeholder: "경력을 입력해주세요",
                             isRequired: false,
+                            maxLength: 1000,
                             text: $experienceLevel
                         )
                     }
                     .padding(.top, 24)
                     
-                    Rectangle()
-                        .frame(minHeight: 132)
-                        .foregroundStyle(.clear)
+                    Spacer()
+                        .frame(minHeight: 100)
                     
                     Button {
                         viewModel.navigateToCoverLetterQuestions()
@@ -129,17 +132,20 @@ struct InputFieldView: View {
     let title: String
     let placeholder: String
     let isRequired: Bool
+    let maxLength: Int?
     @Binding var text: String
     
     init(
         title: String,
         placeholder: String,
         isRequired: Bool = false,
+        maxLength: Int? = nil,
         text: Binding<String>
     ) {
         self.title = title
         self.placeholder = placeholder
         self.isRequired = isRequired
+        self.maxLength = maxLength
         self._text = text
     }
     
@@ -156,6 +162,20 @@ struct InputFieldView: View {
                         .typo(.medium_16)
                         .foregroundColor(.alert)
                 }
+                
+                Spacer()
+                
+                if let maxLength = maxLength {
+                    HStack(spacing: 0) {
+                        Text("\(text.count)")
+                            .typo(.regular_15)
+                            .foregroundColor(text.count > maxLength ? .alert : .black)
+                        
+                        Text(" / \(maxLength)")
+                            .typo(.regular_15)
+                            .foregroundColor(.gray200)
+                    }
+                }
             }
             
             // TextField
@@ -169,6 +189,12 @@ struct InputFieldView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray100, lineWidth: 1)
                 )
+                .onChange(of: text) { oldValue, newValue in
+                    // 글자수 제한 적용
+                    if let maxLength = maxLength, newValue.count > maxLength {
+                        text = String(newValue.prefix(maxLength))
+                    }
+                }
         }
     }
 }
