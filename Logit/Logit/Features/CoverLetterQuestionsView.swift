@@ -11,6 +11,9 @@ struct CoverLetterQuestionsView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
     
+    @State private var questionTitle: String = ""
+    @State private var characterLimit: String = ""
+    
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
@@ -33,19 +36,11 @@ struct CoverLetterQuestionsView: View {
                         .foregroundColor(.gray300)
                         .padding(.top, 3)
                     
-                    // 임시 컨텐츠
                     VStack(spacing: 20) {
-                        Rectangle()
-                            .fill(Color.gray100)
-                            .frame(height: 100)
-                        
-                        Rectangle()
-                            .fill(Color.gray100)
-                            .frame(height: 100)
-                        
-                        Rectangle()
-                            .fill(Color.gray100)
-                            .frame(height: 100)
+                        QuestionInputRow(
+                            questionTitle: $questionTitle,
+                            characterLimit: $characterLimit
+                        )
                     }
                     .padding(.top, 24)
                     
@@ -53,7 +48,7 @@ struct CoverLetterQuestionsView: View {
                         .frame(minHeight: 46.75)
                     
                     Button {
-                        // TODO: 다음 액션
+                        // TODO: 완료 액션
                     } label: {
                         Text("완료")
                             .typo(.bold_18)
@@ -71,5 +66,68 @@ struct CoverLetterQuestionsView: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
+    }
+}
+
+struct QuestionInputRow: View {
+    @Binding var questionTitle: String
+    @Binding var characterLimit: String
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case title, limit
+    }
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            // 문항 제목 입력
+            TextField("문항 제목", text: $questionTitle)
+                .font(.system(size: 15))
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .background(Color.clear)
+                .focused($focusedField, equals: .title)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            focusedField == .title ? Color.primary100 : Color.gray100,
+                            lineWidth: 1
+                        )
+                )
+            
+            // 글자 수 제한 입력
+            HStack(spacing: 4) {
+                TextField("300", text: $characterLimit)
+                    .font(.system(size: 15))
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .padding(.leading, 18)
+                    .frame(height: 44)
+                    .background(Color.clear)
+                    .focused($focusedField, equals: .limit)
+                    .onChange(of: characterLimit) { oldValue, newValue in
+                        // 숫자만 입력 가능하도록
+                        let filtered = newValue.filter { $0.isNumber }
+                        if filtered != newValue {
+                            characterLimit = filtered
+                        }
+                    }
+                
+                Text("자")
+                    .font(.system(size: 15))
+                    .foregroundColor(.black)
+                    .padding(.trailing, 18)
+            }
+            .frame(width: 82)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(
+                        focusedField == .limit ? Color.primary100 : Color.gray100,
+                        lineWidth: 1
+                    )
+            )
+        }
     }
 }
