@@ -41,7 +41,7 @@ struct ApplicationInfoView: View {
                     VStack(spacing: 20) {
                         InputFieldView(
                             title: "기업명",
-                            placeholder: "회사명을 입력해주세요",
+                            placeholder: "예) 로짓 컴퍼니",
                             isRequired: true,
                             maxLength: 100,
                             text: $companyName
@@ -49,7 +49,7 @@ struct ApplicationInfoView: View {
                         
                         InputFieldView(
                             title: "직무명",
-                            placeholder: "직무를 입력해주세요",
+                            placeholder: "예) 프로덕트 디자이너",
                             isRequired: true,
                             maxLength: 100,
                             text: $position
@@ -57,15 +57,16 @@ struct ApplicationInfoView: View {
                         
                         InputFieldView(
                             title: "채용 공고",
-                            placeholder: "부서를 입력해주세요",
+                            placeholder: "주요 업무, 자격요건, 우대사항 등을 입력하세요",
                             isRequired: true,
                             maxLength: 3000,
+                            isLarge: true,
                             text: $department
                         )
                         
                         InputFieldView(
                             title: "기업 인재상",
-                            placeholder: "경력을 입력해주세요",
+                            placeholder: "기업의 인재상이나 핵심가치를 입력하세요",
                             isRequired: false,
                             maxLength: 1000,
                             text: $experienceLevel
@@ -74,7 +75,7 @@ struct ApplicationInfoView: View {
                     .padding(.top, 24)
                     
                     Spacer()
-                        .frame(minHeight: 100)
+                        .frame(minHeight: 46.75)
                     
                     Button {
                         viewModel.navigateToCoverLetterQuestions()
@@ -133,6 +134,7 @@ struct InputFieldView: View {
     let placeholder: String
     let isRequired: Bool
     let maxLength: Int?
+    var isLarge: Bool? = false
     @Binding var text: String
     
     init(
@@ -140,18 +142,20 @@ struct InputFieldView: View {
         placeholder: String,
         isRequired: Bool = false,
         maxLength: Int? = nil,
+        isLarge: Bool? = false,
         text: Binding<String>
     ) {
         self.title = title
         self.placeholder = placeholder
         self.isRequired = isRequired
         self.maxLength = maxLength
+        self.isLarge = isLarge
         self._text = text
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 타이틀 + 필수 표시
+            // 타이틀 + 필수 표시 + 글자수
             HStack(spacing: 2) {
                 Text(title)
                     .typo(.medium_16)
@@ -178,23 +182,56 @@ struct InputFieldView: View {
                 }
             }
             
-            // TextField
-            TextField(placeholder, text: $text)
-                .typo(.regular_15)
-                .padding(.horizontal, 18)
-                .frame(height: 44)
-                .background(Color.clear)
-                .cornerRadius(8)
+            // 조건부 렌더링
+            if isLarge == true {
+                // 큰 사이즈 - TextEditor
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $text)
+                        .typo(.regular_15)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .frame(height: 90)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .onChange(of: text) { oldValue, newValue in
+                            if let maxLength = maxLength, newValue.count > maxLength {
+                                text = String(newValue.prefix(maxLength))
+                            }
+                        }
+                    
+                    // Placeholder
+                    if text.isEmpty {
+                        Text(placeholder)
+                            .typo(.regular_15)
+                            .foregroundColor(.gray100)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray100, lineWidth: 1)
                 )
-                .onChange(of: text) { oldValue, newValue in
-                    // 글자수 제한 적용
-                    if let maxLength = maxLength, newValue.count > maxLength {
-                        text = String(newValue.prefix(maxLength))
+                
+            } else {
+                // 기본 사이즈 - TextField
+                TextField(placeholder, text: $text)
+                    .typo(.regular_15)
+                    .padding(.horizontal, 18)
+                    .frame(height: 44)
+                    .background(Color.clear)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray100, lineWidth: 1)
+                    )
+                    .onChange(of: text) { oldValue, newValue in
+                        if let maxLength = maxLength, newValue.count > maxLength {
+                            text = String(newValue.prefix(maxLength))
+                        }
                     }
-                }
+            }
         }
     }
 }
