@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct ExperienceListView: View {
-    @Environment(\.dismiss) var dismiss
     @State private var experienceCount: Int = 0
     @State private var hasData: Bool = false
+    @State private var showExperienceAddFlow = false // 추가
     
     var body: some View {
         VStack(spacing: 0) {
             ExperienceListHeader(
                 onAddTapped: {
-                    print("경험 추가 버튼 클릭")
+                    showExperienceAddFlow = true
                 }
             )
             
@@ -33,11 +33,14 @@ struct ExperienceListView: View {
                 }
             } else {
                 EmptyExperienceView {
-                    print("경험 추가 버튼 클릭")
+                    showExperienceAddFlow = true
                 }
             }
         }
         .navigationBarHidden(true)
+        .fullScreenCover(isPresented: $showExperienceAddFlow) {
+            ExperienceFlowCoordinator()
+        }
     }
 }
 
