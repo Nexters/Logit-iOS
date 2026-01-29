@@ -60,7 +60,7 @@ struct ApplicationInfoView: View {
                             placeholder: "주요 업무, 자격요건, 우대사항 등을 입력하세요",
                             isRequired: true,
                             maxLength: 3000,
-                            isLarge: true,
+                            largeHeight: 90,
                             text: $department
                         )
                         
@@ -134,7 +134,7 @@ struct InputFieldView: View {
     let placeholder: String
     let isRequired: Bool
     let maxLength: Int?
-    var isLarge: Bool? = false
+    var largeHeight: CGFloat? = nil
     @Binding var text: String
     @FocusState private var isFocused: Bool
     
@@ -143,14 +143,14 @@ struct InputFieldView: View {
         placeholder: String,
         isRequired: Bool = false,
         maxLength: Int? = nil,
-        isLarge: Bool? = false,
+        largeHeight: CGFloat? = nil,
         text: Binding<String>
     ) {
         self.title = title
         self.placeholder = placeholder
         self.isRequired = isRequired
         self.maxLength = maxLength
-        self.isLarge = isLarge
+        self.largeHeight = largeHeight
         self._text = text
     }
     
@@ -182,13 +182,13 @@ struct InputFieldView: View {
                 }
             }
             
-            if isLarge == true {
+            if let height = largeHeight {  // largeHeight가 있으면 TextEditor
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $text)
                         .font(.system(size: 15))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .frame(height: 90)
+                        .frame(height: height)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .focused($isFocused)
