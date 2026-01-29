@@ -15,4 +15,5 @@ struct ExperienceData {
     let action: String
     let result: String
     let competency: String
+    let score: String
 }

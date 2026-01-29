@@ -19,7 +19,8 @@ struct ExperienceSelectionSheet: View {
                 task: "데이터 분석을 통해 이탈 원인 파악",
                 action: "로그 데이터 분석 및 A/B 테스트 진행",
                 result: "이탈률 15% 감소",
-                competency: "문제해결력"
+                competency: "문제해결력",
+                score: "97"
             ),
             ExperienceData(
                 title: "신규 서비스 기획 및 런칭",
@@ -28,7 +29,8 @@ struct ExperienceSelectionSheet: View {
                 task: "0부터 서비스 기획 및 출시",
                 action: "시장 조사 및 MVP 개발 주도",
                 result: "출시 3개월 만에 MAU 10만 달성",
-                competency: "실행력"
+                competency: "실행력",
+                score: "87"
             ),
             ExperienceData(
                 title: "스타트업 창업 및 운영",
@@ -37,7 +39,8 @@ struct ExperienceSelectionSheet: View {
                 task: "팀 구성 및 서비스 개발",
                 action: "팀원 모집, 개발, 마케팅 진행",
                 result: "시드 투자 유치 성공",
-                competency: "리더십"
+                competency: "리더십",
+                score: "66"
             ),
             ExperienceData(
                 title: "고객 응대 및 CS 개선 프로젝트",
@@ -46,7 +49,8 @@ struct ExperienceSelectionSheet: View {
                 task: "CS 프로세스 개선",
                 action: "고객 피드백 분석 및 매뉴얼 작성",
                 result: "고객 만족도 20% 향상",
-                competency: "소통력"
+                competency: "소통력",
+                score: "55"
             ),
             ExperienceData(
                 title: "해커톤 대회 참가 및 수상",
@@ -55,7 +59,8 @@ struct ExperienceSelectionSheet: View {
                 task: "아이디어 구현 및 발표",
                 action: "팀원들과 협업하여 프로토타입 완성",
                 result: "최우수상 수상",
-                competency: "전문성"
+                competency: "전문성",
+                score: "33"
             )
         ]
     
@@ -73,7 +78,7 @@ struct ExperienceSelectionSheet: View {
             // 헤더
             HStack {
                 HStack(spacing: 10) {
-                    Image("file_selected")
+                    Image("folder_selected")
                         .resizable()
                         .renderingMode(.template)
                         .foregroundStyle(.black)
@@ -129,7 +134,7 @@ struct ExperienceSelectionSheet: View {
             // 컨텐츠 영역
             ScrollView {
                 VStack(spacing: 12) {
-                    ForEach(experiences, id: \.title) { experience in
+                    ForEach(experiences.sorted(by: { Int($0.score) ?? 0 > Int($1.score) ?? 0 }), id: \.title) { experience in
                         SelectableExperienceCell(
                             experience: experience,
                             isSelected: selectedExperiences.contains(experience.title),
@@ -150,7 +155,7 @@ struct ExperienceSelectionSheet: View {
                 onSelectExperiences(selected)
                 isPresented = false
             } label: {
-                Text("적용하기 (\(selectedExperiences.count)/\(maxSelectionCount))")
+                Text("\(selectedExperiences.count)개 경험선택")
                     .typo(.semibold_16)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -216,7 +221,7 @@ struct SelectableExperienceCell: View {
                 
                 Spacer()
                 
-                Text("00점")
+                Text("\(experience.score)점")
                     .typo(.medium_15)
                     .foregroundColor(.primary200)
             }

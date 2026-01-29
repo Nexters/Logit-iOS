@@ -56,7 +56,8 @@ class ExperienceFlowViewModel: ObservableObject {
             task: task,
             action: action,
             result: result,
-            competency: selectedCompetency ?? ""
+            competency: selectedCompetency ?? "",
+            score: "11"
         )
         
         onComplete?(experienceData)
