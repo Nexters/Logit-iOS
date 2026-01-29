@@ -12,6 +12,7 @@ struct CoverLetterWorkspaceView: View {
     let questions: [QuestionItem]
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
+    @State private var hasData: Bool = false
     
     enum ContentType {
         case chat, coverLetter
@@ -55,7 +56,16 @@ struct CoverLetterWorkspaceView: View {
             .padding(.top, 16)
             
             // TODO: 컨텐츠 영역
-            Text("Q\(selectedQuestionIndex + 1) - \(selectedView == .chat ? "채팅" : "자기소개서")")
+            
+            if hasData {
+                Text("데이터 있음")  
+                    .padding()
+            } else {
+                EmptyWorkspaceView {
+                    print("경험 선택 버튼 클릭")
+                }
+            }
+
             
             Spacer()
         }
@@ -140,5 +150,42 @@ struct IconTextButton: View {
             .cornerRadius(8)
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct EmptyWorkspaceView: View {
+    let onSelectExperience: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Image("app_status_empty2")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
+            
+            Text("경험을 선택하면 초안이 생성돼요")
+                .typo(.medium_15)
+                .foregroundStyle(.gray100)
+                .padding(.top, 16.adjustedLayout)
+            
+            Button {
+                onSelectExperience()
+            } label: {
+                Text("자기소개서 작성")
+                    .typo(.medium_15)
+                    .foregroundStyle(.primary200)
+                    .padding(.horizontal, 24.adjustedLayout)
+                    .padding(.vertical, 7.5.adjustedLayout)
+                    .background(.primary50)
+                    .cornerRadius(8.adjustedLayout)
+            }
+            .padding(.top, 17.adjustedLayout)
+        }
+        .offset(y: -10.adjustedLayout)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 60.adjustedLayout)
+        .background(.white)
+        .cornerRadius(16.adjustedLayout)
+        .padding(.horizontal, 20.adjustedLayout)
     }
 }
