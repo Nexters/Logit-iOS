@@ -23,7 +23,7 @@ struct LoginView: View {
                     .frame(width: 71.1.adjustedWidth, height: 36.adjustedHeight)
                 
                 Text("자소서가 쉬워지는곳")
-                    .typo(.body3_semibold)
+                    .typo(.semibold_18)
                     .foregroundStyle(.gray100)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -41,7 +41,7 @@ struct LoginView: View {
                             .padding(.leading, 16)
                         
                         Text("Google로 시작하기")
-                            .typo(.body2_regular)
+                            .typo(.regular_19)
                             .frame(maxWidth: .infinity)
                         
                         Spacer()
@@ -60,7 +60,7 @@ struct LoginView: View {
                     // 애플 로그인 액션
                 }) {
                     Text("Apple로 시작하기")
-                        .typo(.body2_regular)
+                        .typo(.regular_19)
                         .frame(maxWidth: .infinity)
                         .frame(height: 49.adjustedHeight)
                         .background(Color.black)

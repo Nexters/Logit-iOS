@@ -16,7 +16,7 @@ struct ProjectListSection: View {
             // 헤더
             HStack {
                 Text("프로젝트 목록")
-                    .typo(.body3_bold)
+                    .typo(.bold_18)
                     .foregroundStyle(.black)
                 
                 Spacer()
@@ -45,7 +45,7 @@ struct ProjectEmptyView: View {
                 .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
             
             Text("자기소개서를 생성해보세요")
-                .typo(.body6_medium)
+                .typo(.medium_15)
                 .foregroundStyle(.gray100)
                 .padding(.top, 16.adjustedLayout)
             
@@ -53,7 +53,7 @@ struct ProjectEmptyView: View {
                 appState.startAddFlow()
             } label: {
                 Text("자기소개서 작성")
-                    .typo(.body6_medium)
+                    .typo(.medium_15)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24.adjustedLayout)
                     .padding(.vertical, 7.5.adjustedLayout)
@@ -113,7 +113,7 @@ struct ProjectCardCell: View {
             
             // 타이틀
             Text(title)
-                .typo(.body6_medium)
+                .typo(.medium_15)
                 .foregroundStyle(.black)
                 .lineLimit(1)
             
@@ -121,7 +121,7 @@ struct ProjectCardCell: View {
             
             // 날짜
             Text(date)
-                .typo(.body7_regular_140)
+                .typo(.regular_14_140)
                 .foregroundStyle(.gray100)
         }
         .padding(.horizontal, 20.adjustedLayout)

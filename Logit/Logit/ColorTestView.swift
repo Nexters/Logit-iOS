@@ -14,7 +14,7 @@ struct ColorTestView: View {
                 // GrayScale Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("GrayScale")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
                         ColorItemView(colorName: "Gray 20", color: .gray20)
@@ -33,7 +33,7 @@ struct ColorTestView: View {
                 // Icon Colors Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Icon Colors")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
                         ColorItemView(colorName: "Icon 1", color: .icon1)
@@ -54,7 +54,7 @@ struct ColorTestView: View {
                 // Primary Colors Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Primary Colors")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
                         ColorItemView(colorName: "Primary 20", color: .primary20)
@@ -75,7 +75,7 @@ struct ColorTestView: View {
                 // Secondary Colors Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Secondary Colors")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
                         ColorItemView(colorName: "Secondary 100", color: .secondary100)
@@ -88,7 +88,7 @@ struct ColorTestView: View {
                 // Gradients Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Gradients")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     VStack(spacing: 20) {
                         GradientItemView(
@@ -114,21 +114,21 @@ struct ColorTestView: View {
                 // Combined Usage Example
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Usage Examples")
-                        .typo(.title1_bold)
+                        .typo(.bold_28)
                     
                     VStack(spacing: 20) {
                         // Text with colors
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Primary Text")
-                                .typo(.body3_bold)
+                                .typo(.bold_18)
                                 .foregroundColor(.primary500)
                             
                             Text("Secondary Text")
-                                .typo(.body5_regular_150)
+                                .typo(.regular_16_150)
                                 .foregroundColor(.gray300)
                             
                             Text("Icon Color Example")
-                                .typo(.body7_regular_140)
+                                .typo(.regular_14_140)
                                 .foregroundColor(.icon5)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,7 +143,7 @@ struct ColorTestView: View {
                                 .frame(width: 100, height: 100)
                             
                             Text("Circle with Logo Gradient")
-                                .typo(.body7_regular_140)
+                                .typo(.regular_14_140)
                                 .foregroundColor(.gray400)
                         }
                         
@@ -154,12 +154,12 @@ struct ColorTestView: View {
                                     .foregroundColor(.icon6)
                                 
                                 Text("Premium Feature")
-                                    .typo(.body5_bold)
+                                    .typo(.bold_16)
                                     .foregroundColor(.primary500)
                             }
                             
                             Text("This card combines gradient background with various text colors")
-                                .typo(.body7_regular_140)
+                                .typo(.regular_14_140)
                                 .foregroundColor(.gray400)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -173,7 +173,7 @@ struct ColorTestView: View {
                                 .foregroundColor(.alert)
                             
                             Text("Alert message example")
-                                .typo(.body7_semibold)
+                                .typo(.semibold_14)
                                 .foregroundColor(.gray400)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -206,7 +206,7 @@ struct ColorItemView: View {
                 )
             
             Text(colorName)
-                .typo(.body9_regular)
+                .typo(.regular_12)
                 .foregroundColor(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -223,7 +223,7 @@ struct GradientItemView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(gradientName)
-                .typo(.body5_semibold)
+                .typo(.semibold_16)
             
             RoundedRectangle(cornerRadius: 16)
                 .fill(gradient)

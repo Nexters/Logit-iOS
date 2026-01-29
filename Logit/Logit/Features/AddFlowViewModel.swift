@@ -21,8 +21,8 @@ class AddFlowViewModel: ObservableObject {
         path.append(AddFlowRoute.applicationInfo)
     }
     
-    func navigateToQuestions() {
-        path.append(AddFlowRoute.coverLetterQuestions)
+    func navigateToCoverLetterWorkspace(questions: [QuestionItem]) {
+        path.append(AddFlowRoute.workspace(questions))
     }
     
     func navigateBack() {
@@ -40,14 +40,10 @@ class AddFlowViewModel: ObservableObject {
             EmptyView()
             
         case .coverLetterQuestions:
-            Text("자기소개서 문항 화면")
-                .navigationTitle("자기소개서 문항")
+            CoverLetterQuestionsView()
             
-        case .questionDetails(let id):
-            Text("문항 상세: \(id)")
-                .navigationTitle("문항 작성")
-            
-
+        case .workspace(let questions):
+            CoverLetterWorkspaceView(questions: questions)
         }
     }
 }

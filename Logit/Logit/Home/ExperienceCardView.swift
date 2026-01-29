@@ -36,10 +36,10 @@ struct ExperienceCardView: View {
             // 텍스트 영역 (왼쪽)
             VStack(alignment: .leading, spacing: 2.adjustedLayout) {
                 Text(title)
-                    .typo(.body3_semibold)
+                    .typo(.semibold_18)
                 
                 Text("관련경험 \(count)개")
-                    .typo(.body5_medium)
+                    .typo(.medium_16)
                     .foregroundStyle(.gray200)
                 
                 Spacer()
@@ -53,7 +53,7 @@ struct ExperienceCardView: View {
                 Spacer()
                 HStack {
                     Text("\(currentPage) / \(totalPages)")
-                        .typo(.body7_semibold)
+                        .typo(.semibold_14)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 17.adjustedLayout)
                         .padding(.vertical, 3.adjustedLayout)
