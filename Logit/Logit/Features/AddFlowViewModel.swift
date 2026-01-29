@@ -44,8 +44,6 @@ class AddFlowViewModel: ObservableObject {
             
         case .workspace(let questions):
             CoverLetterWorkspaceView(questions: questions)
-            
-
         }
     }
 }
