@@ -67,38 +67,6 @@ enum ExperienceFlowRoute: Hashable {
 }
 
 
-// 2단계: STAR 기반 경험 정리
-struct ExperienceStarMethodView: View {
-    @EnvironmentObject var viewModel: ExperienceFlowViewModel
-    
-    var body: some View {
-        VStack {
-            Text("2단계: STAR 기반 경험 정리")
-                .font(.largeTitle)
-                .padding()
-            
-            Button("이전") {
-                viewModel.navigateBack()
-            }
-            .padding()
-            .background(Color.gray)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-            
-            Button("다음 (경험 유형 선택)") {
-                viewModel.navigateToExperienceType()
-            }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.green.opacity(0.1))
-        .navigationBarHidden(true)
-    }
-}
-
 // 3단계: 경험 유형 선택
 struct ExperienceTypeSelectionView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
