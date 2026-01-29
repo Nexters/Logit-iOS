@@ -12,6 +12,7 @@ class AppState: ObservableObject {
     @Published var appPhase: AppPhase = .splash
     @Published var isShowingSignUpSheet: Bool = false
     @Published var isShowingAddFlow: Bool = false
+    @Published var isShowingSettings = false
     
     enum AppPhase {
         case splash
@@ -95,5 +96,9 @@ class AppState: ObservableObject {
     
     func startAddFlow() {
         isShowingAddFlow = true
+    }
+    
+    func startSettings() {
+        isShowingSettings = true
     }
 }

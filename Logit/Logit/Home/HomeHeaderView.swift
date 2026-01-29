@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HomeHeaderView: View {
+    @EnvironmentObject var appState: AppState
+    
     var body: some View {
         HStack {
            Image("app_logo_symbolWord")
@@ -21,6 +23,9 @@ struct HomeHeaderView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(size: 35.2.adjustedLayout)
+                .onTapGesture {
+                    appState.startSettings()
+                }
         }
         .padding(.vertical, 8.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)

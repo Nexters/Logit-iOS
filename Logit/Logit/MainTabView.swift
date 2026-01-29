@@ -49,6 +49,9 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $appState.isShowingAddFlow) {
             AddFlowCoordinator()
         }
+        .fullScreenCover(isPresented: $appState.isShowingSettings) {
+            SettingsView()
+        }
     }
 }
 
