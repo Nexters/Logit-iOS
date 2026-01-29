@@ -13,6 +13,7 @@ struct CoverLetterWorkspaceView: View {
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
     @State private var hasData: Bool = true
+    @State private var showExperienceSelection = false
     
     enum ContentType {
         case chat, coverLetter
@@ -65,6 +66,7 @@ struct CoverLetterWorkspaceView: View {
                         // 빈 화면
                         EmptyWorkspaceView {
                             print("경험 선택 버튼 클릭")
+                            showExperienceSelection = true
                         }
                     }
                 }
@@ -72,12 +74,26 @@ struct CoverLetterWorkspaceView: View {
             .scrollToMinDistance(minDisntance: 32)
             
             // 채팅 입력창 (항상 하단 고정)
-            ChatInputBar { message in
-                print("전송: \(message)")
-            }
+            ChatInputBar(
+                onSend: { message in
+                    print("전송: \(message)")
+                },
+                onAttachmentTapped: {
+                    showExperienceSelection = true 
+                }
+            )
         }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
+        .sheet(isPresented: $showExperienceSelection) {
+            ExperienceSelectionSheet(
+                isPresented: $showExperienceSelection,
+                onSelectExperiences: { selectedExperiences in
+                    print("선택된 경험들: \(selectedExperiences.map { $0.title })")
+                    // TODO: 선택된 경험들로 채팅 시작
+                }
+            )
+        }
     }
 }
 
@@ -201,12 +217,14 @@ struct EmptyWorkspaceView: View {
 struct ChatInputBar: View {
     @State private var messageText: String = ""
     let onSend: (String) -> Void
+    let onAttachmentTapped: () -> Void
     
     var body: some View {
         HStack(spacing: 6) {
             // 동그란 버튼
             Button {
                 // TODO: 추가 기능 (사진, 파일 등)
+                onAttachmentTapped()
             } label: {
                 ZStack {
                     Circle()
