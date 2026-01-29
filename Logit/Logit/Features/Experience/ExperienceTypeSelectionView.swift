@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ExperienceTypeSelectionView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
-    @Environment(\.dismissCoordinator) var dismissCoordinator
 //    @Environment(\.dismiss) var dismiss
     
     let competencies = [

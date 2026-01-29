@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct ExperienceListView: View {
+    @State private var experiences: [ExperienceData] = []
     @State private var experienceCount: Int = 0
     @State private var hasData: Bool = false
-    @State private var showExperienceAddFlow = false // 추가
+    @State private var showExperienceAddFlow = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -25,11 +26,19 @@ struct ExperienceListView: View {
             }
             
             if hasData {
+                // 경험 리스트
                 ScrollView {
-                    VStack(spacing: 0) {
-                        // TODO: 경험 리스트 아이템들
-                        Text("경험 리스트 아이템들")
+                    VStack(spacing: 12) {
+                        ForEach(experiences, id: \.title) { experience in
+                            ExperienceListCell(experience: experience)
+                                .onTapGesture {
+                                    // TODO: 경험 상세보기
+                                    print("선택된 경험: \(experience.title)")
+                                }
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
                 }
             } else {
                 EmptyExperienceView {
@@ -37,12 +46,14 @@ struct ExperienceListView: View {
                 }
             }
         }
+        .background(.gray20)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
-            ExperienceFlowCoordinator { experienceData in  
-                   print("경험 추가됨: \(experienceData.title)")
-                   // TODO: 실제 목록에 추가 로직
-               }
+            ExperienceFlowCoordinator { experienceData in
+                experiences.append(experienceData)
+                hasData = true
+                experienceCount = experiences.count
+            }
         }
     }
 }
@@ -71,7 +82,7 @@ struct ExperienceListHeader: View {
         }
         .frame(height: 44)
         .padding(.horizontal, 20)
-        .background(Color.white)
+        .background(Color.gray20)
     }
 }
 
@@ -123,8 +134,77 @@ struct EmptyExperienceView: View {
         .offset(y: -10.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 60.adjustedLayout)
-        .background(.white)
+        .background(.gray20)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
+    }
+}
+
+struct ExperienceListCell: View {
+    let experience: ExperienceData
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // 상단: 제목과 점수
+            HStack {
+                Text(experience.title)
+                    .typo(.medium_15)
+                    .foregroundColor(.primary500)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                Text("00점")
+                    .typo(.medium_13)
+                    .foregroundColor(.primary200)
+            }
+            
+            // 하단: 태그들
+            HStack(spacing: 8) {
+                // 핵심 역량 태그
+                ExperienceTag(
+                    text: experience.competency,
+                    icon: experience.competency,
+                    isCompetency: true  // 역량 태그 표시
+                )
+                
+                // 경험 유형 태그
+                ExperienceTag(text: experience.type)
+                
+                Spacer()
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray70, lineWidth: 1)
+        )
+    }
+}
+
+// 태그
+struct ExperienceTag: View {
+    let text: String
+    var icon: String? = nil
+    var isCompetency: Bool = false
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            if let icon = icon {
+                Image(icon)
+                    .resizable()
+                    .frame(width: 16, height: 16)
+            }
+            
+            Text(text)
+                .typo(.regular_12)
+                .foregroundColor(.primary600)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(isCompetency ? Color(hex: "E3F5FF") : Color.gray50)
+        .cornerRadius(6)
     }
 }
