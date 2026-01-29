@@ -22,25 +22,59 @@ struct ExperienceSelectionSheet: View {
             
             // 헤더
             HStack {
-                Text("경험 선택")
-                    .typo(.semibold_17)
-                    .foregroundColor(.black)
+                HStack(spacing: 10) {
+                    Image("file_selected")
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundStyle(.black)
+                        .frame(size: 20)
+                    
+                    Text("경험 선택")
+                        .typo(.semibold_17)
+                        .foregroundColor(.black)
+                }
                 
                 Spacer()
                 
-                Button {
-                    isPresented = false
-                } label: {
-                    Image(systemName: "xmark")
-                        .foregroundColor(.gray200)
-                        .frame(width: 24, height: 24)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
             .padding(.bottom, 12)
             
-            Divider()
+            // 설명 텍스트
+            HStack {
+                Text("반영할 경험카드를 선택해주세요 (최대 3개)")
+                    .typo(.regular_15)
+                    .foregroundColor(.gray400)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
+            
+            // 추가하기 버튼
+            Button {
+                showExperienceAddFlow = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image("plus_selected")
+                        .frame(size: 18)
+                    
+                    Text("추가하기")
+                        .typo(.medium_15)
+                        .foregroundColor(.gray300)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 11.5)
+                .background(Color.primary50)
+                .cornerRadius(8)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
             
             // 컨텐츠 영역
             ScrollView {
@@ -55,22 +89,18 @@ struct ExperienceSelectionSheet: View {
                 .padding(.horizontal, 20)
             }
             
-            // 하단 버튼
+            // 하단 적용 버튼
             Button {
-                showExperienceAddFlow = true
+                // TODO: 선택된 경험들 적용
+                isPresented = false
             } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .semibold))
-                    
-                    Text("새 경험 추가")
-                        .typo(.semibold_16)
-                }
-                .foregroundColor(.primary100)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.primary20)
-                .cornerRadius(12)
+                Text("적용하기")
+                    .typo(.semibold_16)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.primary100)
+                    .cornerRadius(12)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
