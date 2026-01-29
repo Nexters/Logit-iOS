@@ -88,9 +88,9 @@ struct CoverLetterWorkspaceView: View {
         .sheet(isPresented: $showExperienceSelection) {
             ExperienceSelectionSheet(
                 isPresented: $showExperienceSelection,
-                onSelectExperience: { experienceData in
-                    print("선택된 경험: \(experienceData.title)")
-                    // TODO: 선택된 경험으로 채팅 시작
+                onSelectExperiences: { selectedExperiences in
+                    print("선택된 경험들: \(selectedExperiences.map { $0.title })")
+                    // TODO: 선택된 경험들로 채팅 시작
                 }
             )
         }
