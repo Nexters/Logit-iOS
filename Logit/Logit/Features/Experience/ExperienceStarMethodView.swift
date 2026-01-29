@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ExperienceStarMethodView: View {
-    @EnvironmentObject var viewModel: AddFlowViewModel
+    @EnvironmentObject var viewModel: ExperienceFlowViewModel
     @Environment(\.dismiss) var dismiss
     
     @State private var situation: String = ""
@@ -81,7 +81,7 @@ struct ExperienceStarMethodView: View {
                         .frame(minHeight: 46.75)
                     
                     Button {
-                        viewModel.navigateToCoverLetterQuestions()
+                        viewModel.navigateToExperienceType()
                     } label: {
                         Text("다음으로")
                             .typo(.bold_18)
