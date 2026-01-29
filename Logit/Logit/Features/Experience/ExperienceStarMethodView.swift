@@ -11,17 +11,12 @@ struct ExperienceStarMethodView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
     @Environment(\.dismiss) var dismiss
     
-    @State private var situation: String = ""
-    @State private var task: String = ""
-    @State private var action: String = ""
-    @State private var result: String = ""
-    
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
                 title: "경험 등록",
                 showBackButton: true,
-                onBackTapped: { dismiss() }
+                onBackTapped: { viewModel.navigateBack() }
             )
             
             ScrollView {
@@ -45,7 +40,7 @@ struct ExperienceStarMethodView: View {
                             isRequired: true,
                             maxLength: 1000,
                             largeHeight: 74,
-                            text: $situation
+                            text: $viewModel.situation
                         )
                         
                         InputFieldView(
@@ -54,7 +49,7 @@ struct ExperienceStarMethodView: View {
                             isRequired: true,
                             maxLength: 1000,
                             largeHeight: 74,
-                            text: $task
+                            text: $viewModel.task
                         )
                         
                         InputFieldView(
@@ -63,7 +58,7 @@ struct ExperienceStarMethodView: View {
                             isRequired: true,
                             maxLength: 1000,
                             largeHeight: 74,
-                            text: $action
+                            text: $viewModel.action
                         )
                         
                         InputFieldView(
@@ -72,7 +67,7 @@ struct ExperienceStarMethodView: View {
                             isRequired: false,
                             maxLength: 1000,
                             largeHeight: 74,
-                            text: $result
+                            text: $viewModel.result
                         )
                     }
                     .padding(.top, 24)
@@ -104,7 +99,10 @@ struct ExperienceStarMethodView: View {
     }
     
     private var isFormValid: Bool {
-        !situation.isEmpty && !task.isEmpty && !action.isEmpty && !result.isEmpty
+        !viewModel.situation.isEmpty &&
+        !viewModel.task.isEmpty &&
+        !viewModel.action.isEmpty &&
+        !viewModel.result.isEmpty
     }
 }
 

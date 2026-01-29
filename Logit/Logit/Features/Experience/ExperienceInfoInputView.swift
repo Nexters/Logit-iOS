@@ -10,8 +10,7 @@ import SwiftUI
 struct ExperienceInfoInputView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
     @Environment(\.dismiss) var dismiss
-    @State private var experienceTitle: String = ""
-    @State private var selectedType: String?
+
     let experienceTypes = ["아르바이트", "정규직", "인턴", "계약직", "봉사 활동", "동아리 활동", "연구 활동", "군복무","수상경력","개인활동"]
     
     var body: some View {
@@ -42,14 +41,14 @@ struct ExperienceInfoInputView: View {
                             placeholder: "예) 로짓 데이터 분석을 통한 이탈률 개선",
                             isRequired: true,
                             maxLength: 100,
-                            text: $experienceTitle
+                            text: $viewModel.experienceTitle
                         )
                         
                         SelectableChipGroup(
                             title: "경험 유형",
                             isRequired: true,
                             options: experienceTypes,
-                            selectedOption: $selectedType
+                            selectedOption: $viewModel.experienceType
                         )
                     }
                     .padding(.top, 24)
@@ -80,7 +79,7 @@ struct ExperienceInfoInputView: View {
     }
     
     private var isFormValid: Bool {
-        return !experienceTitle.isEmpty && selectedType != nil
+        return !viewModel.experienceTitle.isEmpty && viewModel.experienceType != nil
     }
 }
 

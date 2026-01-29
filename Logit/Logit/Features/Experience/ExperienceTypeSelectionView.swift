@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ExperienceTypeSelectionView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
-    @Environment(\.dismiss) var dismiss
-    @State private var selectedCompetency: String?
+    @Environment(\.dismissCoordinator) var dismissCoordinator
+//    @Environment(\.dismiss) var dismiss
     
     let competencies = [
         CompetencyOption(icon: "고객이해력", title: "고객이해력"),
@@ -50,9 +50,9 @@ struct ExperienceTypeSelectionView: View {
                             CompetencyChip(
                                 icon: competency.icon,
                                 title: competency.title,
-                                isSelected: selectedCompetency == competency.title
+                                isSelected: viewModel.selectedCompetency == competency.title
                             ) {
-                                selectedCompetency = competency.title
+                                viewModel.selectedCompetency = competency.title
                             }
                         }
                     }
@@ -63,6 +63,8 @@ struct ExperienceTypeSelectionView: View {
         
             Button {
                 // TODO: 경험 저장 로직
+                viewModel.saveExperience()
+               
                 
             } label: {
                 Text("경험등록")
@@ -70,10 +72,10 @@ struct ExperienceTypeSelectionView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(selectedCompetency != nil ? Color.primary100 : Color.gray100)
+                    .background(viewModel.selectedCompetency != nil ? Color.primary100 : Color.gray100)
                     .cornerRadius(12)
             }
-            .disabled(selectedCompetency == nil)
+            .disabled(viewModel.selectedCompetency == nil)
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
         }

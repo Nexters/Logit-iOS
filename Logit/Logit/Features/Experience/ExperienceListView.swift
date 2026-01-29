@@ -39,7 +39,10 @@ struct ExperienceListView: View {
         }
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
-            ExperienceFlowCoordinator()
+            ExperienceFlowCoordinator { experienceData in  
+                   print("경험 추가됨: \(experienceData.title)")
+                   // TODO: 실제 목록에 추가 로직
+               }
         }
     }
 }
