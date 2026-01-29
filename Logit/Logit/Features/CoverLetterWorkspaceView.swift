@@ -65,6 +65,11 @@ struct CoverLetterWorkspaceView: View {
                     print("경험 선택 버튼 클릭")
                 }
             }
+            
+            ChatInputBar { message in
+                print("전송: \(message)")
+            }
+            .scrollToMinDistance(minDisntance: 32)
 
             
             Spacer()
@@ -187,5 +192,64 @@ struct EmptyWorkspaceView: View {
         .background(.white)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
+    }
+}
+
+struct ChatInputBar: View {
+    @State private var messageText: String = ""
+    let onSend: (String) -> Void
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            // 동그란 버튼
+            Button {
+                // TODO: 추가 기능 (사진, 파일 등)
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.gray50)
+                        .frame(size: 44)
+                    
+                    Image("Union")
+                        .resizable()
+                        .frame(width: 18.12, height: 15)
+                        .foregroundColor(.primary400)
+                }
+            }
+            
+            // 캡슐 모양 채팅 입력창
+            HStack(spacing: 8) {
+                TextField("메시지를 입력하세요", text: $messageText)
+                    .font(.system(size: 15))
+                    .padding(.leading, 16)
+                
+                Button {
+                    onSend(messageText)
+                    messageText = ""
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(messageText.isEmpty ? Color.gray50 : Color.primary20)
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "paperplane.fill")
+                            .resizable()
+                            .frame(width: 16, height: 16)
+                            .foregroundColor(messageText.isEmpty ? .gray200 : .primary100)
+                    }
+                    .padding(.trailing, 8)
+                }
+                .disabled(messageText.isEmpty)
+            }
+            .frame(height: 44)
+            .background(Color.white)
+            .overlay(
+                Capsule()
+                    .stroke(Color.gray100, lineWidth: 1)
+            )
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .background(Color.white)
     }
 }
