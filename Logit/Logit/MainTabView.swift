@@ -29,7 +29,7 @@ struct MainTabView: View {
                     case .add:
                         EmptyView()
                     case .activity:
-                        Text("경험")
+                        ExperienceListView()
                     case .profile:
                         Text("리포트")
                     }
