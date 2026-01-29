@@ -12,7 +12,7 @@ struct CoverLetterWorkspaceView: View {
     let questions: [QuestionItem]
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
-    @State private var hasData: Bool = false
+    @State private var hasData: Bool = true
     
     enum ContentType {
         case chat, coverLetter
@@ -55,25 +55,28 @@ struct CoverLetterWorkspaceView: View {
             .padding(.horizontal, 20)
             .padding(.top, 16)
             
-            // TODO: 컨텐츠 영역
-            
-            if hasData {
-                Text("데이터 있음")  
-                    .padding()
-            } else {
-                EmptyWorkspaceView {
-                    print("경험 선택 버튼 클릭")
+            // 채팅 스크롤 영역
+            ScrollView {
+                VStack(spacing: 0) {
+                    if hasData {
+                        // 채팅 메시지 리스트
+                        ChatMessagesView()
+                    } else {
+                        // 빈 화면
+                        EmptyWorkspaceView {
+                            print("경험 선택 버튼 클릭")
+                        }
+                    }
                 }
             }
+            .scrollToMinDistance(minDisntance: 32)
             
+            // 채팅 입력창 (항상 하단 고정)
             ChatInputBar { message in
                 print("전송: \(message)")
             }
-            .scrollToMinDistance(minDisntance: 32)
-
-            
-            Spacer()
         }
+        .dismissKeyboardOnTap()
         .navigationBarHidden(true)
     }
 }
@@ -251,5 +254,73 @@ struct ChatInputBar: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
         .background(Color.white)
+    }
+}
+
+
+// 채팅 메시지 리스트 뷰
+struct ChatMessagesView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // TODO: 실제 채팅 메시지들
+            ChatBubble(message: "안녕하세요!", isUser: false)
+            ChatBubble(message: "네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요", isUser: true)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
+            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
+}
+
+// 채팅 버블 컴포넌트
+struct ChatBubble: View {
+    let message: String
+    let isUser: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            if isUser {
+                Spacer()
+                
+                // 사용자 메시지
+                Text(message)
+                    .typo(.regular_14_160)
+                    .foregroundColor(.black )
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.primary20)
+                    .cornerRadius(16)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Image("chatting_logo")
+                        .resizable()
+                        .frame(size: 24)
+                    
+                    // 봇 메시지
+                    Text(message)
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                        .padding(.vertical, 10)
+                        .background(Color.clear)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 }
