@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum AuthEndpoint {
+enum AuthEndpoint:Endpoint {
     // Auth
     case googleLogin // 구글 로그인
     case googleCallback // 구글 콜백
