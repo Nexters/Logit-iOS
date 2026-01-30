@@ -9,13 +9,13 @@ import Foundation
 
 protocol NetworkClient {
     func request<T:Decodable>(
-        endpoint: AuthEndpoint,
+        endpoint: Endpoint,
         body: Encodable?
     ) async throws -> T
     
     // 응답 body 없을때
     func request(
-        endpoint: AuthEndpoint,
+        endpoint: Endpoint,
         body: Encodable?
     ) async throws
 }
