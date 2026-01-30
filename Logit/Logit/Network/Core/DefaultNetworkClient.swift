@@ -22,7 +22,7 @@ class DefaultNetworkClient: NetworkClient {
     
     
     func request<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoint,
         body: Encodable? = nil
     ) async throws -> T {
         let data = try await performRequest(endpoint: endpoint, body: body)
@@ -36,7 +36,7 @@ class DefaultNetworkClient: NetworkClient {
     }
     
     func request(
-        endpoint: APIEndpoint,
+        endpoint: Endpoint,
         body: Encodable? = nil
     ) async throws {
         _ = try await performRequest(endpoint: endpoint, body: body)
@@ -44,7 +44,7 @@ class DefaultNetworkClient: NetworkClient {
     
     
     private func performRequest(
-        endpoint: APIEndpoint,
+        endpoint: Endpoint,
         body: Encodable?,
         isRetry: Bool = false
     ) async throws -> Data {
@@ -106,7 +106,7 @@ class DefaultNetworkClient: NetworkClient {
     }
     
     private func createURLRequest(
-        endpoint: APIEndpoint,
+        endpoint: Endpoint,
         body: Encodable?
     ) throws -> URLRequest {
         // URL 생성
@@ -167,7 +167,7 @@ class DefaultNetworkClient: NetworkClient {
             
             // Refresh Token으로 새 Access Token 받기
             let request = try createURLRequest(
-                endpoint: .refreshToken,
+                endpoint: AuthEndpoint.refreshToken,
                 body: RefreshTokenRequest(refreshToken: refreshToken)
             )
             

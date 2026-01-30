@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum APIEndpoint {
+enum AuthEndpoint:Endpoint {
     // Auth
     case googleLogin // 구글 로그인
     case googleCallback // 구글 콜백
@@ -35,12 +35,4 @@ enum APIEndpoint {
             return .post
         }
     }
-}
-
-enum HTTPMethod: String {
-    case get = "GET"
-    case post = "POST"
-    case put = "PUT"
-    case delete = "DELETE"
-    case patch = "PATCH"
 }
