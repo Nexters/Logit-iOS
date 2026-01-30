@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum APIError {
+enum APIError: Error {
     case invalidURL
     case invalidResponse
     case badRequest(message: String) // 400
