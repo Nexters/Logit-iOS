@@ -12,6 +12,8 @@ protocol ProjectRepository {
     func createProject(request: CreateProjectRequest) async throws -> ProjectResponse
     /// 프로젝트  목록 조회
     func getProjectList(skip: Int, limit: Int) async throws -> [ProjectListItemResponse]
+    /// 프로젝트  상세 조회
+    func getProjectDetail(projectId: String) async throws -> ProjectDetailResponse
 }
 
 
@@ -30,10 +32,18 @@ final class DefaultProjectRepository: ProjectRepository {
         )
     }
     
-    // 프로젝트 목록 조회
+    // 프로젝트 목록조회
     func getProjectList(skip: Int, limit: Int) async throws -> [ProjectListItemResponse] {
         return try await networkClient.request(
             endpoint: ProjectEndpoint.getProjectList(skip: skip, limit: limit),
+            body: nil
+        )
+    }
+    
+    //프로젝트 상세조회
+    func getProjectDetail(projectId: String) async throws -> ProjectDetailResponse {
+        return try await networkClient.request(
+            endpoint: ProjectEndpoint.getProjectDetail(projectId: projectId),
             body: nil
         )
     }
