@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct ExperienceListView: View {
-    @State private var experiences: [ExperienceData] = []
+    @State private var experiences: [ExperienceData] = ExperienceDataStore.shared.experiences
+    
     @State private var experienceCount: Int = 0
-    @State private var hasData: Bool = false
+    @State private var hasData: Bool = true
     @State private var showExperienceAddFlow = false
     
     var body: some View {
@@ -39,6 +40,7 @@ struct ExperienceListView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
+                    .padding(.bottom, 20)
                 }
             } else {
                 EmptyExperienceView {
@@ -50,10 +52,15 @@ struct ExperienceListView: View {
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator { experienceData in
-                experiences.append(experienceData)
+                ExperienceDataStore.shared.experiences.append(experienceData)
+                experiences = ExperienceDataStore.shared.experiences
                 hasData = true
                 experienceCount = experiences.count
             }
+        }
+        .onAppear {
+            experiences = ExperienceDataStore.shared.experiences 
+            experienceCount = experiences.count
         }
     }
 }
@@ -154,7 +161,7 @@ struct ExperienceListCell: View {
                 
                 Spacer()
                 
-                Text("00점")
+                Text("\(experience.score)점")
                     .typo(.medium_13)
                     .foregroundColor(.primary200)
             }

@@ -12,7 +12,7 @@ struct CoverLetterWorkspaceView: View {
     let questions: [QuestionItem]
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
-    @State private var hasData: Bool = true
+    @State private var hasData: Bool = false
     @State private var showExperienceSelection = false
     
     enum ContentType {
@@ -60,10 +60,17 @@ struct CoverLetterWorkspaceView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     if hasData {
-                        // 채팅 메시지 리스트
-                        ChatMessagesView()
+                        if selectedView == .chat {
+                            ChatMessagesView(
+                                   onUpdateCoverLetter: {
+                                       selectedView = .coverLetter
+                                   }
+                               )
+                        } else {
+                            // TODO: 자기소개서 뷰
+                            CoverLetterContentView()
+                        }
                     } else {
-                        // 빈 화면
                         EmptyWorkspaceView {
                             print("경험 선택 버튼 클릭")
                             showExperienceSelection = true
@@ -88,6 +95,7 @@ struct CoverLetterWorkspaceView: View {
         .sheet(isPresented: $showExperienceSelection) {
             ExperienceSelectionSheet(
                 isPresented: $showExperienceSelection,
+                hasData: $hasData,
                 onSelectExperiences: { selectedExperiences in
                     print("선택된 경험들: \(selectedExperiences.map { $0.title })")
                     // TODO: 선택된 경험들로 채팅 시작
@@ -278,27 +286,12 @@ struct ChatInputBar: View {
 
 // 채팅 메시지 리스트 뷰
 struct ChatMessagesView: View {
+    let onUpdateCoverLetter: () -> Void
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // TODO: 실제 채팅 메시지들
-            ChatBubble(message: "안녕하세요!", isUser: false)
-            ChatBubble(message: "네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요네 안녕하세요", isUser: true)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: true)
-            ChatBubble(message: "자기소개서 작성 도와드릴게요", isUser: false)
+            ChatBubble(message: "저는 비전공자로 iOS 개발을 시작했지만, 사용자 중심의 문제 해결에 집중하며 성장해왔습니다. 특히 로그 데이터 분석을 통한 이탈률 개선 프로젝트에서, Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석하고 특정 화면에서의 높은 이탈률 원인을 파악했습니다. 이를 해결하기 위해 이미지 캐싱과 lazy loading을 적용하여 로딩 시간을 개선했고, 불필요한 네트워크 요청을 최적화한 결과 이탈률을 15% 감소시켰습니다. 이 과정에서 단순히 코드를 작성하는 것을 넘어, 데이터 기반으로 문제를 정의하고 기술적 해결책을 찾는 능력을 키웠습니다. 또한 신규 서비스 런칭 경험에서는 SwiftUI와 MVVM 아키텍처를 활용해 빠른 프로토타이핑과 확장 가능한 구조를 동시에 구현했으며, 출시 3개월 만에 MAU 10만을 달성하는 성과를 이뤘습니다. 앞으로도 사용자에게 진정한 가치를 전달하는 iOS 개발자로 성장하고 싶습니다.", isUser: false, showUpdateButton: true, onUpdateCoverLetter: onUpdateCoverLetter )
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
@@ -309,6 +302,10 @@ struct ChatMessagesView: View {
 struct ChatBubble: View {
     let message: String
     let isUser: Bool
+    let showUpdateButton: Bool
+    @State private var displayedText: String = ""
+    @State private var isTypingComplete: Bool = false
+    let onUpdateCoverLetter: (() -> Void)?
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -318,7 +315,7 @@ struct ChatBubble: View {
                 // 사용자 메시지
                 Text(message)
                     .typo(.regular_14_160)
-                    .foregroundColor(.black )
+                    .foregroundColor(.black)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(Color.primary20)
@@ -329,16 +326,113 @@ struct ChatBubble: View {
                         .resizable()
                         .frame(size: 24)
                     
-                    // 봇 메시지
-                    Text(message)
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                        .padding(.vertical, 10)
-                        .background(Color.clear)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 12) {
+                        // 봇 메시지
+                        Text(displayedText)
+                            .typo(.regular_14_160)
+                            .foregroundColor(.black)
+                            .padding(.vertical, 10)
+                            .background(Color.clear)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        // 자기소개서 업데이트 버튼 (타이핑 완료 후 표시)
+                        if showUpdateButton && isTypingComplete {
+                            Button {
+                                print("자기소개서 업데이트 버튼 클릭 (시연용)")
+                                onUpdateCoverLetter?()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image("autorenew")
+                                        .frame(size: 16)
+                                    
+                                    Text("자기소개서 업데이트")
+                                        .typo(.medium_13)
+                                        .foregroundStyle(.primary600)
+                    
+                                }
+//                                .foregroundColor(.clear)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.clear)
+                                .cornerRadius(8)
+                            }
+                            .transition(.opacity.combined(with: .scale))  //  부드러운 등장 효과
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .onAppear {
+            if !isUser {
+                startTypingAnimation()
+            } else {
+                // 사용자 메시지는 즉시 표시
+                displayedText = message
+                isTypingComplete = true
+            }
+        }
+    }
+    
+    private func startTypingAnimation() {
+        displayedText = ""
+        isTypingComplete = false  // ← 타이핑 시작 시 false
+        
+        let characters = Array(message)
+        
+        for (index, character) in characters.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.03) {
+                displayedText.append(character)
+                
+                if index == characters.count - 1 {
+                    // 타이핑 완료
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        isTypingComplete = true  //  완료 후 true
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct CoverLetterContentView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // 제목
+                Text("Q1. 지원 동기 및 포부")
+                    .typo(.semibold_18)
+                    .foregroundColor(.black)
+                    .padding(.top, 20)
+                
+                // 자기소개서 본문
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("저는 비전공자로 iOS 개발을 시작했지만, 사용자 중심의 문제 해결에 집중하며 성장해왔습니다. 특히 로그 데이터 분석을 통한 이탈률 개선 프로젝트에서, Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석하고 특정 화면에서의 높은 이탈률 원인을 파악했습니다.")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                    
+                    Text("이를 해결하기 위해 이미지 캐싱과 lazy loading을 적용하여 로딩 시간을 개선했고, 불필요한 네트워크 요청을 최적화한 결과 이탈률을 15% 감소시켰습니다. 이 과정에서 단순히 코드를 작성하는 것을 넘어, 데이터 기반으로 문제를 정의하고 기술적 해결책을 찾는 능력을 키웠습니다.")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                    
+                    Text("또한 신규 서비스 런칭 경험에서는 SwiftUI와 MVVM 아키텍처를 활용해 빠른 프로토타이핑과 확장 가능한 구조를 동시에 구현했으며, 출시 3개월 만에 MAU 10만을 달성하는 성과를 이뤘습니다.")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                    
+                    Text("앞으로도 사용자에게 진정한 가치를 전달하는 iOS 개발자로 성장하고 싶습니다. 귀사에서 저의 기술적 역량과 문제 해결 능력을 발휘하여, 더 나은 사용자 경험을 만드는 데 기여하고 싶습니다.")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 20)
+                .background(Color.gray20)
+                .cornerRadius(12)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
+        .background(Color.white)
     }
 }

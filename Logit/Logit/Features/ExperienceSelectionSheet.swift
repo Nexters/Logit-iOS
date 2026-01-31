@@ -10,59 +10,9 @@ import SwiftUI
 struct ExperienceSelectionSheet: View {
     @Binding var isPresented: Bool
     @State private var showExperienceAddFlow = false
+    @Binding var hasData: Bool
     @State private var selectedExperiences: Set<String> = []
-    @State private var experiences: [ExperienceData] = [
-            ExperienceData(
-                title: "로짓 데이터 분석을 통한 이탈률 개선",
-                type: "인턴",
-                situation: "사용자 이탈률이 높아 개선이 필요했습니다",
-                task: "데이터 분석을 통해 이탈 원인 파악",
-                action: "로그 데이터 분석 및 A/B 테스트 진행",
-                result: "이탈률 15% 감소",
-                competency: "문제해결력",
-                score: "97"
-            ),
-            ExperienceData(
-                title: "신규 서비스 기획 및 런칭",
-                type: "정규직",
-                situation: "새로운 시장 진입이 필요했습니다",
-                task: "0부터 서비스 기획 및 출시",
-                action: "시장 조사 및 MVP 개발 주도",
-                result: "출시 3개월 만에 MAU 10만 달성",
-                competency: "실행력",
-                score: "87"
-            ),
-            ExperienceData(
-                title: "스타트업 창업 및 운영",
-                type: "개인활동",
-                situation: "문제를 해결할 서비스가 필요했습니다",
-                task: "팀 구성 및 서비스 개발",
-                action: "팀원 모집, 개발, 마케팅 진행",
-                result: "시드 투자 유치 성공",
-                competency: "리더십",
-                score: "66"
-            ),
-            ExperienceData(
-                title: "고객 응대 및 CS 개선 프로젝트",
-                type: "아르바이트",
-                situation: "고객 불만이 증가하는 상황",
-                task: "CS 프로세스 개선",
-                action: "고객 피드백 분석 및 매뉴얼 작성",
-                result: "고객 만족도 20% 향상",
-                competency: "소통력",
-                score: "55"
-            ),
-            ExperienceData(
-                title: "해커톤 대회 참가 및 수상",
-                type: "수상경력",
-                situation: "48시간 안에 서비스 개발 필요",
-                task: "아이디어 구현 및 발표",
-                action: "팀원들과 협업하여 프로토타입 완성",
-                result: "최우수상 수상",
-                competency: "전문성",
-                score: "33"
-            )
-        ]
+    @State private var experiences: [ExperienceData] = ExperienceDataStore.shared.experiences
     
     let onSelectExperiences: ([ExperienceData]) -> Void
     private let maxSelectionCount = 3
@@ -153,6 +103,7 @@ struct ExperienceSelectionSheet: View {
             Button {
                 let selected = experiences.filter { selectedExperiences.contains($0.title) }
                 onSelectExperiences(selected)
+                hasData = true 
                 isPresented = false
             } label: {
                 Text("\(selectedExperiences.count)개 경험선택")
@@ -172,7 +123,8 @@ struct ExperienceSelectionSheet: View {
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator { experienceData in
                 // 경험 추가 후 목록에 추가
-                experiences.append(experienceData)
+                ExperienceDataStore.shared.experiences.append(experienceData)
+                experiences = ExperienceDataStore.shared.experiences
                 // 자동으로 선택
                 if selectedExperiences.count < maxSelectionCount {
                     selectedExperiences.insert(experienceData.title)
@@ -201,6 +153,7 @@ struct ExperienceSelectionSheet: View {
     
     private func loadExperiences() {
         // TODO: 실제 경험 목록 로드
+        experiences = ExperienceDataStore.shared.experiences
     }
 }
 
