@@ -12,6 +12,8 @@ protocol UserRepository {
     func getCurrentUser() async throws -> UserResponse
     /// 현재 사용자 계정 삭제
     func deleteCurrentUser() async throws
+    /// 현재 사용자 정보 수정
+       func updateCurrentUser(request: UpdateUserRequest) async throws -> UserResponse
 }
 
 class DefaultUserRepository: UserRepository {
@@ -35,6 +37,14 @@ class DefaultUserRepository: UserRepository {
         try await networkClient.request(
             endpoint: UserEndpoint.deleteCurrentUser,
             body: nil
+        )
+    }
+    
+    // 현재 사용자 정보 수정
+    func updateCurrentUser(request: UpdateUserRequest) async throws -> UserResponse {
+        return try await networkClient.request(
+            endpoint: UserEndpoint.updateCurrentUser,
+            body: request
         )
     }
 }
