@@ -10,6 +10,8 @@ import Foundation
 protocol UserRepository {
     /// 현재 사용자 정보 조회
     func getCurrentUser() async throws -> UserResponse
+    /// 현재 사용자 계정 삭제
+    func deleteCurrentUser() async throws
 }
 
 class DefaultUserRepository: UserRepository {
@@ -24,6 +26,14 @@ class DefaultUserRepository: UserRepository {
     func getCurrentUser() async throws -> UserResponse {
         return try await networkClient.request(
             endpoint: UserEndpoint.getCurrentUser,
+            body: nil
+        )
+    }
+    
+    // 현재 사용자 계정 삭제
+    func deleteCurrentUser() async throws {
+        try await networkClient.request(
+            endpoint: UserEndpoint.deleteCurrentUser,
             body: nil
         )
     }
