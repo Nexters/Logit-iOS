@@ -9,11 +9,33 @@ import Foundation
 
 enum ChatEndpoint: Endpoint {
     case sendMessage  // 메시지 전송 (SSE 스트리밍)
+    case getChatHistory(questionId: String, cursor: String?, size: Int)  // 채팅 히스토리 조회
     
     var path: String {
         switch self {
         case .sendMessage:
             return "/api/v1/projects/chats"
+            
+        case .getChatHistory(let questionId, let cursor, let size):
+            var path = "/api/v1/projects/chats/\(questionId)"
+            
+            var queryItems: [String] = []
+            
+            // size 설정 (1~100 범위 제한)
+            let validSize = min(max(size, 1), 100)
+            queryItems.append("size=\(validSize)")
+            
+            // cursor가 있으면 추가
+            if let cursor = cursor {
+                let encodedCursor = cursor.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? cursor
+                queryItems.append("cursor=\(encodedCursor)")
+            }
+            
+            if !queryItems.isEmpty {
+                path += "?" + queryItems.joined(separator: "&")
+            }
+            
+            return path
         }
     }
     
@@ -21,6 +43,8 @@ enum ChatEndpoint: Endpoint {
         switch self {
         case .sendMessage:
             return .post
+        case .getChatHistory:
+            return .get
         }
     }
 }
