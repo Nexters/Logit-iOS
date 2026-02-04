@@ -21,6 +21,13 @@ protocol ChatRepository {
         cursor: String?,
         size: Int
     ) async throws -> ChatHistoryResponse
+    
+    /// 자기소개서 답변 업데이트
+    func updateAnswer(
+        projectId: String,
+        chatId: String,
+        request: UpdateAnswerRequest
+    ) async throws -> UpdateAnswerResponse
 }
 
 class DefaultChatRepository: ChatRepository {
@@ -61,6 +68,20 @@ class DefaultChatRepository: ChatRepository {
                 size: size
             ),
             body: nil
+        )
+    }
+    
+    // 자기소개서 답변 업데이트
+    func updateAnswer(
+        projectId: String,
+        chatId: String,
+        request: UpdateAnswerRequest
+    ) async throws -> UpdateAnswerResponse {
+        return try await networkClient.request(
+            endpoint: ChatEndpoint.updateAnswer(
+                chatId: chatId
+            ),
+            body: request
         )
     }
 }

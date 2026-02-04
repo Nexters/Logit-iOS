@@ -10,6 +10,7 @@ import Foundation
 enum ChatEndpoint: Endpoint {
     case sendMessage  // 메시지 전송 (SSE 스트리밍)
     case getChatHistory(questionId: String, cursor: String?, size: Int)  // 채팅 히스토리 조회
+    case updateAnswer(chatId: String)                   // 자기소개서 답변 업데이트
     
     var path: String {
         switch self {
@@ -36,6 +37,9 @@ enum ChatEndpoint: Endpoint {
             }
             
             return path
+            
+        case .updateAnswer(let chatId):
+            return "/api/v1/projects/chats/\(chatId)/answer"
         }
     }
     
@@ -45,6 +49,8 @@ enum ChatEndpoint: Endpoint {
             return .post
         case .getChatHistory:
             return .get
+        case .updateAnswer:
+            return .patch
         }
     }
 }
