@@ -14,6 +14,10 @@ protocol QuestionRepository {
     func getQuestionList(projectId: String) async throws -> [QuestionResponse]
     /// 문항 상세 조회
     func getQuestionDetail(projectId: String, questionId: String) async throws -> QuestionDetailResponse
+    /// 문항 수정
+    func updateQuestion(projectId: String, questionId: String, request: UpdateQuestionRequest) async throws -> QuestionDetailResponse
+    /// 문항 삭제
+    func deleteQuestion(projectId: String, questionId: String) async throws
 }
 
 class DefaultQuestionRepository: QuestionRepository {
@@ -44,6 +48,22 @@ class DefaultQuestionRepository: QuestionRepository {
     func getQuestionDetail(projectId: String, questionId: String) async throws -> QuestionDetailResponse {
         return try await networkClient.request(
             endpoint: QuestionEndpoint.getQuestionDetail(projectId: projectId, questionId: questionId),
+            body: nil
+        )
+    }
+    
+    // 문항 수정
+    func updateQuestion(projectId: String, questionId: String, request: UpdateQuestionRequest) async throws -> QuestionDetailResponse {
+        return try await networkClient.request(
+            endpoint: QuestionEndpoint.updateQuestion(projectId: projectId, questionId: questionId),
+            body: request
+        )
+    }
+    
+    // 문항 삭제
+    func deleteQuestion(projectId: String, questionId: String) async throws {
+        try await networkClient.request(
+            endpoint: QuestionEndpoint.deleteQuestion(projectId: projectId, questionId: questionId),
             body: nil
         )
     }
