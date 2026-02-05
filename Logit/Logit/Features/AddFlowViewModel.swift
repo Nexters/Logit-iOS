@@ -29,9 +29,14 @@ class AddFlowViewModel: ObservableObject {
     @Published var questions: [QuestionItem] = [QuestionItem()]
     
     private let projectRepository: ProjectRepository
+    private let questionRepository: QuestionRepository
     
-    init(projectRepository: ProjectRepository = DefaultProjectRepository()) {
+    init(
+        projectRepository: ProjectRepository = DefaultProjectRepository(),
+        questionRepository: QuestionRepository = DefaultQuestionRepository() 
+    ) {
         self.projectRepository = projectRepository
+        self.questionRepository = questionRepository
     }
        
     
@@ -72,17 +77,17 @@ class AddFlowViewModel: ObservableObject {
         print("직무명: \(jobPosition)")
         print("채용 공고: \(recruitNotice)")
         print("기업 인재상: \(companyTalent)")
-        print("마감일: \(dueDate)")
         print("문항 개수: \(questions.count)")
-        questions.enumerated().forEach { index, question in
-            print("  문항 \(index + 1): \(question.title) (\(question.characterLimit)자)")
-        }
         
         do {
             let response = try await projectRepository.createProject(request: request)
             print(" 프로젝트 생성 성공!")
             print("응답: \(response)")
             print("프로젝트 ID: \(response.id)")
+            
+            print("문항 등록 시작")
+            try await createQuestionsInParallel(projectId: response.id)
+            print("모든 문항 등록 완료!")
             
             // TODO: 성공 후 처리 (예: Workspace로 이동)
             rootScreen = .workspace(projectId: response.id, questions: questions)
@@ -98,6 +103,38 @@ class AddFlowViewModel: ObservableObject {
             }
         }
     }
+    
+    private func createQuestionsInParallel(projectId: String) async throws {
+         try await withThrowingTaskGroup(of: QuestionResponse.self) { group in
+             // 각 문항을 병렬로 등록
+             for (index, question) in questions.enumerated() {
+                 group.addTask {
+                     let request = CreateQuestionRequest(
+                        maxLength: Int(question.characterLimit) ?? 0,
+                         question: question.title
+                        
+                     )
+                     
+                     print("  문항 \(index + 1) 등록 중: \(question.title)")
+                     
+                     let response = try await self.questionRepository.createQuestion(
+                         projectId: projectId,
+                         request: request
+                     )
+                     
+                     print("   문항 \(index + 1) 등록 완료 (ID: \(response.id))")
+                     return response
+                 }
+             }
+             
+             // 모든 작업이 완료될 때까지 대기
+             // 하나라도 실패하면 throw
+             for try await response in group {
+                 // 성공한 응답들 (필요시 저장 가능)
+                 _ = response
+             }
+         }
+     }
     
     
     // View 생성

@@ -11,8 +11,6 @@ struct CoverLetterQuestionsView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
     
-    @State private var questions: [QuestionItem] = [QuestionItem()]
-    
     private let maxQuestionsCount = 5 // 최대 문항 개수
     
     private var isFormValid: Bool {
@@ -44,7 +42,7 @@ struct CoverLetterQuestionsView: View {
                         .padding(.top, 3)
                     
                     VStack(spacing: 20) {
-                        ForEach(Array(questions.enumerated()), id: \.element.id) { index, question in
+                        ForEach(Array(viewModel.questions.enumerated()), id: \.element.id) { index, question in
                             QuestionInputRow(
                                 questionNumber: index + 1,
                                 questionTitle: Binding(
@@ -59,7 +57,7 @@ struct CoverLetterQuestionsView: View {
                         }
                         
                         // 추가하기 버튼 (최대 개수 미만일 때만 표시)
-                        if questions.count < maxQuestionsCount {
+                        if viewModel.questions.count < maxQuestionsCount {
                             Button {
                                 viewModel.questions.append(QuestionItem())
                             } label: {

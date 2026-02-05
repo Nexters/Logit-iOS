@@ -17,7 +17,7 @@ enum QuestionEndpoint: Endpoint {
     var path: String {
         switch self {
         case .createQuestion(let projectId):
-            return "/api/v1/projects/\(projectId)/questions"
+            return "/api/v1/projects/\(projectId)/questions/"
             
         case .getQuestionList(let projectId):
             return "/api/v1/projects/\(projectId)/questions"
