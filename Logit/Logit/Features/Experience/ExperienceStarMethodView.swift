@@ -14,7 +14,7 @@ struct ExperienceStarMethodView: View {
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "경험 등록",
+                title: "",
                 showBackButton: true,
                 onBackTapped: { viewModel.navigateBack() }
             )
@@ -24,9 +24,29 @@ struct ExperienceStarMethodView: View {
                     PageIndicator(currentPage: 2, totalPages: 3)
                         .padding(.top, 16)
                     
-                    Text("STAR 기반 경험 정리")
-                        .typo(.bold_18)
-                        .padding(.top, 13.25)
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("STAR 기반 경험 정리")
+                            .typo(.bold_18)
+                        
+                        Spacer()
+                        
+                        Button {
+                            // 예시 불러오기 액션
+                            viewModel.loadStarExampleData()
+                        } label: {
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
+                        }
+                    }
+                    .padding(.top, 13.25)
                     
                     Text("상세할수록 답변의 품질이 올라가요")
                         .typo(.regular_15)

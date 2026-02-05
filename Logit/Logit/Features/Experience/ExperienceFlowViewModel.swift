@@ -78,6 +78,17 @@ class ExperienceFlowViewModel: ObservableObject {
         isOngoing = false
     }
     
+    // STAR 기반 경험 정리 예시 데이터 불러오기
+        func loadStarExampleData() {
+            situation = "앱 사용자 이탈률이 지속적으로 증가하여 월 평균 20%의 사용자가 앱을 삭제하는 문제가 발생했습니다. 데이터 분석 결과, 첫 로그인 후 3일 이내 이탈이 가장 높았습니다."
+            
+            task = "사용자 이탈률을 분석하고, 3개월 내 이탈률을 10% 이하로 낮추는 것이 목표였습니다. 특히 신규 사용자의 온보딩 경험을 개선해야 했습니다."
+            
+            action = "Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석했습니다. 온보딩 프로세스를 3단계에서 5단계로 세분화하고, 각 단계마다 핵심 기능을 직접 체험할 수 있도록 인터랙티브 튜토리얼을 구현했습니다. SwiftUI를 활용해 부드러운 애니메이션과 직관적인 UI를 제공했습니다."
+            
+            result = "3개월 후 신규 사용자 이탈률이 20%에서 8%로 감소했습니다. 특히 온보딩 완료율이 45%에서 78%로 증가했고, 첫 3일 내 핵심 기능 사용률이 2배 향상되었습니다. 이 경험을 통해 데이터 기반 의사결정의 중요성과 사용자 경험 개선이 비즈니스 성과에 직접적인 영향을 미친다는 것을 배웠습니다."
+        }
+    
     
     @ViewBuilder
     func destination(for route: ExperienceFlowRoute) -> some View {
