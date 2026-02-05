@@ -24,7 +24,17 @@ class ExperienceFlowViewModel: ObservableObject {
     @Published var endDate: Date?
     @Published var isOngoing: Bool = false
     
-    var onComplete: ((ExperienceData) -> Void)?
+    var onComplete: (() -> Void)?
+    
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
+    
+    private let experienceRepository: ExperienceRepository
+    
+    init(experienceRepository: ExperienceRepository) {
+        self.experienceRepository = experienceRepository
+    }
     
     // Navigation 함수들
     func navigateToStarMethod() {
@@ -41,30 +51,54 @@ class ExperienceFlowViewModel: ObservableObject {
         }
     }
     
-    func saveExperience() {
-        print("=== 경험 등록 완료 ===")
-        print("경험 제목: \(experienceTitle)")
-        print("경험 유형: \(experienceType ?? "미선택")")
-        print("\n[STAR 분석]")
-        print("Situation: \(situation)")
-        print("Task: \(task)")
-        print("Action: \(action)")
-        print("Result: \(result)")
-        print("\n핵심 역량: \(selectedCompetency ?? "미선택")")
-        print("==================")
-        
-        let experienceData = ExperienceData(
-            title: experienceTitle,
-            type: experienceType ?? "",
-            situation: situation,
-            task: task,
-            action: action,
-            result: result,
-            competency: selectedCompetency ?? "",
-            score: "11"
-        )
-        
-        onComplete?(experienceData)
+    func saveExperience() async {
+         isLoading = true
+         errorMessage = nil
+         
+         do {
+             // Request 생성
+             let request = CreateExperienceRequest(
+                 action: action,
+                 category: selectedCompetency ?? "",
+                 endDate: isOngoing ? "" : (endDate?.toString() ?? ""),
+                 experienceType: experienceType ?? "",
+                 result: result,
+                 situation: situation,
+                 startDate: startDate?.toString() ?? "",
+                 task: task,
+                 title: experienceTitle
+             )
+             
+             // API 호출
+             let response: ExperienceResponse = try await experienceRepository.createExperience(request)
+             
+             print("경험 등록 성공: \(response)")
+             
+             // 성공하면 그냥 dismiss
+             onComplete?()
+             
+         } catch let error as APIError {
+             handleAPIError(error)
+         } catch {
+             errorMessage = "알 수 없는 오류가 발생했습니다."
+             showError = true
+         }
+         
+         isLoading = false
+     }
+    
+    private func handleAPIError(_ error: APIError) {
+        switch error {
+        case .unauthorized(let message):
+            errorMessage = message ?? "로그인이 필요합니다."
+        case .validationError(let errors):
+            errorMessage = errors.first?.message ?? "입력값을 확인해주세요."
+        case .serverError(let message):
+            errorMessage = message
+        default:
+            errorMessage = "네트워크 오류가 발생했습니다."
+        }
+        showError = true
     }
     
     func loadExampleData() {

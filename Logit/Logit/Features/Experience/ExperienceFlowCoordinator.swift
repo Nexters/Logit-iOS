@@ -9,8 +9,17 @@ import SwiftUI
 
 struct ExperienceFlowCoordinator: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var viewModel = ExperienceFlowViewModel()
-    let onComplete: (ExperienceData) -> Void
+    @StateObject private var viewModel: ExperienceFlowViewModel
+    let onComplete: (() -> Void)?
+    
+    init(onComplete: (() -> Void)? = nil) {
+        self.onComplete = onComplete
+        
+        // Repository 생성 및 주입
+        let networkClient = DefaultNetworkClient()
+        let repository = DefaultExperienceRepository(networkClient: networkClient)
+        _viewModel = StateObject(wrappedValue: ExperienceFlowViewModel(experienceRepository: repository))
+    }
     
     var body: some View {
         NavigationStack(path: $viewModel.path) {
@@ -24,9 +33,9 @@ struct ExperienceFlowCoordinator: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
         .onAppear {
-            viewModel.onComplete = { [dismiss] data in
-                onComplete(data)
-                dismiss()
+            viewModel.onComplete = { [dismiss] in
+                onComplete?()  // 부모에게 성공 알림 
+                dismiss()      // sheet dismiss
             }
         }
     }

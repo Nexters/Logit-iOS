@@ -121,14 +121,8 @@ struct ExperienceSelectionSheet: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
-            ExperienceFlowCoordinator { experienceData in
-                // 경험 추가 후 목록에 추가
-                ExperienceDataStore.shared.experiences.append(experienceData)
-                experiences = ExperienceDataStore.shared.experiences
-                // 자동으로 선택
-                if selectedExperiences.count < maxSelectionCount {
-                    selectedExperiences.insert(experienceData.title)
-                }
+            ExperienceFlowCoordinator {
+                print("경험 등록 완료!")
             }
         }
         .onAppear {

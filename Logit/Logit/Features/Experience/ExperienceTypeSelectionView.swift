@@ -61,24 +61,39 @@ struct ExperienceTypeSelectionView: View {
             }
         
             Button {
-                // TODO: 경험 저장 로직
-                viewModel.saveExperience()
-               
-                
+                Task {
+                    await viewModel.saveExperience()
+                }
             } label: {
-                Text("경험등록")
-                    .typo(.bold_18)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(viewModel.selectedCompetency != nil ? Color.primary100 : Color.gray100)
-                    .cornerRadius(12)
+                if viewModel.isLoading {
+                    ProgressView()
+                        .tint(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                } else {
+                    Text("경험등록")
+                        .typo(.bold_18)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
             }
-            .disabled(viewModel.selectedCompetency == nil)
+            .background(isButtonEnabled ? Color.primary100 : Color.gray100)
+            .cornerRadius(12)
+            .disabled(!isButtonEnabled)
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
         }
+        .alert("오류", isPresented: $viewModel.showError) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
         .navigationBarHidden(true)
+    }
+    
+    private var isButtonEnabled: Bool {
+        viewModel.selectedCompetency != nil && !viewModel.isLoading
     }
 }
 

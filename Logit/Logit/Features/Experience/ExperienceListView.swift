@@ -51,11 +51,8 @@ struct ExperienceListView: View {
         .background(.gray20)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
-            ExperienceFlowCoordinator { experienceData in
-                ExperienceDataStore.shared.experiences.append(experienceData)
-                experiences = ExperienceDataStore.shared.experiences
-                hasData = true
-                experienceCount = experiences.count
+            ExperienceFlowCoordinator {
+                print("경험 등록 완료!")
             }
         }
         .onAppear {
