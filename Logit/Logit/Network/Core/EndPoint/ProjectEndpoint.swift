@@ -21,7 +21,7 @@ enum ProjectEndpoint: Endpoint {
         case .getProjectList(let skip, let limit):
             let skipValue = max(skip, 0) 
             let limitValue = max(1, min(limit, 200))
-            return "/api/v1/projects?skip=\(skipValue)&limit=\(limitValue)"
+            return "/api/v1/projects/?skip=\(skipValue)&limit=\(limitValue)"
         case .getProjectDetail(let id):
             return "/api/v1/projects/\(id)"
         case .updateProject(let id):

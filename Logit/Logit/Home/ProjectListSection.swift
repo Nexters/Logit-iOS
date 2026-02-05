@@ -10,6 +10,8 @@ import SwiftUI
 struct ProjectListSection: View {
     @EnvironmentObject var appState: AppState
     let hasProjects: Bool
+    let projects: [ProjectListItemResponse]
+    let isLoading: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8.adjustedLayout) {
@@ -24,8 +26,13 @@ struct ProjectListSection: View {
             .padding(.horizontal, 20.adjustedLayout)
             
             // 컨텐츠
-            if hasProjects {
-                ProjectListView()
+            if isLoading {
+                // 로딩 중
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.vertical, 60.adjustedLayout)
+            } else if hasProjects {
+                ProjectListView(projects: projects)
                     .padding(.top, 8.adjustedLayout)
             } else {
                 ProjectEmptyView()
@@ -72,30 +79,26 @@ struct ProjectEmptyView: View {
 }
 
 struct ProjectListView: View {
-    // 나중에 실제 데이터로 교체
-    let mockProjects = [
-        ("프로젝트 1", "2024.01.15"),
-        ("프로젝트 2", "2023.12.20"),
-        ("프로젝트 3", "2023.11.05"),
-        ("프로젝트 4", "2023.11.05"),
-        ("프로젝트 5", "2023.11.05")
-    ]
+    let projects: [ProjectListItemResponse]
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(mockProjects.indices, id: \.self) { index in
-                ProjectCardCell(
-                    title: mockProjects[index].0,
-                    date: mockProjects[index].1
-                )
-                
-                // Divider (마지막 셀 제외)
-                if index < mockProjects.count - 1 {
-                    Divider()
-                        .background(Color.gray100)
-                        .padding(.horizontal, 20.adjustedLayout)
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(projects.indices, id: \.self) { index in
+                    ProjectCardCell(
+                        title: projects[index].company,
+                        date: projects[index].updatedAt.toDateString(format: "yyyy.MM.dd")
+                    )
+                    
+                    if index < projects.count - 1 {
+                        Divider()
+                            .background(Color.gray100)
+                            .padding(.horizontal, 20.adjustedLayout)
+                    }
                 }
             }
+            .foregroundStyle(.red)
+            .padding(.bottom, (49 + 20).adjustedLayout)
         }
     }
 }

@@ -12,7 +12,7 @@ struct ProjectListItemResponse: Decodable {
     let company: String
     let jobPosition: String
     let updatedAt: String
-    let questionId: String
+    let questionId: String?
     
     enum CodingKeys: String, CodingKey {
         case id
