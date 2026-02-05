@@ -20,6 +20,10 @@ class ExperienceFlowViewModel: ObservableObject {
     @Published var result: String = ""
     @Published var selectedCompetency: String?
     
+    @Published var startDate: Date?
+    @Published var endDate: Date?
+    @Published var isOngoing: Bool = false
+    
     var onComplete: ((ExperienceData) -> Void)?
     
     // Navigation 함수들
