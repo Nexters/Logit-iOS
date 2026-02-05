@@ -10,6 +10,12 @@ import SwiftUI
 @MainActor
 class AddFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
+    @Published var rootScreen: RootScreen = .applicationInfo
+    
+    enum RootScreen {
+        case applicationInfo
+        case workspace(projectId: String, questions: [QuestionItem])
+    }
     
     
     // Step 1: 지원기업 정보
@@ -79,10 +85,10 @@ class AddFlowViewModel: ObservableObject {
             print("프로젝트 ID: \(response.id)")
             
             // TODO: 성공 후 처리 (예: Workspace로 이동)
-            path.append(AddFlowRoute.workspace(
-                           questions: questions,
-                           projectId: response.id
-                       ))
+            rootScreen = .workspace(projectId: response.id, questions: questions)
+                       
+            //  스택 초기화
+            path = NavigationPath()
             
         } catch {
             print(" 프로젝트 생성 실패: \(error)")
