@@ -21,7 +21,7 @@ class DefaultSSEClient: SSEClient {
     private let timeoutInterval: TimeInterval
     
     init(
-        baseURL: String = "https://api.example.com",
+        baseURL: String = Config.baseURL,
         tokenManager: TokenManager = .shared,
         timeoutInterval: TimeInterval = 120  // 기본 2분
     ) {

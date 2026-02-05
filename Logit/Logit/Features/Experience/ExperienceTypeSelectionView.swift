@@ -12,15 +12,15 @@ struct ExperienceTypeSelectionView: View {
 //    @Environment(\.dismiss) var dismiss
     
     let competencies = [
-        CompetencyOption(icon: "고객이해력", title: "고객이해력"),
-        CompetencyOption(icon: "전문성", title: "전문성"),
-        CompetencyOption(icon: "소통력", title: "소통력"),
-        CompetencyOption(icon: "실행력", title: "실행력"),
-        CompetencyOption(icon: "분석력", title: "분석력"),
-        CompetencyOption(icon: "문제해결력", title: "문제해결력"),
-        CompetencyOption(icon: "적응력", title: "적응력"),
-        CompetencyOption(icon: "책임감", title: "책임감")
-    ]
+           CompetencyOption(icon: "고객이해력", displayTitle: "고객이해력", apiValue: "고객 가치 지향"),
+           CompetencyOption(icon: "전문성", displayTitle: "전문성", apiValue: "기술적 전문성"),
+           CompetencyOption(icon: "소통력", displayTitle: "소통력", apiValue: "협력적 소통"),
+           CompetencyOption(icon: "실행력", displayTitle: "실행력", apiValue: "주도적 실행력"),
+           CompetencyOption(icon: "분석력", displayTitle: "분석력", apiValue: "논리적 분석력"),
+           CompetencyOption(icon: "문제해결력", displayTitle: "문제해결력", apiValue: "창의적 문제해결"),
+           CompetencyOption(icon: "적응력", displayTitle: "적응력", apiValue: "유연한 적응력"),
+           CompetencyOption(icon: "책임감", displayTitle: "책임감", apiValue: "끈기있는 책임감")
+       ]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -45,13 +45,13 @@ struct ExperienceTypeSelectionView: View {
                         .padding(.top, 3)
                     
                     FlowLayout(spacing: 8) {
-                        ForEach(competencies, id: \.title) { competency in
+                        ForEach(competencies, id: \.displayTitle) { competency in
                             CompetencyChip(
                                 icon: competency.icon,
-                                title: competency.title,
-                                isSelected: viewModel.selectedCompetency == competency.title
+                                title: competency.displayTitle,
+                                isSelected: viewModel.selectedCompetency == competency.apiValue
                             ) {
-                                viewModel.selectedCompetency = competency.title
+                                viewModel.selectedCompetency = competency.apiValue
                             }
                         }
                     }
@@ -100,7 +100,8 @@ struct ExperienceTypeSelectionView: View {
 // 역량 옵션 모델
 struct CompetencyOption {
     let icon: String
-    let title: String
+    let displayTitle: String  // UI에 표시될 이름
+    let apiValue: String      // 서버에 보낼 값
 }
 
 // 아이콘이 포함된 칩 버튼
