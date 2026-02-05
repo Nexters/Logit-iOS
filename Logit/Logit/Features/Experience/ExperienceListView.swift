@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct ExperienceListView: View {
-    @State private var experiences: [ExperienceData] = ExperienceDataStore.shared.experiences
-    
-    @State private var experienceCount: Int = 0
-    @State private var hasData: Bool = true
+    @StateObject private var viewModel: ExperienceListViewModel
     @State private var showExperienceAddFlow = false
+    
+    init() {
+        let networkClient = DefaultNetworkClient()
+        let repository = DefaultExperienceRepository(networkClient: networkClient)
+        _viewModel = StateObject(wrappedValue: ExperienceListViewModel(experienceRepository: repository))
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -22,45 +25,77 @@ struct ExperienceListView: View {
                 }
             )
             
-            if hasData {
-                ExperienceCountLabel(count: experienceCount)
+            if !viewModel.experiences.isEmpty {
+                ExperienceCountLabel(count: viewModel.experiences.count)
             }
             
-            if hasData {
-                // 경험 리스트
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView()
+                Spacer()
+            } else if viewModel.experiences.isEmpty {
+                EmptyExperienceView {
+                    showExperienceAddFlow = true
+                }
+            } else {
                 ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(experiences, id: \.title) { experience in
+                    LazyVStack(spacing: 12) {
+                        ForEach(viewModel.experiences, id: \.id) { experience in
                             ExperienceListCell(experience: experience)
                                 .onTapGesture {
-                                    // TODO: 경험 상세보기
                                     print("선택된 경험: \(experience.title)")
                                 }
+                                .onAppear {
+                                    // 마지막에서 3개 전에 미리 로드
+                                    if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
+                                       lastIndex >= viewModel.experiences.count - 3 {
+                                        Task {
+                                            await viewModel.loadMore()
+                                        }
+                                    }
+                                }
+                        }
+                        
+                        // 로딩 인디케이터
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .padding(.vertical, 20)
+                        } else if viewModel.showError && !viewModel.experiences.isEmpty {
+                            Button("재시도") {
+                                Task {
+                                    await viewModel.loadMore()
+                                }
+                            }
+                            .padding(.vertical, 20)
                         }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 49 + 20)
                 }
-            } else {
-                EmptyExperienceView {
-                    showExperienceAddFlow = true
+                .refreshable {
+                    // Pull to Refresh
+                    await viewModel.fetchExperiences()
                 }
             }
         }
         .background(.gray20)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
-            ExperienceFlowCoordinator { experienceData in
-                ExperienceDataStore.shared.experiences.append(experienceData)
-                experiences = ExperienceDataStore.shared.experiences
-                hasData = true
-                experienceCount = experiences.count
+            ExperienceFlowCoordinator {
+                Task {
+                    await viewModel.fetchExperiences()
+                }
             }
         }
-        .onAppear {
-            experiences = ExperienceDataStore.shared.experiences 
-            experienceCount = experiences.count
+        .alert("오류", isPresented: $viewModel.showError) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .task {
+            // 첫 로드
+            await viewModel.fetchExperiences()
         }
     }
 }
@@ -148,38 +183,34 @@ struct EmptyExperienceView: View {
 }
 
 struct ExperienceListCell: View {
-    let experience: ExperienceData
+    let experience: ExperienceResponse
+    
+    // 태그 파싱 (쉼표로 분리)
+    private var parsedTags: [String] {
+        experience.tags
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+    
+    // Category를 짧은 이름으로 변환
+    private var displayCategory: String {
+        CompetencyMapper.toDisplayTitle(experience.category)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 상단: 제목과 점수
-            HStack {
-                Text(experience.title)
-                    .typo(.medium_15)
-                    .foregroundColor(.primary500)
-                    .lineLimit(1)
-                
-                Spacer()
-                
-                Text("\(experience.score)점")
-                    .typo(.medium_13)
-                    .foregroundColor(.primary200)
-            }
+            // 상단: 제목
+            Text(experience.title)
+                .typo(.medium_15)
+                .foregroundColor(.primary500)
+                .lineLimit(1)
             
-            // 하단: 태그들
-            HStack(spacing: 8) {
-                // 핵심 역량 태그
-                ExperienceTag(
-                    text: experience.competency,
-                    icon: experience.competency,
-                    isCompetency: true  // 역량 태그 표시
-                )
-                
-                // 경험 유형 태그
-                ExperienceTag(text: experience.type)
-                
-                Spacer()
-            }
+            // 하단: 태그들 (가변 레이아웃)
+            AdaptiveTagsView(
+                competencyTag: displayCategory,
+                tags: parsedTags
+            )
         }
         .padding(16)
         .background(Color.white)
@@ -188,6 +219,67 @@ struct ExperienceListCell: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray70, lineWidth: 1)
         )
+    }
+}
+
+struct AdaptiveTagsView: View {
+    let competencyTag: String
+    let tags: [String]
+    
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            // 1순위: 모든 태그 표시
+            allTagsView
+            
+            // 2순위: 태그 개수에 따라 단계적으로 줄이기
+            ForEach((0..<tags.count).reversed(), id: \.self) { count in
+                limitedTagsView(count: count)
+            }
+        }
+    }
+    
+    // 모든 태그 표시
+    private var allTagsView: some View {
+        HStack(spacing: 8) {
+            ExperienceTag(
+                text: competencyTag,
+                icon: competencyTag,
+                isCompetency: true
+            )
+            
+            ForEach(tags, id: \.self) { tag in
+                ExperienceTag(text: tag)
+            }
+            
+            Spacer()
+        }
+    }
+    
+    // 제한된 개수만 표시
+    private func limitedTagsView(count: Int) -> some View {
+        HStack(spacing: 8) {
+            ExperienceTag(
+                text: competencyTag,
+                icon: competencyTag,
+                isCompetency: true
+            )
+            
+            ForEach(tags.prefix(count), id: \.self) { tag in
+                ExperienceTag(text: tag)
+            }
+            
+            if tags.count > count {
+                Text("+\(tags.count - count)")
+                    .typo(.regular_12)
+                    .foregroundColor(.gray400)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(Color.gray50)
+                    .cornerRadius(6)
+            }
+            
+            Spacer()
+        }
     }
 }
 
@@ -208,10 +300,12 @@ struct ExperienceTag: View {
             Text(text)
                 .typo(.regular_12)
                 .foregroundColor(.primary600)
+                .lineLimit(1)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(isCompetency ? Color(hex: "E3F5FF") : Color.gray50)
         .cornerRadius(6)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }

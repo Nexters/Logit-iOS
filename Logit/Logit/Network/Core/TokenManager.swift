@@ -15,7 +15,7 @@ class TokenManager {
     private let refreshTokenKey = "refreshToken"
     
     // 메모리 캐시 (매번 Keychain 접근 방지)
-    private var _accessToken: String?
+    private var _accessToken: String? = Config.testAccessToken
     private var _refreshToken: String?
     
     var accessToken: String? {
@@ -40,6 +40,7 @@ class TokenManager {
             try keychain.save(key: refreshTokenKey, value: refresh)
             _accessToken = access
             _refreshToken = refresh
+            NetworkLogger.logTokenStatus(accessToken: access, refreshToken: refresh)
         } catch {
             print("Keychain save error: \(error)")
         }
@@ -49,6 +50,8 @@ class TokenManager {
         do {
             try keychain.save(key: accessTokenKey, value: token)
             _accessToken = token
+            
+            NetworkLogger.logTokenStatus(accessToken: token, refreshToken: _refreshToken)
         } catch {
             print("Keychain update error: \(error)")
         }
@@ -60,6 +63,7 @@ class TokenManager {
             try keychain.delete(key: refreshTokenKey)
             _accessToken = nil
             _refreshToken = nil
+            NetworkLogger.logTokenStatus(accessToken: nil, refreshToken: nil)
         } catch {
             print("Keychain delete error: \(error)")
         }

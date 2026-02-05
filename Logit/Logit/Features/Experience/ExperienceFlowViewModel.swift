@@ -20,7 +20,23 @@ class ExperienceFlowViewModel: ObservableObject {
     @Published var result: String = ""
     @Published var selectedCompetency: String?
     
-    var onComplete: ((ExperienceData) -> Void)?
+    @Published var startDate: Date?
+    @Published var endDate: Date?
+    @Published var isOngoing: Bool = false
+    
+    var onComplete: (() -> Void)?
+    
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
+    @Published var isExampleLoaded: Bool = false
+    @Published var isStarExampleLoaded: Bool = false
+    
+    private let experienceRepository: ExperienceRepository
+    
+    init(experienceRepository: ExperienceRepository) {
+        self.experienceRepository = experienceRepository
+    }
     
     // Navigation 함수들
     func navigateToStarMethod() {
@@ -37,31 +53,84 @@ class ExperienceFlowViewModel: ObservableObject {
         }
     }
     
-    func saveExperience() {
-        print("=== 경험 등록 완료 ===")
-        print("경험 제목: \(experienceTitle)")
-        print("경험 유형: \(experienceType ?? "미선택")")
-        print("\n[STAR 분석]")
-        print("Situation: \(situation)")
-        print("Task: \(task)")
-        print("Action: \(action)")
-        print("Result: \(result)")
-        print("\n핵심 역량: \(selectedCompetency ?? "미선택")")
-        print("==================")
-        
-        let experienceData = ExperienceData(
-            title: experienceTitle,
-            type: experienceType ?? "",
-            situation: situation,
-            task: task,
-            action: action,
-            result: result,
-            competency: selectedCompetency ?? "",
-            score: "11"
-        )
-        
-        onComplete?(experienceData)
+    func saveExperience() async {
+         isLoading = true
+         errorMessage = nil
+         
+         do {
+             // Request 생성
+             let request = CreateExperienceRequest(
+                 action: action,
+                 category: selectedCompetency ?? "",
+                 endDate: isOngoing ? "" : (endDate?.toString() ?? ""),
+                 experienceType: experienceType ?? "",
+                 result: result,
+                 situation: situation,
+                 startDate: startDate?.toString() ?? "",
+                 task: task,
+                 title: experienceTitle
+             )
+             
+             // API 호출
+             let response: ExperienceResponse = try await experienceRepository.createExperience(request)
+             
+             print("경험 등록 성공: \(response)")
+             
+             // 성공하면 그냥 dismiss
+             onComplete?()
+             
+         } catch let error as APIError {
+             handleAPIError(error)
+         } catch {
+             errorMessage = "알 수 없는 오류가 발생했습니다."
+             showError = true
+         }
+         
+         isLoading = false
+     }
+    
+    private func handleAPIError(_ error: APIError) {
+        switch error {
+        case .unauthorized(let message):
+            errorMessage = message ?? "로그인이 필요합니다."
+        case .validationError(let errors):
+            errorMessage = errors.first?.message ?? "입력값을 확인해주세요."
+        case .serverError(let message):
+            errorMessage = message
+        default:
+            errorMessage = "네트워크 오류가 발생했습니다."
+        }
+        showError = true
     }
+    
+    func loadExampleData() {
+        guard !isExampleLoaded else { return }
+        
+        experienceTitle = "iOS 앱 개발 인턴"
+        experienceType = "인턴"
+        
+        // 날짜 예시 (2024년 1월 1일 ~ 2024년 6월 30일)
+        let calendar = Calendar.current
+        startDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1))
+        endDate = calendar.date(from: DateComponents(year: 2024, month: 6, day: 30))
+        isOngoing = false
+        isExampleLoaded = true
+    }
+    
+    // STAR 기반 경험 정리 예시 데이터 불러오기
+        func loadStarExampleData() {
+            guard !isStarExampleLoaded else { return }
+            situation = "앱 사용자 이탈률이 지속적으로 증가하여 월 평균 20%의 사용자가 앱을 삭제하는 문제가 발생했습니다. 데이터 분석 결과, 첫 로그인 후 3일 이내 이탈이 가장 높았습니다."
+            
+            task = "사용자 이탈률을 분석하고, 3개월 내 이탈률을 10% 이하로 낮추는 것이 목표였습니다. 특히 신규 사용자의 온보딩 경험을 개선해야 했습니다."
+            
+            action = "Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석했습니다. 온보딩 프로세스를 3단계에서 5단계로 세분화하고, 각 단계마다 핵심 기능을 직접 체험할 수 있도록 인터랙티브 튜토리얼을 구현했습니다. SwiftUI를 활용해 부드러운 애니메이션과 직관적인 UI를 제공했습니다."
+            
+            result = "3개월 후 신규 사용자 이탈률이 20%에서 8%로 감소했습니다. 특히 온보딩 완료율이 45%에서 78%로 증가했고, 첫 3일 내 핵심 기능 사용률이 2배 향상되었습니다. 이 경험을 통해 데이터 기반 의사결정의 중요성과 사용자 경험 개선이 비즈니스 성과에 직접적인 영향을 미친다는 것을 배웠습니다."
+            
+            isStarExampleLoaded = true
+        }
+    
     
     @ViewBuilder
     func destination(for route: ExperienceFlowRoute) -> some View {

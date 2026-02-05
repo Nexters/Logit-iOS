@@ -13,7 +13,7 @@ class DefaultNetworkClient: NetworkClient {
     private var refreshTask: Task<Void, Error>?
     
     init(
-        baseURL: String = "https://api.example.com",
+        baseURL: String = Config.baseURL,
         tokenManager: TokenManager = .shared
     ) {
         self.baseURL = baseURL
@@ -56,6 +56,8 @@ class DefaultNetworkClient: NetworkClient {
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
         
+        NetworkLogger.logRequest(request, body: body)
+        
         // 3. 요청 실행
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -63,6 +65,8 @@ class DefaultNetworkClient: NetworkClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
+        
+        NetworkLogger.logResponse(httpResponse, data: data)
         
         // 5. 상태 코드 처리
         switch httpResponse.statusCode {
