@@ -55,3 +55,7 @@ extension String {
            return date.toString(format: format)
        }
 }
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
+}

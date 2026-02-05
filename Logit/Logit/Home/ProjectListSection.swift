@@ -86,8 +86,7 @@ struct ProjectListView: View {
             VStack(spacing: 0) {
                 ForEach(projects.indices, id: \.self) { index in
                     ProjectCardCell(
-                        title: projects[index].company,
-                        date: projects[index].updatedAt.toDateString(format: "yyyy.MM.dd")
+                        project: projects[index]
                     )
                     
                     if index < projects.count - 1 {
@@ -97,25 +96,24 @@ struct ProjectListView: View {
                     }
                 }
             }
-            .foregroundStyle(.red)
             .padding(.bottom, (49 + 20).adjustedLayout)
         }
     }
 }
 
 struct ProjectCardCell: View {
-    let title: String
-    let date: String
+    @EnvironmentObject var appState: AppState
+    let project: ProjectListItemResponse
     
     var body: some View {
         HStack(spacing: 12.adjustedLayout) {
-            // 세로 막대기 (태그)
+            // 세로 막대기
             RoundedRectangle(cornerRadius: 2.adjustedLayout)
                 .fill(.primary70)
                 .frame(width: 3.adjustedWidth, height: 24.adjustedHeight)
             
             // 타이틀
-            Text(title)
+            Text(project.company)
                 .typo(.medium_15)
                 .foregroundStyle(.black)
                 .lineLimit(1)
@@ -123,12 +121,16 @@ struct ProjectCardCell: View {
             Spacer()
             
             // 날짜
-            Text(date)
+            Text(project.updatedAt.toDateString(format: "yyyy.MM.dd"))
                 .typo(.regular_14_140)
                 .foregroundStyle(.gray100)
         }
         .padding(.horizontal, 20.adjustedLayout)
         .padding(.vertical, 17.5.adjustedLayout)
         .background(Color.white)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            appState.openWorkspace(projectId: project.id)
+        }
     }
 }

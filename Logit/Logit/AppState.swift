@@ -13,6 +13,7 @@ class AppState: ObservableObject {
     @Published var isShowingSignUpSheet: Bool = false
     @Published var isShowingAddFlow: Bool = false
     @Published var isShowingSettings = false
+    @Published var selectedProjectId: String?
     
     enum AppPhase {
         case splash
@@ -100,5 +101,9 @@ class AppState: ObservableObject {
     
     func startSettings() {
         isShowingSettings = true
+    }
+    
+    func openWorkspace(projectId: String) {
+        selectedProjectId = projectId
     }
 }

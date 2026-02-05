@@ -93,6 +93,9 @@ struct CoverLetterWorkspaceView: View {
                 }
             )
         }
+        .task {
+          //  await viewModel.fetchProjectDetail()
+        }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {

@@ -49,6 +49,11 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $appState.isShowingAddFlow) {
             AddFlowCoordinator()
         }
+        .fullScreenCover(item: $appState.selectedProjectId) { projectId in
+            CoverLetterWorkspaceView(
+                questions: [], projectId: projectId
+            )
+        }
         .fullScreenCover(isPresented: $appState.isShowingSettings) {
             SettingsView()
         }
