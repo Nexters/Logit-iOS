@@ -31,20 +31,28 @@ struct ExperienceStarMethodView: View {
                         Spacer()
                         
                         Button {
-                            // 예시 불러오기 액션
                             viewModel.loadStarExampleData()
                         } label: {
-                            Text("예시 불러오기")
-                                .typo(.regular_12)
-                                .foregroundColor(.primary400)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(.gray70, lineWidth: 1)
-                                        .background(.gray20)
-                                )
+                            if viewModel.isStarExampleLoaded {
+                                Text("작성된 예시로 등록해보세요")
+                                    .typo(.regular_12)
+                                    .foregroundColor(.primary100)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                            } else {
+                                Text("예시 불러오기")
+                                    .typo(.regular_12)
+                                    .foregroundColor(.primary400)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(.gray70, lineWidth: 1)
+                                            .background(.gray20)
+                                    )
+                            }
                         }
+                        .disabled(viewModel.isStarExampleLoaded)
                     }
                     .padding(.top, 13.25)
                     
