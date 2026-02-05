@@ -16,7 +16,7 @@ struct ExperienceInfoInputView: View {
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "경험 등록",
+                title: "",
                 showBackButton: true,
                 onBackTapped: { dismiss() }
             )
@@ -34,6 +34,7 @@ struct ExperienceInfoInputView: View {
                         
                         Button {
                             // 예시 불러오기 액션
+                            viewModel.loadExampleData()
                         } label: {
                             Text("예시 불러오기")
                                 .typo(.regular_12)
@@ -380,6 +381,20 @@ struct DateRangeInputView: View {
                         date: field == .start ? $startDate : $endDate,
                         isValid: isValid
                     )
+                }
+            // 시작 날짜가 변경될 때
+                .onChange(of: startDate) { oldValue, newValue in
+                    if field == .start, let date = newValue {
+                        text.wrappedValue = formatDateToString(date)
+                        isValid.wrappedValue = true
+                    }
+                }
+            // 종료 날짜가 변경될 때
+                .onChange(of: endDate) { oldValue, newValue in
+                    if field == .end, let date = newValue {
+                        text.wrappedValue = formatDateToString(date)
+                        isValid.wrappedValue = true
+                    }
                 }
                 .onAppear {
                     // 초기 데이터 바인딩

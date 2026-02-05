@@ -67,6 +67,18 @@ class ExperienceFlowViewModel: ObservableObject {
         onComplete?(experienceData)
     }
     
+    func loadExampleData() {
+        experienceTitle = "iOS 앱 개발 인턴"
+        experienceType = "인턴"
+        
+        // 날짜 예시 (2024년 1월 1일 ~ 2024년 6월 30일)
+        let calendar = Calendar.current
+        startDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1))
+        endDate = calendar.date(from: DateComponents(year: 2024, month: 6, day: 30))
+        isOngoing = false
+    }
+    
+    
     @ViewBuilder
     func destination(for route: ExperienceFlowRoute) -> some View {
         switch route {
