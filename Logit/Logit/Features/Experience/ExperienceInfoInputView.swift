@@ -26,11 +26,30 @@ struct ExperienceInfoInputView: View {
                     PageIndicator(currentPage: 1, totalPages: 3)
                         .padding(.top, 16)
                     
-                    Text("경험 정보 입력")
-                        .typo(.bold_18)
-                        .padding(.top, 13.25)
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("경험 정보 입력")
+                            .typo(.bold_18)
+                        
+                        Spacer()
+                        
+                        Button {
+                            // 예시 불러오기 액션
+                        } label: {
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
+                        }
+                    }
+                    .padding(.top, 13.25)
                     
-                    Text("경험에 대한 기본 정보를 입력해주세요")
+                    Text("등록하는 경험의 정보를 알려주세요")
                         .typo(.regular_15)
                         .foregroundColor(.gray300)
                         .padding(.top, 3)
