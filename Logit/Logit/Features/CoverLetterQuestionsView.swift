@@ -16,10 +16,10 @@ struct CoverLetterQuestionsView: View {
     private let maxQuestionsCount = 5 // 최대 문항 개수
     
     private var isFormValid: Bool {
-         questions.allSatisfy { question in
-             !question.title.isEmpty && !question.characterLimit.isEmpty
-         }
-     }
+        viewModel.questions.allSatisfy { question in
+            !question.title.isEmpty && !question.characterLimit.isEmpty
+        }
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -48,12 +48,12 @@ struct CoverLetterQuestionsView: View {
                             QuestionInputRow(
                                 questionNumber: index + 1,
                                 questionTitle: Binding(
-                                    get: { questions[index].title },
-                                    set: { questions[index].title = $0 }
+                                    get: { viewModel.questions[index].title },
+                                    set: { viewModel.questions[index].title = $0 }
                                 ),
                                 characterLimit: Binding(
-                                    get: { questions[index].characterLimit },
-                                    set: { questions[index].characterLimit = $0 }
+                                    get: { viewModel.questions[index].characterLimit },
+                                    set: { viewModel.questions[index].characterLimit = $0 }
                                 )
                             )
                         }
@@ -61,7 +61,7 @@ struct CoverLetterQuestionsView: View {
                         // 추가하기 버튼 (최대 개수 미만일 때만 표시)
                         if questions.count < maxQuestionsCount {
                             Button {
-                                questions.append(QuestionItem())
+                                viewModel.questions.append(QuestionItem())
                             } label: {
                                 HStack(spacing: 8) {
                                     Image("plus_selected")
@@ -89,7 +89,9 @@ struct CoverLetterQuestionsView: View {
                     
                     Button {
                         // TODO: 완료 액션
-                        viewModel.navigateToCoverLetterWorkspace(questions: questions)
+                        Task {
+                            await viewModel.createProject()
+                        }
                     } label: {
                         Text("프로젝트 생성")
                             .typo(.bold_18)

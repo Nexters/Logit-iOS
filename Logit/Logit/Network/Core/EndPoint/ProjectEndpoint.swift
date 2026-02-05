@@ -17,7 +17,7 @@ enum ProjectEndpoint: Endpoint {
     var path: String {
         switch self {
         case .createProject:
-            return "/api/v1/projects"
+            return "/api/v1/projects/"
         case .getProjectList(let skip, let limit):
             let skipValue = max(skip, 0) 
             let limitValue = max(1, min(limit, 200))

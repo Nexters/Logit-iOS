@@ -10,6 +10,7 @@ import SwiftUI
 struct CoverLetterWorkspaceView: View {
     @Environment(\.dismiss) var dismiss
     let questions: [QuestionItem]
+    let projectId: String
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
     @State private var hasData: Bool = false
@@ -73,6 +74,7 @@ struct CoverLetterWorkspaceView: View {
                     } else {
                         EmptyWorkspaceView {
                             print("경험 선택 버튼 클릭")
+                            print("현재 프로젝트 ID: \(projectId)")
                             showExperienceSelection = true
                         }
                     }
@@ -84,6 +86,7 @@ struct CoverLetterWorkspaceView: View {
             ChatInputBar(
                 onSend: { message in
                     print("전송: \(message)")
+                    print("프로젝트 ID: \(projectId)")
                 },
                 onAttachmentTapped: {
                     showExperienceSelection = true 

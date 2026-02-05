@@ -44,7 +44,7 @@ struct ApplicationInfoView: View {
                             placeholder: "예) 로짓 컴퍼니",
                             isRequired: true,
                             maxLength: 100,
-                            text: $companyName
+                            text: $viewModel.companyName
                         )
                         
                         InputFieldView(
@@ -52,7 +52,7 @@ struct ApplicationInfoView: View {
                             placeholder: "예) 프로덕트 디자이너",
                             isRequired: true,
                             maxLength: 100,
-                            text: $position
+                            text: $viewModel.jobPosition
                         )
                         
                         InputFieldView(
@@ -61,7 +61,7 @@ struct ApplicationInfoView: View {
                             isRequired: true,
                             maxLength: 3000,
                             largeHeight: 90,
-                            text: $department
+                            text: $viewModel.recruitNotice
                         )
                         
                         InputFieldView(
@@ -69,7 +69,7 @@ struct ApplicationInfoView: View {
                             placeholder: "기업의 인재상이나 핵심가치를 입력하세요",
                             isRequired: false,
                             maxLength: 1000,
-                            text: $experienceLevel
+                            text: $viewModel.companyTalent
                         )
                     }
                     .padding(.top, 24)
@@ -101,7 +101,9 @@ struct ApplicationInfoView: View {
     }
     
     private var isFormValid: Bool {
-        !companyName.isEmpty && !position.isEmpty && !department.isEmpty
+        !viewModel.companyName.isEmpty &&
+        !viewModel.jobPosition.isEmpty &&
+        !viewModel.recruitNotice.isEmpty
     }
 }
 

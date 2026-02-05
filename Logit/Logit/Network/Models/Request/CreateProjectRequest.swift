@@ -10,7 +10,7 @@ import Foundation
 struct CreateProjectRequest: Encodable {
     let company: String
     let companyTalent: String
-    let dueDate: String
+    let dueDate: String?
     let jobPosition: String
     let questions: [QuestionRequest]
     let recruitNotice: String
