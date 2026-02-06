@@ -20,7 +20,7 @@ struct AddFlowCoordinator: View {
                     
                 case .workspace(let projectId, let questions):
                     CoverLetterWorkspaceView(
-                        questions: questions, projectId: projectId
+                        projectId: projectId, questions: questions
                     )
                 }
             }

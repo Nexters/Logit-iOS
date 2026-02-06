@@ -10,7 +10,7 @@ import Foundation
 struct QuestionResponse: Decodable {
     let answer: String?
     let id: String
-    let maxLength: Int
+    let maxLength: Int?
     let question: String
     
     enum CodingKeys: String, CodingKey {

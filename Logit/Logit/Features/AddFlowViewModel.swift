@@ -86,7 +86,7 @@ class AddFlowViewModel: ObservableObject {
             print("프로젝트 ID: \(response.id)")
             
             print("문항 등록 시작")
-            try await createQuestionsInParallel(projectId: response.id)
+          //  try await createQuestionsInParallel(projectId: response.id)
             print("모든 문항 등록 완료!")
             
             // TODO: 성공 후 처리 (예: Workspace로 이동)
@@ -148,11 +148,10 @@ class AddFlowViewModel: ObservableObject {
         case .coverLetterQuestions:
             CoverLetterQuestionsView()
             
-        case .workspace(let questions, let projectId):
-               CoverLetterWorkspaceView(
-                   questions: questions,
-                   projectId: projectId
-               )
+//        case .workspace(let questions, let projectId):
+//               CoverLetterWorkspaceView(
+//                projectId: projectId, questions: questions
+//               )
         }
     }
 }

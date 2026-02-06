@@ -20,7 +20,7 @@ enum QuestionEndpoint: Endpoint {
             return "/api/v1/projects/\(projectId)/questions/"
             
         case .getQuestionList(let projectId):
-            return "/api/v1/projects/\(projectId)/questions"
+            return "/api/v1/projects/\(projectId)/questions/"
             
         case .getQuestionDetail(let projectId, let questionId):
             return "/api/v1/projects/\(projectId)/questions/\(questionId)"

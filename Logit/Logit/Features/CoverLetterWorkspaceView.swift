@@ -9,7 +9,8 @@ import SwiftUI
 
 struct CoverLetterWorkspaceView: View {
     @Environment(\.dismiss) var dismiss
-    let questions: [QuestionItem]
+    @StateObject private var viewModel: WorkspaceViewModel
+    let questions: [QuestionItem]  // AddFlow에서 전달받은 임시 데이터
     let projectId: String
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
@@ -20,19 +21,37 @@ struct CoverLetterWorkspaceView: View {
         case chat, coverLetter
     }
     
+    init(projectId: String, questions: [QuestionItem]) {
+        self.projectId = projectId
+        self.questions = questions
+        _viewModel = StateObject(wrappedValue: WorkspaceViewModel(projectId: projectId))
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "프로젝트 생성",
+                title: viewModel.navigationTitle,  //  동적 타이틀
                 showBackButton: true,
                 onBackTapped: { dismiss() }
             )
             
-            // 문항 탭 바
-            QuestionTabBar(
-                questionCount: questions.count,
-                selectedIndex: $selectedQuestionIndex
-            )
+            // 문항 탭 바 (API에서 가져온 데이터)
+            if !viewModel.questionList.isEmpty {
+                QuestionTabBar(
+                    questionCount: viewModel.questionList.count,
+                    selectedIndex: $selectedQuestionIndex
+                )
+            } else if viewModel.isLoading {
+                // 로딩 중
+                ProgressView()
+                    .padding(.vertical, 12)
+            } else {
+                // 임시: AddFlow에서 전달받은 questions 사용
+                QuestionTabBar(
+                    questionCount: questions.count,
+                    selectedIndex: $selectedQuestionIndex
+                )
+            }
             
             // 채팅 / 자기소개서 선택 버튼
             HStack(spacing: 8) {
@@ -63,18 +82,25 @@ struct CoverLetterWorkspaceView: View {
                     if hasData {
                         if selectedView == .chat {
                             ChatMessagesView(
-                                   onUpdateCoverLetter: {
-                                       selectedView = .coverLetter
-                                   }
-                               )
+                                onUpdateCoverLetter: {
+                                    selectedView = .coverLetter
+                                }
+                            )
                         } else {
-                            // TODO: 자기소개서 뷰
                             CoverLetterContentView()
                         }
                     } else {
                         EmptyWorkspaceView {
                             print("경험 선택 버튼 클릭")
                             print("현재 프로젝트 ID: \(projectId)")
+                            
+                            //  현재 선택된 문항 정보
+                            if !viewModel.questionList.isEmpty {
+                                let currentQuestion = viewModel.questionList[selectedQuestionIndex]
+                                print("현재 문항 ID: \(currentQuestion.id)")
+                                print("현재 문항: \(currentQuestion.question)")
+                            }
+                            
                             showExperienceSelection = true
                         }
                     }
@@ -82,20 +108,30 @@ struct CoverLetterWorkspaceView: View {
             }
             .scrollToMinDistance(minDisntance: 32)
             
-            // 채팅 입력창 (항상 하단 고정)
+            // 채팅 입력창
             ChatInputBar(
                 onSend: { message in
                     print("전송: \(message)")
                     print("프로젝트 ID: \(projectId)")
+                    
+                    // 현재 선택된 문항 정보
+                    if !viewModel.questionList.isEmpty {
+                        let currentQuestion = viewModel.questionList[selectedQuestionIndex]
+                        print("문항 ID: \(currentQuestion.id)")
+                    }
                 },
                 onAttachmentTapped: {
-                    showExperienceSelection = true 
+                    showExperienceSelection = true
                 }
             )
         }
         .task {
-          //  await viewModel.fetchProjectDetail()
-        }
+             async let projectDetail: () = viewModel.fetchProjectDetail()
+             async let questionList: () = viewModel.fetchQuestionList()
+             
+             await projectDetail
+             await questionList
+         }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {
@@ -104,7 +140,6 @@ struct CoverLetterWorkspaceView: View {
                 hasData: $hasData,
                 onSelectExperiences: { selectedExperiences in
                     print("선택된 경험들: \(selectedExperiences.map { $0.title })")
-                    // TODO: 선택된 경험들로 채팅 시작
                 }
             )
         }

@@ -51,7 +51,7 @@ struct MainTabView: View {
         }
         .fullScreenCover(item: $appState.selectedProjectId) { projectId in
             CoverLetterWorkspaceView(
-                questions: [], projectId: projectId
+                projectId: projectId, questions: []
             )
         }
         .fullScreenCover(isPresented: $appState.isShowingSettings) {
