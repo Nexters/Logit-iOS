@@ -783,11 +783,7 @@ struct CoverLetterContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // 제목
-                Text(question)
-                    .typo(.semibold_18)
-                    .foregroundColor(.black)
-                    .padding(.top, 20)
-                
+
                 // 자기소개서 본문
                 if let answer = answer, !answer.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
