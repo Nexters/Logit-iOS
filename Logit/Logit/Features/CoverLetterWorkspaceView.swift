@@ -20,6 +20,7 @@ struct CoverLetterWorkspaceView: View {
     
     @State private var hasSelectedExperiences: Bool = false
     @State private var selectedExperienceIds: [String] = []
+    @State private var currentChatViewModel: ChatMessagesViewModel?
     
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
@@ -113,21 +114,14 @@ struct CoverLetterWorkspaceView: View {
                                 questionId: question.id,
                                 hasSelectedExperiences: $hasSelectedExperiences,
                                 selectedExperienceIds: $selectedExperienceIds,
+                                viewModelRef: $currentChatViewModel,  
                                 onUpdateCoverLetter: {
                                     selectedView = .coverLetter
                                 },
                                 onShowExperienceSelection: {
                                     showExperienceSelection = true
                                 },
-                                onGenerateDraft: {
-                                    Task {
-                                        await sendMessage(
-                                            questionId: question.id,
-                                            content: nil,  // 초안 생성은 content 없음
-                                            experienceIds: selectedExperienceIds
-                                        )
-                                    }
-                                }
+                                onGenerateDraft: {}
                             )
                         }
                     } else {
@@ -431,12 +425,14 @@ struct ChatMessagesView: View {
     let onGenerateDraft: () -> Void
     
     @StateObject private var viewModel: ChatMessagesViewModel
+    @Binding var viewModelRef: ChatMessagesViewModel?
     
     init(
         projectId: String,
         questionId: String,
         hasSelectedExperiences: Binding<Bool>,
         selectedExperienceIds: Binding<[String]>,
+        viewModelRef: Binding<ChatMessagesViewModel?>,
         onUpdateCoverLetter: @escaping () -> Void,
         onShowExperienceSelection: @escaping () -> Void,
         onGenerateDraft: @escaping () -> Void
@@ -445,6 +441,7 @@ struct ChatMessagesView: View {
         self.questionId = questionId
         self._hasSelectedExperiences = hasSelectedExperiences
         self._selectedExperienceIds = selectedExperienceIds
+        self._viewModelRef = viewModelRef
         self.onUpdateCoverLetter = onUpdateCoverLetter
         self.onShowExperienceSelection = onShowExperienceSelection
         self.onGenerateDraft = onGenerateDraft
@@ -485,7 +482,13 @@ struct ChatMessagesView: View {
                         onShowExperienceSelection()
                     },
                     onGenerateDraft: {
-                        onGenerateDraft()  // 초안 생성 콜백
+                        Task {
+                            // ✅ ViewModel의 sendMessage 직접 호출
+                            await viewModel.sendMessage(
+                                content: "선택한 경험을 바탕으로 자기소개서 초안을 작성해줘",
+                                experienceIds: selectedExperienceIds
+                            )
+                        }
                     }
                 )
                 
@@ -497,6 +500,16 @@ struct ChatMessagesView: View {
                         isUser: message.role == .user,
                         showUpdateButton: message.role == .assistant && message.id == viewModel.messages.last?.id,
                         onUpdateCoverLetter: onUpdateCoverLetter
+                    )
+                }
+                
+                // ✅ 스트리밍 중일 때 실시간 ChatBubble
+                if viewModel.isStreaming {
+                    ChatBubble(
+                        message: viewModel.streamingMessage,
+                        isUser: false,
+                        showUpdateButton: false,  // 아직 완료 안 됨
+                        onUpdateCoverLetter: nil
                     )
                 }
                 
@@ -529,6 +542,9 @@ struct ChatMessagesView: View {
             hasSelectedExperiences = !newValue.isEmpty
             selectedExperienceIds = newValue
         }
+        .onAppear {
+               viewModelRef = viewModel  // ✅ 부모에게 ViewModel 전달
+           }
     }
 }
 

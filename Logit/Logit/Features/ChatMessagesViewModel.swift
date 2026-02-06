@@ -10,6 +10,8 @@ import Foundation
 @MainActor
 class ChatMessagesViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
+    @Published var streamingMessage: String = ""
+    @Published var isStreaming: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var hasMore: Bool = false
@@ -111,4 +113,106 @@ class ChatMessagesViewModel: ObservableObject {
         
         isLoading = false
     }
+    
+    /// 메시지 전송 (SSE 스트리밍)
+      func sendMessage(
+          content: String,
+          experienceIds: [String]
+      ) async {
+          guard !isStreaming else {
+              print("이미 전송 중입니다")
+              return
+          }
+          
+          isStreaming = true
+          streamingMessage = ""
+          errorMessage = nil
+          
+          let request = SendMessageRequest(
+              content: content,
+              experienceIds: experienceIds,
+              questionId: questionId
+          )
+          
+          print(" SSE 메시지 전송")
+          print("  - questionId: \(questionId)")
+          print("  - content: \(content)")
+          print("  - experienceIds: \(experienceIds)")
+          
+          //  1. 사용자 메시지 즉시 추가 (낙관적 업데이트)
+          let userMessage = ChatMessage(
+              id: UUID().uuidString,  // 임시 ID
+              role: .user,
+              content: content,
+              isDraft: false,
+              createdAt: ISO8601DateFormatter().string(from: Date())
+          )
+          messages.append(userMessage)
+          
+          do {
+              let stream = chatRepository.sendMessage(
+                  projectId: projectId,
+                  request: request
+              )
+              
+              //  2. SSE 스트리밍 수신
+              var chatId: String = ""
+              
+              for try await event in stream {
+                  switch event {
+                  case .content(let text):
+                      // 실시간으로 텍스트 추가
+                      streamingMessage += text
+                      print(" 스트리밍: \(text)")
+                      
+                  case .done(let completedChatId, let isDraft, let remainingChats):
+                      print("스트리밍 완료")
+                      print("  - chatId: \(completedChatId)")
+                      print("  - isDraft: \(isDraft)")
+                      print("  - remainingChats: \(remainingChats)")
+                      
+                      chatId = completedChatId
+                      
+                      // 3. 완성된 어시스턴트 메시지 추가
+                      let assistantMessage = ChatMessage(
+                          id: completedChatId,
+                          role: .assistant,
+                          content: streamingMessage,
+                          isDraft: isDraft,
+                          createdAt: ISO8601DateFormatter().string(from: Date())
+                      )
+                      messages.append(assistantMessage)
+                      
+                      //  4. experienceIds 업데이트 (서버에 저장된 상태)
+                      self.experienceIds = experienceIds
+                      
+                      // 초기화
+                      streamingMessage = ""
+                      isStreaming = false
+                      
+                  case .error(let message):
+                      print(" SSE 에러: \(message)")
+                      errorMessage = message
+                      
+                      // 실패 시 사용자 메시지 제거
+                      messages.removeAll { $0.id == userMessage.id }
+                      
+                      isStreaming = false
+                  }
+              }
+              
+          } catch {
+              print(" 메시지 전송 실패: \(error)")
+              errorMessage = "메시지 전송에 실패했습니다."
+              
+              if let apiError = error as? APIError {
+                  errorMessage = apiError.localizedDescription
+              }
+              
+              // 실패 시 사용자 메시지 제거
+              messages.removeAll { $0.id == userMessage.id }
+              
+              isStreaming = false
+          }
+      }
 }

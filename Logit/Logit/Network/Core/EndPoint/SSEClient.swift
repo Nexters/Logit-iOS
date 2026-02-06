@@ -100,10 +100,17 @@ class DefaultSSEClient: SSEClient {
                     // 7. 스트리밍 데이터 파싱
                     var receivedDone = false
                     var buffer = ""
+                    var byteBuffer = Data()
                     
                     for try await byte in bytes {
-                        let character = Character(UnicodeScalar(byte))
-                        buffer.append(character)
+                        byteBuffer.append(byte)  //  바이트 누적
+                        
+                        // UTF-8로 디코딩 시도
+                        if let decodedString = String(data: byteBuffer, encoding: .utf8) {
+                            buffer.append(decodedString)
+                            byteBuffer.removeAll()  //  성공하면 버퍼 비우기
+                        }
+                        // 디코딩 실패하면 계속 바이트 누적 (멀티바이트 문자 중간)
                         
                         // SSE 이벤트는 \n\n으로 구분됨
                         if buffer.hasSuffix("\n\n") {
