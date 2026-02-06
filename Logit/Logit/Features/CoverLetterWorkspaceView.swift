@@ -18,6 +18,8 @@ struct CoverLetterWorkspaceView: View {
     
     @State private var hasLoadedData = false
     
+    @State private var hasSelectedExperiences: Bool = false
+    
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
               selectedQuestionIndex < viewModel.questionList.count else {
@@ -108,6 +110,7 @@ struct CoverLetterWorkspaceView: View {
                             ChatMessagesView(
                                 projectId: projectId,
                                 questionId: question.id,
+                                hasSelectedExperiences: $hasSelectedExperiences,
                                 onUpdateCoverLetter: {
                                     selectedView = .coverLetter
                                 },
@@ -126,6 +129,7 @@ struct CoverLetterWorkspaceView: View {
             
             // 채팅 입력창
             ChatInputBar(
+                hasSelectedExperiences: hasSelectedExperiences,
                 onSend: { message in
                     print("전송: \(message)")
                     print("프로젝트 ID: \(projectId)")
@@ -306,6 +310,7 @@ struct EmptyWorkspaceView: View {
 
 struct ChatInputBar: View {
     @State private var messageText: String = ""
+    let hasSelectedExperiences: Bool
     let onSend: (String) -> Void
     let onAttachmentTapped: () -> Void
     
@@ -321,7 +326,7 @@ struct ChatInputBar: View {
                         .fill(Color.gray50)
                         .frame(size: 44)
                     
-                    Image("Union")
+                    Image(hasSelectedExperiences ? "Union_selected" : "Union")
                         .resizable()
                         .frame(width: 18.12, height: 15)
                         .foregroundColor(.primary400)
@@ -370,6 +375,7 @@ struct ChatInputBar: View {
 struct ChatMessagesView: View {
     let projectId: String
     let questionId: String
+    @Binding var hasSelectedExperiences: Bool
     let onUpdateCoverLetter: () -> Void
     let onShowExperienceSelection: () -> Void
     
@@ -378,11 +384,13 @@ struct ChatMessagesView: View {
     init(
         projectId: String,
         questionId: String,
+        hasSelectedExperiences: Binding<Bool>,
         onUpdateCoverLetter: @escaping () -> Void,
         onShowExperienceSelection: @escaping () -> Void
     ) {
         self.projectId = projectId
         self.questionId = questionId
+        self._hasSelectedExperiences = hasSelectedExperiences
         self.onUpdateCoverLetter = onUpdateCoverLetter
         self.onShowExperienceSelection = onShowExperienceSelection
         _viewModel = StateObject(wrappedValue: ChatMessagesViewModel(
@@ -461,6 +469,12 @@ struct ChatMessagesView: View {
         .padding(.vertical, 16)
         .task {
             await viewModel.fetchChatHistory()
+        }
+        .onChange(of: viewModel.experienceIds) { newValue in
+            // ✅ experienceIds 변경 시 바인딩 자동 업데이트
+            hasSelectedExperiences = !newValue.isEmpty
+            print("🔍 experienceIds 변경: \(newValue)")
+            print("🔍 hasSelectedExperiences → \(hasSelectedExperiences)")
         }
     }
 }

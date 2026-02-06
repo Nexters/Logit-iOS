@@ -14,11 +14,16 @@ class ChatMessagesViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var hasMore: Bool = false
     @Published var answer: String = ""
+    @Published var experienceIds: [String] = []
     
     private var nextCursor: String?
     private let projectId: String
     private let questionId: String
     private let chatRepository: ChatRepository
+    
+    var hasSelectedExperiences: Bool {
+        !experienceIds.isEmpty
+    }
     
     init(
         projectId: String,
@@ -55,9 +60,12 @@ class ChatMessagesViewModel: ObservableObject {
             print("  - 현재 답변: \(response.answer)")
             print("  - 더 있는지: \(response.hasMore)")
             
+            print("  - 경험 ID 개수: \(response.experienceIds.count)")
+            print("  - 경험 IDs: \(response.experienceIds)")
             // 데이터 업데이트
             messages = response.chats
             answer = response.answer ?? ""
+            experienceIds = response.experienceIds
             nextCursor = response.nextCursor
             hasMore = response.hasMore
             

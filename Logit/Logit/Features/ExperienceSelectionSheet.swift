@@ -11,7 +11,7 @@ struct ExperienceSelectionSheet: View {
     @Binding var isPresented: Bool
     @State private var showExperienceAddFlow = false
     @State private var selectedExperiences: Set<String> = []
-    @State private var experiences: [ExperienceData] = ExperienceDataStore.shared.experiences
+    @State private var experiences: [ExperienceData] = []
     
     let onSelectExperiences: ([ExperienceData]) -> Void
     private let maxSelectionCount = 3
@@ -124,7 +124,7 @@ struct ExperienceSelectionSheet: View {
             }
         }
         .onAppear {
-            loadExperiences()
+           // loadExperiences()
         }
     }
     
