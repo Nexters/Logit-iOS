@@ -83,16 +83,12 @@ struct CoverLetterWorkspaceView: View {
                 // 채팅 / 자기소개서 선택 버튼
                 HStack(spacing: 8) {
                     IconTextButton(
-                        selectedIconName: "chat_selected",
-                        unselectedIconName: "chat_unselected",
                         title: "채팅",
                         isSelected: selectedView == .chat,
                         action: { selectedView = .chat }
                     )
                     
                     IconTextButton(
-                        selectedIconName: "coverLetter_selected",
-                        unselectedIconName: "coverLetter_unselected",
                         title: "자기소개서",
                         isSelected: selectedView == .coverLetter,
                         action: { selectedView = .coverLetter }
@@ -275,7 +271,6 @@ struct QuestionTabBar: View {
 }
 
 
-
 struct QuestionTabButton: View {
     let number: Int
     let isSelected: Bool
@@ -283,51 +278,39 @@ struct QuestionTabButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 0) {
-                Text("Q\(number)")
-                    .typo(.semibold_16)
-                    .foregroundColor(isSelected ? .primary100 : .gray400)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 11)
-                
-                // 선택 인디케이터
-                if isSelected {
-                    Rectangle()
-                        .fill(Color.primary100)
-                        .frame(height: 2)
-                } else {
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(height: 2)
-                }
-            }
+            Text("Q\(number)")
+                .typo(isSelected ? .bold_16 : .regular_16_140)
+                .foregroundColor(isSelected ? .primary100 : .gray300)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.primary100 : Color.gray100, lineWidth: 1)
+                )
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
 
+
 struct IconTextButton: View {
-    let selectedIconName: String
-    let unselectedIconName: String
     let title: String
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                Image(isSelected ? selectedIconName : unselectedIconName)
-                    .resizable()
-                    .frame(width: 15, height: 15)
-                
+            VStack(spacing: 0) {
                 Text(title)
                     .typo(.medium_15)
-                    .foregroundColor(isSelected ? .white : .gray200)
+                    .foregroundColor(isSelected ? .gray400 : .gray200)
+                    .padding(.vertical, 10)
+                
+                Rectangle()
+                    .fill(isSelected ? Color.gray400 : Color.clear)
+                    .frame(height: 2)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.gray400 : Color.gray50)
-            .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(PlainButtonStyle())
     }
