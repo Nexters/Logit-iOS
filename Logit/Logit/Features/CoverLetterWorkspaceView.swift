@@ -116,7 +116,13 @@ struct CoverLetterWorkspaceView: View {
                                 selectedExperienceIds: $selectedExperienceIds,
                                 viewModelRef: $currentChatViewModel,  
                                 onUpdateCoverLetter: {
-                                    selectedView = .coverLetter
+                                    Task {
+                                        // questionList 다시 fetch
+                                        await viewModel.fetchQuestionList()
+                                        
+                                        // 자기소개서 탭으로 전환
+                                        selectedView = .coverLetter
+                                    }
                                 },
                                 onShowExperienceSelection: {
                                     showExperienceSelection = true
@@ -126,7 +132,12 @@ struct CoverLetterWorkspaceView: View {
                         }
                     } else {
                         // 자소서 뷰
-                        CoverLetterContentView()
+                        if let question = currentQuestion {
+                            CoverLetterContentView(
+                                question: question.question,
+                                answer: question.answer
+                            )
+                        }
                     }
                 }
             }
@@ -734,37 +745,48 @@ struct ChatBubble: View {
 }
 
 struct CoverLetterContentView: View {
+    let question: String
+    let answer: String?
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // 제목
-                Text("Q1. 지원 동기 및 포부")
+                Text(question)
                     .typo(.semibold_18)
                     .foregroundColor(.black)
                     .padding(.top, 20)
                 
                 // 자기소개서 본문
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("저는 비전공자로 iOS 개발을 시작했지만, 사용자 중심의 문제 해결에 집중하며 성장해왔습니다. 특히 로그 데이터 분석을 통한 이탈률 개선 프로젝트에서, Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석하고 특정 화면에서의 높은 이탈률 원인을 파악했습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("이를 해결하기 위해 이미지 캐싱과 lazy loading을 적용하여 로딩 시간을 개선했고, 불필요한 네트워크 요청을 최적화한 결과 이탈률을 15% 감소시켰습니다. 이 과정에서 단순히 코드를 작성하는 것을 넘어, 데이터 기반으로 문제를 정의하고 기술적 해결책을 찾는 능력을 키웠습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("또한 신규 서비스 런칭 경험에서는 SwiftUI와 MVVM 아키텍처를 활용해 빠른 프로토타이핑과 확장 가능한 구조를 동시에 구현했으며, 출시 3개월 만에 MAU 10만을 달성하는 성과를 이뤘습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("앞으로도 사용자에게 진정한 가치를 전달하는 iOS 개발자로 성장하고 싶습니다. 귀사에서 저의 기술적 역량과 문제 해결 능력을 발휘하여, 더 나은 사용자 경험을 만드는 데 기여하고 싶습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
+                if let answer = answer, !answer.isEmpty {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // answer를 단락별로 나눠서 표시
+                        ForEach(answer.components(separatedBy: "\n\n"), id: \.self) { paragraph in
+                            if !paragraph.isEmpty {
+                                Text(paragraph)
+                                    .typo(.regular_14_160)
+                                    .foregroundColor(.black)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
+                    .background(Color.gray20)
+                    .cornerRadius(12)
+                } else {
+                    //  answer가 없을 때
+                    VStack(spacing: 12) {
+                        Text("아직 작성된 자기소개서가 없습니다.")
+                            .typo(.regular_14_160)
+                            .foregroundColor(.gray200)
+                        
+                        Text("채팅에서 초안을 생성하고 업데이트해보세요.")
+                            .typo(.regular_12)
+                            .foregroundColor(.gray300)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 60)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
-                .background(Color.gray20)
-                .cornerRadius(12)
                 
                 Spacer()
             }
