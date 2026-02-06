@@ -39,7 +39,7 @@ struct ExperienceTypeSection: View {
                     imageName: "논리적 분석력",
                     currentPage: 3,
                     totalPages: 8,
-                    backgroundStyle: .color(.icon7)
+                    backgroundStyle: .gradient(.experienceCard)
                 )
                 
                 ExperienceCardView(
@@ -48,7 +48,7 @@ struct ExperienceTypeSection: View {
                     imageName: "창의적 문제해결",
                     currentPage: 4,
                     totalPages: 8,
-                    backgroundStyle: .color(.icon7)
+                    backgroundStyle: .gradient(.experienceCard)
                 )
                 
                 ExperienceCardView(

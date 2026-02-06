@@ -24,9 +24,9 @@ protocol ChatRepository {
     
     /// 자기소개서 답변 업데이트
     func updateAnswer(
-        projectId: String,
-        chatId: String,
-        request: UpdateAnswerRequest
+//        projectId: String,
+        chatId: String
+//        request: UpdateAnswerRequest
     ) async throws -> UpdateAnswerResponse
 }
 
@@ -73,15 +73,15 @@ class DefaultChatRepository: ChatRepository {
     
     // 자기소개서 답변 업데이트
     func updateAnswer(
-        projectId: String,
-        chatId: String,
-        request: UpdateAnswerRequest
+//        projectId: String,
+        chatId: String
+//        request: UpdateAnswerRequest
     ) async throws -> UpdateAnswerResponse {
         return try await networkClient.request(
             endpoint: ChatEndpoint.updateAnswer(
                 chatId: chatId
             ),
-            body: request
+            body: nil
         )
     }
 }

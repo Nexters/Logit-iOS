@@ -10,7 +10,7 @@ import Foundation
 struct CreateExperienceRequest: Encodable {
     let action: String
     let category: String
-    let endDate: String
+    let endDate: String?
     let experienceType: String
     let result: String
     let situation: String

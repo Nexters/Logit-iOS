@@ -10,7 +10,7 @@ import SwiftUI
 struct CoverLetterWorkspaceView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel: WorkspaceViewModel
-    let questions: [QuestionItem]  // AddFlow에서 전달받은 임시 데이터
+    let questions: [QuestionItem]
     let projectId: String
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
@@ -22,6 +22,8 @@ struct CoverLetterWorkspaceView: View {
     @State private var selectedExperienceIds: [String] = []
     @State private var currentChatViewModel: ChatMessagesViewModel?
     
+    @State private var showToast: Bool = false
+    
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
               selectedQuestionIndex < viewModel.questionList.count else {
@@ -29,7 +31,6 @@ struct CoverLetterWorkspaceView: View {
         }
         return viewModel.questionList[selectedQuestionIndex]
     }
-    
     
     enum ContentType {
         case chat, coverLetter
@@ -42,113 +43,186 @@ struct CoverLetterWorkspaceView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            CustomNavigationBar(
-                title: viewModel.navigationTitle,  //  동적 타이틀
-                showBackButton: true,
-                onBackTapped: { dismiss() }
-            )
-            
-            // 문항 탭 바 (API에서 가져온 데이터)
-            if !viewModel.questionList.isEmpty {
-                QuestionTabBar(
-                    questionCount: viewModel.questionList.count,
-                    selectedIndex: $selectedQuestionIndex
+        ZStack {
+            VStack(spacing: 0) {
+                CustomNavigationBar(
+                    title: viewModel.navigationTitle,
+                    showBackButton: true,
+                    onBackTapped: { dismiss() }
                 )
-                .onChange(of: selectedQuestionIndex) { newIndex in
-                    // 탭 전환 시 체크
-                    print("========== 문항 전환 ==========")
-                    print("선택된 Index: \(newIndex)")
-                    
-                    if newIndex < viewModel.questionList.count {
-                        let question = viewModel.questionList[newIndex]
-                        print("문항 ID: \(question.id)")
-                        print("문항 내용: \(question.question)")
-                    } else {
-                        print(" Index out of range")
+                
+                // 문항 탭 바
+                if !viewModel.questionList.isEmpty {
+                    QuestionTabBar(
+                        questionCount: viewModel.questionList.count,
+                        selectedIndex: $selectedQuestionIndex
+                    )
+                    .onChange(of: selectedQuestionIndex) { newIndex in
+                        print("========== 문항 전환 ==========")
+                        print("선택된 Index: \(newIndex)")
+                        
+                        if newIndex < viewModel.questionList.count {
+                            let question = viewModel.questionList[newIndex]
+                            print("문항 ID: \(question.id)")
+                            print("문항 내용: \(question.question)")
+                        } else {
+                            print(" Index out of range")
+                        }
+                        print("==============================")
                     }
-                    print("==============================")
+                } else if viewModel.isLoading {
+                    ProgressView()
+                        .padding(.vertical, 12)
+                } else {
+                    QuestionTabBar(
+                        questionCount: questions.count,
+                        selectedIndex: $selectedQuestionIndex
+                    )
                 }
-            } else if viewModel.isLoading {
-                // 로딩 중
-                ProgressView()
+                
+                if let question = currentQuestion {
+                    HStack(spacing: 12) {
+                        Text(question.question)
+                            .typo(.bold_16)
+                            .foregroundColor(.gray400)
+                            .lineLimit(1)  // 한 줄 or 전체
+                        
+                        Spacer()
+                        
+                        // 화살표 버튼
+                        Button {
+                            withAnimation {
+//                                showQuestionDetail.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .resizable()
+                                .frame(width: 12, height: 8)
+                                .foregroundColor(.gray400)
+                        }
+                    }
+                    .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-            } else {
-                // 임시: AddFlow에서 전달받은 questions 사용
-                QuestionTabBar(
-                    questionCount: questions.count,
-                    selectedIndex: $selectedQuestionIndex
-                )
-            }
-            
-            // 채팅 / 자기소개서 선택 버튼
-            HStack(spacing: 8) {
-                IconTextButton(
-                    selectedIconName: "chat_selected",
-                    unselectedIconName: "chat_unselected",
-                    title: "채팅",
-                    isSelected: selectedView == .chat,
-                    action: { selectedView = .chat }
-                )
+                    .background(Color.gray20)
+                }
                 
-                IconTextButton(
-                    selectedIconName: "coverLetter_selected",
-                    unselectedIconName: "coverLetter_unselected",
-                    title: "자기소개서",
-                    isSelected: selectedView == .coverLetter,
-                    action: { selectedView = .coverLetter }
-                )
+                // 채팅 / 자기소개서 선택 버튼
+                HStack(spacing: 8) {
+                    IconTextButton(
+                        title: "채팅",
+                        isSelected: selectedView == .chat,
+                        action: { selectedView = .chat }
+                    )
+                    
+                    IconTextButton(
+                        title: "자기소개서",
+                        isSelected: selectedView == .coverLetter,
+                        action: { selectedView = .coverLetter }
+                    )
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 0)
                 
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            
-            // 채팅 스크롤 영역
-            ScrollView {
-                VStack(spacing: 0) {
-                    if selectedView == .chat {
-                        if let question = currentQuestion {
-                            ChatMessagesView(
-                                projectId: projectId,
-                                questionId: question.id,
-                                hasSelectedExperiences: $hasSelectedExperiences,
-                                selectedExperienceIds: $selectedExperienceIds,
-                                viewModelRef: $currentChatViewModel,  
-                                onUpdateCoverLetter: {
-                                    selectedView = .coverLetter
-                                },
-                                onShowExperienceSelection: {
-                                    showExperienceSelection = true
-                                },
-                                onGenerateDraft: {}
+                // 채팅 스크롤 영역
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if selectedView == .chat {
+                            if let question = currentQuestion {
+                                ChatMessagesView(
+                                    projectId: projectId,
+                                    questionId: question.id,
+                                    hasSelectedExperiences: $hasSelectedExperiences,
+                                    selectedExperienceIds: $selectedExperienceIds,
+                                    viewModelRef: $currentChatViewModel,
+                                    onUpdateCoverLetter: {
+                                        // 업데이트 성공 처리
+                                        Task {
+                                            // questionList 다시 fetch
+                                            await viewModel.fetchQuestionList()
+                                            
+                                            //  토스트 표시
+                                            withAnimation(.spring()) {
+                                                showToast = true
+                                            }
+                                            
+                                            //  3초 후 자동 숨김
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                                withAnimation {
+                                                    showToast = false
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onShowExperienceSelection: {
+                                        showExperienceSelection = true
+                                    },
+                                    onGenerateDraft: {}
+                                )
+                                .id(question.id)
+                            }
+                        } else {
+                            // 자소서 뷰
+                            if let question = currentQuestion {
+                                CoverLetterContentView(
+                                    question: question.question,
+                                    answer: question.answer
+                                )
+                                .id(question.id)
+                            }
+                        }
+                    }
+                }
+                .scrollToMinDistance(minDisntance: 32)
+                
+                // 채팅 입력창
+                ChatInputBar(
+                    hasSelectedExperiences: hasSelectedExperiences,
+                    onSend: { message in
+                        print("전송: \(message)")
+                        print("프로젝트 ID: \(projectId)")
+                        
+                        guard let chatViewModel = currentChatViewModel else {
+                            print(" ChatViewModel이 아직 초기화되지 않았습니다")
+                            return
+                        }
+                        
+                        Task {
+                            await chatViewModel.sendMessage(
+                                content: message,
+                                experienceIds: selectedExperienceIds
                             )
                         }
-                    } else {
-                        // 자소서 뷰
-                        CoverLetterContentView()
+                    },
+                    onAttachmentTapped: {
+                        showExperienceSelection = true
                     }
+                )
+            }
+            
+            //  토스트 오버레이
+            if showToast {
+                VStack {
+                    Spacer()
+                    
+                    ToastView(
+                        message: "자소서가 업데이트 됐어요",
+                        actionTitle: "바로가기",
+                        onAction: {
+                            // 자기소개서 탭으로 전환
+                            selectedView = .coverLetter
+                            
+                            // 토스트 숨김
+                            withAnimation {
+                                showToast = false
+                            }
+                        }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 74)
                 }
             }
-            .scrollToMinDistance(minDisntance: 32)
-            
-            // 채팅 입력창
-            ChatInputBar(
-                hasSelectedExperiences: hasSelectedExperiences,
-                onSend: { message in
-                    print("전송: \(message)")
-                    print("프로젝트 ID: \(projectId)")
-                    
-                    // 현재 선택된 문항 정보
-                    if !viewModel.questionList.isEmpty {
-                        let currentQuestion = viewModel.questionList[selectedQuestionIndex]
-                        print("문항 ID: \(currentQuestion.id)")
-                    }
-                },
-                onAttachmentTapped: {
-                    showExperienceSelection = true
-                }
-            )
         }
         .onAppear {
             guard !hasLoadedData else {
@@ -165,7 +239,6 @@ struct CoverLetterWorkspaceView: View {
                 await projectDetail
                 await questionList
                 
-                // 디버깅
                 print("========== 데이터 할당 체크 ==========")
                 print("프로젝트 ID: \(projectId)")
                 print("문항 목록 개수: \(viewModel.questionList.count)")
@@ -185,33 +258,21 @@ struct CoverLetterWorkspaceView: View {
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {
-              if let question = currentQuestion {
-                  ExperienceSelectionSheet(
-                      isPresented: $showExperienceSelection,
-                      questionId: question.id,  //  문항 ID
-                      initialSelectedIds: selectedExperienceIds,  //  기존 선택
-                      onConfirm: { selectedIds in
-                          selectedExperienceIds = selectedIds  //  임시 저장
-                          hasSelectedExperiences = !selectedIds.isEmpty
-                          
-                          print("경험 선택 완료: \(selectedIds)")
-                      }
-                  )
-              }
-          }
+            if let question = currentQuestion {
+                ExperienceSelectionSheet(
+                    isPresented: $showExperienceSelection,
+                    questionId: question.id,
+                    initialSelectedIds: selectedExperienceIds,
+                    onConfirm: { selectedIds in
+                        selectedExperienceIds = selectedIds
+                        hasSelectedExperiences = !selectedIds.isEmpty
+                        
+                        print("경험 선택 완료: \(selectedIds)")
+                    }
+                )
+            }
+        }
     }
-    private func sendMessage(
-           questionId: String,
-           content: String?,
-           experienceIds: [String]
-       ) async {
-           print(" SSE 메시지 전송")
-           print("  - questionId: \(questionId)")
-           print("  - content: \(content ?? "nil")")
-           print("  - experienceIds: \(experienceIds)")
-           
-           // TODO: SSE 스트리밍 구현
-       }
 }
 
 struct QuestionTabBar: View {
@@ -236,7 +297,6 @@ struct QuestionTabBar: View {
 }
 
 
-
 struct QuestionTabButton: View {
     let number: Int
     let isSelected: Bool
@@ -244,51 +304,39 @@ struct QuestionTabButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 0) {
-                Text("Q\(number)")
-                    .typo(.semibold_16)
-                    .foregroundColor(isSelected ? .primary100 : .gray400)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 11)
-                
-                // 선택 인디케이터
-                if isSelected {
-                    Rectangle()
-                        .fill(Color.primary100)
-                        .frame(height: 2)
-                } else {
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(height: 2)
-                }
-            }
+            Text("Q\(number)")
+                .typo(isSelected ? .bold_16 : .regular_16_140)
+                .foregroundColor(isSelected ? .primary100 : .gray300)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.primary100 : Color.gray100, lineWidth: 1)
+                )
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
 
+
 struct IconTextButton: View {
-    let selectedIconName: String
-    let unselectedIconName: String
     let title: String
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                Image(isSelected ? selectedIconName : unselectedIconName)
-                    .resizable()
-                    .frame(width: 15, height: 15)
-                
+            VStack(spacing: 0) {
                 Text(title)
                     .typo(.medium_15)
-                    .foregroundColor(isSelected ? .white : .gray200)
+                    .foregroundColor(isSelected ? .gray400 : .gray200)
+                    .padding(.vertical, 10)
+                
+                Rectangle()
+                    .fill(isSelected ? Color.gray400 : Color.clear)
+                    .frame(height: 2)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.gray400 : Color.gray50)
-            .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -363,6 +411,7 @@ struct ChatInputBar: View {
             Button {
                 // TODO: 추가 기능 (사진, 파일 등)
                 onAttachmentTapped()
+
             } label: {
                 ZStack {
                     Circle()
@@ -385,6 +434,12 @@ struct ChatInputBar: View {
                 Button {
                     onSend(messageText)
                     messageText = ""
+                    UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
                 } label: {
                     ZStack {
                         Circle()
@@ -451,6 +506,13 @@ struct ChatMessagesView: View {
         ))
     }
     
+    //  마지막 draft 메시지 ID
+    private var lastDraftId: String? {
+        viewModel.messages
+            .filter { $0.role == .assistant && $0.isDraft }
+            .last?.id
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if viewModel.isLoading && viewModel.messages.isEmpty {
@@ -483,7 +545,6 @@ struct ChatMessagesView: View {
                     },
                     onGenerateDraft: {
                         Task {
-                            // ✅ ViewModel의 sendMessage 직접 호출
                             await viewModel.sendMessage(
                                 content: "선택한 경험을 바탕으로 자기소개서 초안을 작성해줘",
                                 experienceIds: selectedExperienceIds
@@ -493,42 +554,92 @@ struct ChatMessagesView: View {
                 )
                 
             } else {
-                // 메시지 리스트
-                ForEach(viewModel.messages) { message in
-                    ChatBubble(
-                        message: message.content,
-                        isUser: message.role == .user,
-                        showUpdateButton: message.role == .assistant && message.id == viewModel.messages.last?.id,
-                        onUpdateCoverLetter: onUpdateCoverLetter
-                    )
-                }
-                
-                // ✅ 스트리밍 중일 때 실시간 ChatBubble
-                if viewModel.isStreaming {
-                    ChatBubble(
-                        message: viewModel.streamingMessage,
-                        isUser: false,
-                        showUpdateButton: false,  // 아직 완료 안 됨
-                        onUpdateCoverLetter: nil
-                    )
-                }
-                
-                if viewModel.hasMore {
-                    Button {
-                        Task {
-                            await viewModel.loadMoreMessages()
+                // ScrollViewReader로 자동 스크롤
+                ScrollViewReader { proxy in
+                    VStack(alignment: .leading, spacing: 16) {
+                        // 메시지 리스트
+                        ForEach(viewModel.messages) { message in
+                            ChatBubble(
+                                message: message.content,
+                                isUser: message.role == .user,
+                                isDraft: message.isDraft,
+                                showUpdateButton: message.role == .assistant
+                                    && message.isDraft
+                                    && message.id == lastDraftId,  //  마지막 draft만
+                                isAnimated: false,
+                                chatId: message.id,
+                                onUpdateCoverLetter: {  chatId in
+                                    Task {
+                                        await viewModel.updateAnswer(chatId: chatId)
+                                        
+                                        // 성공 후 자기소개서 탭으로 전환
+                                        onUpdateCoverLetter()
+                                    }
+                                }
+                            )
+                            .id(message.id)  //  스크롤용 ID
                         }
-                    } label: {
-                        if viewModel.isLoading {
-                            ProgressView()
-                        } else {
-                            Text("이전 메시지 보기")
-                                .typo(.regular_14_160)
-                                .foregroundColor(.gray200)
+                        
+                        // 스트리밍 중일 때 실시간 ChatBubble
+                        if viewModel.isStreaming {
+                            ChatBubble(
+                                message: viewModel.streamingMessage,
+                                isUser: false,
+                                isDraft: true,  // 의미상: 아직 완성 안 된 초안
+                                showUpdateButton: false,  // 스트리밍 중에는 버튼 안 보임
+                                isAnimated: true,
+                                chatId: nil,
+                                onUpdateCoverLetter: nil
+                            )
+                            .id("streaming")  //  스트리밍용 고정 ID
+                        }
+                        
+                        // 스크롤 앵커 (투명한 뷰)
+                        Color.clear
+                            .frame(height: 1)
+                            .id("bottom")
+                        
+                        // 더보기 버튼
+                        if viewModel.hasMore {
+                            Button {
+                                Task {
+                                    await viewModel.loadMoreMessages()
+                                }
+                            } label: {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                } else {
+                                    Text("이전 메시지 보기")
+                                        .typo(.regular_14_160)
+                                        .foregroundColor(.gray200)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
                         }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    //  메시지 변경 시 자동 스크롤
+                    .onChange(of: viewModel.messages.count) { _ in
+                        withAnimation {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
+                    // 스트리밍 중 실시간 스크롤
+                    .onChange(of: viewModel.streamingMessage) { newValue in
+                        if !newValue.isEmpty {
+                            withAnimation {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
+                        }
+                    }
+                    //  스트리밍 시작 시 스크롤
+                    .onChange(of: viewModel.isStreaming) { isStreaming in
+                        if isStreaming {
+                            withAnimation {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -543,8 +654,8 @@ struct ChatMessagesView: View {
             selectedExperienceIds = newValue
         }
         .onAppear {
-               viewModelRef = viewModel  // ✅ 부모에게 ViewModel 전달
-           }
+            viewModelRef = viewModel
+        }
     }
 }
 
@@ -552,10 +663,14 @@ struct ChatMessagesView: View {
 struct ChatBubble: View {
     let message: String
     let isUser: Bool
+    let isDraft: Bool
     let showUpdateButton: Bool
+    let isAnimated: Bool
+    let chatId: String?
     @State private var displayedText: String = ""
     @State private var isTypingComplete: Bool = false
-    let onUpdateCoverLetter: (() -> Void)?
+    @State private var rotationAngle: Double = 0
+    let onUpdateCoverLetter: ((String) -> Void)?
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -575,21 +690,34 @@ struct ChatBubble: View {
                     Image("chatting_logo")
                         .resizable()
                         .frame(size: 24)
+                        .rotationEffect(.degrees(isAnimated && displayedText.isEmpty ? rotationAngle : 0))
                     
                     VStack(alignment: .leading, spacing: 12) {
-                        // 봇 메시지
-                        Text(displayedText)
-                            .typo(.regular_14_160)
-                            .foregroundColor(.black)
-                            .padding(.vertical, 10)
-                            .background(Color.clear)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // 로딩 상태 분기
+                        if isAnimated && displayedText.isEmpty {
+                            // 스트리밍 대기 중
+                            Text("응답 기다리는 중...")
+                                .typo(.regular_14_160)
+                                .foregroundColor(.gray200)
+                                .padding(.vertical, 10)
+                        } else {
+                            // 봇 메시지
+                            Text(displayedText)
+                                .typo(.regular_14_160)
+                                .foregroundColor(.black)
+                                .padding(.vertical, 10)
+                                .background(Color.clear)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         
-                        // 자기소개서 업데이트 버튼 (타이핑 완료 후 표시)
-                        if showUpdateButton && isTypingComplete {
+                        // 자기소개서 업데이트 버튼
+                        if showUpdateButton && isTypingComplete && isDraft {
                             Button {
-                                print("자기소개서 업데이트 버튼 클릭 (시연용)")
-                                onUpdateCoverLetter?()
+                                if let chatId = chatId {
+                                    print("자기소개서 업데이트 버튼 클릭")
+                                    print("  - chatId: \(chatId)")
+                                    onUpdateCoverLetter?(chatId)
+                                }
                             } label: {
                                 HStack(spacing: 6) {
                                     Image("autorenew")
@@ -598,15 +726,13 @@ struct ChatBubble: View {
                                     Text("자기소개서 업데이트")
                                         .typo(.medium_13)
                                         .foregroundStyle(.primary600)
-                    
                                 }
-//                                .foregroundColor(.clear)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
                                 .background(Color.clear)
                                 .cornerRadius(8)
                             }
-                            .transition(.opacity.combined(with: .scale))  //  부드러운 등장 효과
+                            .transition(.opacity.combined(with: .scale))
                         }
                     }
                 }
@@ -615,68 +741,79 @@ struct ChatBubble: View {
         }
         .onAppear {
             if !isUser {
-                startTypingAnimation()
+                if isAnimated {
+                    //  실시간 스트리밍 → 회전 애니메이션 시작
+                    startRotation()
+                } else {
+                    // 히스토리는 바로 표시
+                    displayedText = message
+                    isTypingComplete = true
+                }
             } else {
-                // 사용자 메시지는 즉시 표시
                 displayedText = message
                 isTypingComplete = true
             }
         }
-    }
-    
-    private func startTypingAnimation() {
-        displayedText = ""
-        isTypingComplete = false  // ← 타이핑 시작 시 false
-        
-        let characters = Array(message)
-        
-        for (index, character) in characters.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.03) {
-                displayedText.append(character)
+        .onChange(of: message) { newValue in
+            if isAnimated && !isUser {
+                //  스트리밍 시작되면 텍스트 업데이트 + 회전 중지
+                displayedText = newValue
                 
-                if index == characters.count - 1 {
-                    // 타이핑 완료
-                    withAnimation(.easeIn(duration: 0.3)) {
-                        isTypingComplete = true  //  완료 후 true
-                    }
+                // 첫 글자 들어오면 타이핑 애니메이션 시작
+                if !newValue.isEmpty && displayedText.count == newValue.count {
+                    isTypingComplete = true  // 회전 애니메이션 중지
                 }
             }
+        }
+    }
+    
+    // 로고 회전 애니메이션
+    private func startRotation() {
+        withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
+            rotationAngle = 360
         }
     }
 }
 
 struct CoverLetterContentView: View {
+    let question: String
+    let answer: String?
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // 제목
-                Text("Q1. 지원 동기 및 포부")
-                    .typo(.semibold_18)
-                    .foregroundColor(.black)
-                    .padding(.top, 20)
-                
+
                 // 자기소개서 본문
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("저는 비전공자로 iOS 개발을 시작했지만, 사용자 중심의 문제 해결에 집중하며 성장해왔습니다. 특히 로그 데이터 분석을 통한 이탈률 개선 프로젝트에서, Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석하고 특정 화면에서의 높은 이탈률 원인을 파악했습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("이를 해결하기 위해 이미지 캐싱과 lazy loading을 적용하여 로딩 시간을 개선했고, 불필요한 네트워크 요청을 최적화한 결과 이탈률을 15% 감소시켰습니다. 이 과정에서 단순히 코드를 작성하는 것을 넘어, 데이터 기반으로 문제를 정의하고 기술적 해결책을 찾는 능력을 키웠습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("또한 신규 서비스 런칭 경험에서는 SwiftUI와 MVVM 아키텍처를 활용해 빠른 프로토타이핑과 확장 가능한 구조를 동시에 구현했으며, 출시 3개월 만에 MAU 10만을 달성하는 성과를 이뤘습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
-                    
-                    Text("앞으로도 사용자에게 진정한 가치를 전달하는 iOS 개발자로 성장하고 싶습니다. 귀사에서 저의 기술적 역량과 문제 해결 능력을 발휘하여, 더 나은 사용자 경험을 만드는 데 기여하고 싶습니다.")
-                        .typo(.regular_14_160)
-                        .foregroundColor(.black)
+                if let answer = answer, !answer.isEmpty {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // answer를 단락별로 나눠서 표시
+                        ForEach(answer.components(separatedBy: "\n\n"), id: \.self) { paragraph in
+                            if !paragraph.isEmpty {
+                                Text(paragraph)
+                                    .typo(.regular_14_160)
+                                    .foregroundColor(.black)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
+                    .background(Color.gray20)
+                    .cornerRadius(12)
+                } else {
+                    //  answer가 없을 때
+                    VStack(spacing: 12) {
+                        Text("아직 작성된 자기소개서가 없습니다.")
+                            .typo(.regular_14_160)
+                            .foregroundColor(.gray200)
+                        
+                        Text("채팅에서 초안을 생성하고 업데이트해보세요.")
+                            .typo(.regular_12)
+                            .foregroundColor(.gray300)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 60)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
-                .background(Color.gray20)
-                .cornerRadius(12)
                 
                 Spacer()
             }
@@ -686,3 +823,57 @@ struct CoverLetterContentView: View {
         .background(Color.white)
     }
 }
+
+struct ToastView: View {
+    let message: String
+    let actionTitle: String
+    let onAction: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // 체크 아이콘
+            ZStack {
+                Circle()
+                    .fill(Color.primary100)
+                    .frame(width: 24, height: 24)
+                
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .frame(width: 12, height: 12)
+                    .foregroundColor(.white)
+                    .fontWeight(.semibold)
+            }
+            
+            // 메시지
+            Text(message)
+                .typo(.regular_16_150)
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            
+            Spacer(minLength: 8)
+            
+            // 바로가기 버튼
+            Button {
+                onAction()
+            } label: {
+                Text(actionTitle)
+                    .typo(.regular_14_160)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.primary500)
+                    .clipShape(Capsule())
+            }
+            .fixedSize()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.primary400)
+        )
+        .padding(.horizontal, 20)
+    }
+}
+
