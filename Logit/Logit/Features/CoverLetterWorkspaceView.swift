@@ -17,6 +17,17 @@ struct CoverLetterWorkspaceView: View {
     @State private var hasData: Bool = false
     @State private var showExperienceSelection = false
     
+    @State private var hasLoadedData = false
+    
+    private var currentQuestion: QuestionResponse? {
+        guard !viewModel.questionList.isEmpty,
+              selectedQuestionIndex < viewModel.questionList.count else {
+            return nil
+        }
+        return viewModel.questionList[selectedQuestionIndex]
+    }
+    
+    
     enum ContentType {
         case chat, coverLetter
     }
@@ -41,6 +52,20 @@ struct CoverLetterWorkspaceView: View {
                     questionCount: viewModel.questionList.count,
                     selectedIndex: $selectedQuestionIndex
                 )
+                .onChange(of: selectedQuestionIndex) { newIndex in
+                    // 탭 전환 시 체크
+                    print("========== 문항 전환 ==========")
+                    print("선택된 Index: \(newIndex)")
+                    
+                    if newIndex < viewModel.questionList.count {
+                        let question = viewModel.questionList[newIndex]
+                        print("문항 ID: \(question.id)")
+                        print("문항 내용: \(question.question)")
+                    } else {
+                        print(" Index out of range")
+                    }
+                    print("==============================")
+                }
             } else if viewModel.isLoading {
                 // 로딩 중
                 ProgressView()
@@ -91,15 +116,16 @@ struct CoverLetterWorkspaceView: View {
                         }
                     } else {
                         EmptyWorkspaceView {
-                            print("경험 선택 버튼 클릭")
-                            print("현재 프로젝트 ID: \(projectId)")
+                            print("========== 경험 선택 버튼 클릭 ==========")
+                            print("프로젝트 ID: \(projectId)")
                             
-                            //  현재 선택된 문항 정보
-                            if !viewModel.questionList.isEmpty {
-                                let currentQuestion = viewModel.questionList[selectedQuestionIndex]
-                                print("현재 문항 ID: \(currentQuestion.id)")
-                                print("현재 문항: \(currentQuestion.question)")
+                            if let question = currentQuestion {
+                                print("현재 문항 ID: \(question.id)")
+                                print("현재 문항: \(question.question)")
+                            } else {
+                                print(" currentQuestion이 nil입니다")
                             }
+                            print("======================================")
                             
                             showExperienceSelection = true
                         }
@@ -125,13 +151,38 @@ struct CoverLetterWorkspaceView: View {
                 }
             )
         }
-        .task {
-             async let projectDetail: () = viewModel.fetchProjectDetail()
-             async let questionList: () = viewModel.fetchQuestionList()
-             
-             await projectDetail
-             await questionList
-         }
+        .onAppear {
+            guard !hasLoadedData else {
+                print(" 이미 데이터 로드됨, 스킵")
+                return
+            }
+            
+            hasLoadedData = true
+            
+            Task {
+                async let projectDetail: () = viewModel.fetchProjectDetail()
+                async let questionList: () = viewModel.fetchQuestionList()
+                
+                await projectDetail
+                await questionList
+                
+                // 디버깅
+                print("========== 데이터 할당 체크 ==========")
+                print("프로젝트 ID: \(projectId)")
+                print("문항 목록 개수: \(viewModel.questionList.count)")
+                
+                if let question = currentQuestion {
+                    print("현재 선택된 문항:")
+                    print("  - Index: \(selectedQuestionIndex)")
+                    print("  - ID: \(question.id)")
+                    print("  - 문항: \(question.question)")
+                    print("  - max_length: \(question.maxLength ?? 0)")
+                } else {
+                    print(" currentQuestion이 nil입니다")
+                }
+                print("====================================")
+            }
+        }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {
