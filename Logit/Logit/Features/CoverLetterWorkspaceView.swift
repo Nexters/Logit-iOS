@@ -525,7 +525,15 @@ struct ChatMessagesView: View {
                                     && message.isDraft
                                     && message.id == lastDraftId,  //  마지막 draft만
                                 isAnimated: false,
-                                onUpdateCoverLetter: onUpdateCoverLetter
+                                chatId: message.id,
+                                onUpdateCoverLetter: {  chatId in
+                                    Task {
+                                        await viewModel.updateAnswer(chatId: chatId)
+                                        
+                                        // 성공 후 자기소개서 탭으로 전환
+                                        onUpdateCoverLetter()
+                                    }
+                                }
                             )
                             .id(message.id)  //  스크롤용 ID
                         }
@@ -538,6 +546,7 @@ struct ChatMessagesView: View {
                                 isDraft: true,  // 의미상: 아직 완성 안 된 초안
                                 showUpdateButton: false,  // 스트리밍 중에는 버튼 안 보임
                                 isAnimated: true,
+                                chatId: nil,
                                 onUpdateCoverLetter: nil
                             )
                             .id("streaming")  //  스트리밍용 고정 ID
@@ -615,10 +624,11 @@ struct ChatBubble: View {
     let isDraft: Bool
     let showUpdateButton: Bool
     let isAnimated: Bool
+    let chatId: String?
     @State private var displayedText: String = ""
     @State private var isTypingComplete: Bool = false
     @State private var rotationAngle: Double = 0
-    let onUpdateCoverLetter: (() -> Void)?
+    let onUpdateCoverLetter: ((String) -> Void)?
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -661,8 +671,11 @@ struct ChatBubble: View {
                         // 자기소개서 업데이트 버튼
                         if showUpdateButton && isTypingComplete && isDraft {
                             Button {
-                                print("자기소개서 업데이트 버튼 클릭")
-                                onUpdateCoverLetter?()
+                                if let chatId = chatId {
+                                    print("자기소개서 업데이트 버튼 클릭")
+                                    print("  - chatId: \(chatId)")
+                                    onUpdateCoverLetter?(chatId)
+                                }
                             } label: {
                                 HStack(spacing: 6) {
                                     Image("autorenew")
