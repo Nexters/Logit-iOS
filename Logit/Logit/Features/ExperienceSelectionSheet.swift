@@ -10,11 +10,31 @@ import SwiftUI
 struct ExperienceSelectionSheet: View {
     @Binding var isPresented: Bool
     @State private var showExperienceAddFlow = false
-    @State private var selectedExperiences: Set<String> = []
-    @State private var experiences: [ExperienceData] = []
+    @State private var experiences: [MatchingExperience] = []
+    @State private var selectedExperienceIds: Set<String> = []  
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     
-    let onSelectExperiences: ([ExperienceData]) -> Void
+    let questionId: String  //  문항 ID
+    let initialSelectedIds: [String]  // 기존 선택된 경험 ID
+    let onConfirm: ([String]) -> Void  //선택 완료 콜백
+    
+    private let experienceRepository: ExperienceRepository
     private let maxSelectionCount = 3
+    
+    init(
+        isPresented: Binding<Bool>,
+        questionId: String,
+        initialSelectedIds: [String] = [],
+        onConfirm: @escaping ([String]) -> Void,
+        experienceRepository: ExperienceRepository = DefaultExperienceRepository()
+    ) {
+        self._isPresented = isPresented
+        self.questionId = questionId
+        self.initialSelectedIds = initialSelectedIds
+        self.onConfirm = onConfirm
+        self.experienceRepository = experienceRepository
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -39,7 +59,6 @@ struct ExperienceSelectionSheet: View {
                 }
                 
                 Spacer()
-                
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
@@ -81,38 +100,71 @@ struct ExperienceSelectionSheet: View {
             .padding(.bottom, 16)
             
             // 컨텐츠 영역
-            ScrollView {
+            if isLoading {
+                //  로딩 상태
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else if let error = errorMessage {
+                //  에러 상태
                 VStack(spacing: 12) {
-                    ForEach(experiences.sorted(by: { Int($0.score) ?? 0 > Int($1.score) ?? 0 }), id: \.title) { experience in
-                        SelectableExperienceCell(
-                            experience: experience,
-                            isSelected: selectedExperiences.contains(experience.title),
-                            onTap: {
-                                toggleSelection(experience)
-                            }
-                        )
+                    Text(error)
+                        .typo(.regular_14_160)
+                        .foregroundColor(.gray200)
+                    
+                    Button("다시 시도") {
+                        Task {
+                            await loadMatchingExperiences()
+                        }
                     }
+                    .typo(.medium_13)
+                    .foregroundColor(.primary100)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else {
+                // 경험 리스트
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(
+                            experiences.sorted(by: { $0.similarityScore > $1.similarityScore }),
+                            id: \.experience.id
+                        ) { matchingExperience in
+                            SelectableExperienceCell(
+                                experience: matchingExperience.experience,
+                                similarityScore: matchingExperience.similarityScore,
+                                
+                                isSelected: selectedExperienceIds.contains(matchingExperience.experience.id),
+                                onTap: {
+                                    toggleSelection(matchingExperience.experience.id)
+                                },
+                                onMoreTapped: {
+                                    // TODO: 수정/삭제 메뉴 표시
+                                    print("더보기 버튼 클릭: \(matchingExperience.experience.title)")
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                }
+                .padding(.bottom, 20)
             }
-            .padding(.bottom, 20)
             
-            // 하단 적용 버튼
+            // 하단 확인 버튼
             Button {
-                let selected = experiences.filter { selectedExperiences.contains($0.title) }
-                onSelectExperiences(selected)
+                onConfirm(Array(selectedExperienceIds))
                 isPresented = false
             } label: {
-                Text("\(selectedExperiences.count)개 경험선택")
+                Text("\(selectedExperienceIds.count)개 경험 선택")
                     .typo(.semibold_16)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(selectedExperiences.isEmpty ? Color.gray100 : Color.primary100)
+                    .background(selectedExperienceIds.isEmpty ? Color.gray100 : Color.primary100)
                     .cornerRadius(12)
             }
-            .disabled(selectedExperiences.isEmpty)
+            .disabled(selectedExperienceIds.isEmpty)
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
         }
@@ -120,78 +172,147 @@ struct ExperienceSelectionSheet: View {
         .presentationDragIndicator(.hidden)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
-                print("경험 등록 완료!")
+                print(" 경험 등록 완료 - 목록 새로고침")
+                Task {
+                    await loadMatchingExperiences()
+                }
             }
         }
-        .onAppear {
-           // loadExperiences()
+        .task {
+            await loadMatchingExperiences()
         }
     }
     
-    private func toggleSelection(_ experience: ExperienceData) {
-        if selectedExperiences.contains(experience.title) {
-            // 이미 선택됨 → 선택 해제
-            selectedExperiences.remove(experience.title)
+    // 버튼 타이틀 (초안 생성 or 경험 선택)
+    private var buttonTitle: String {
+        if initialSelectedIds.isEmpty {
+            return "초안 생성하기"
         } else {
-            // 선택 안 됨 → 선택
-            if selectedExperiences.count < maxSelectionCount {
-                selectedExperiences.insert(experience.title)
-            } else {
-                // TODO: 최대 개수 초과 알림 (옵션)
-                print("최대 3개까지만 선택 가능합니다")
-            }
+            return "\(selectedExperienceIds.count)개 경험 선택"
         }
     }
     
-    private func loadExperiences() {
-        // TODO: 실제 경험 목록 로드
-        experiences = ExperienceDataStore.shared.experiences
+    // 매칭 경험 로드
+    private func loadMatchingExperiences() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let response = try await experienceRepository.getMatchingExperiences(
+                questionId: questionId
+            )
+            
+            experiences = response.experiences
+            
+            // 초기 선택 설정
+            selectedExperienceIds = Set(initialSelectedIds)
+            
+            print(" 매칭 경험 로드 성공")
+            print("  - 총 개수: \(response.total)")
+            print("  - 경험 목록: \(experiences.count)개")
+            print("  - 초기 선택: \(initialSelectedIds)")
+            
+            experiences.enumerated().forEach { index, matching in
+                print("  \(index + 1). \(matching.experience.title) (점수: \(matching.similarityScore))")
+            }
+            
+        } catch {
+            print(" 매칭 경험 로드 실패: \(error)")
+            errorMessage = "경험 목록을 불러올 수 없습니다."
+            
+            if let apiError = error as? APIError {
+                print("API Error: \(apiError.localizedDescription)")
+            }
+        }
+        
+        isLoading = false
+    }
+    
+    // 선택 토글
+    private func toggleSelection(_ experienceId: String) {
+        if selectedExperienceIds.contains(experienceId) {
+            selectedExperienceIds.remove(experienceId)
+        } else {
+            if selectedExperienceIds.count < maxSelectionCount {
+                selectedExperienceIds.insert(experienceId)
+            } else {
+                print(" 최대 3개까지만 선택 가능합니다")
+                // TODO: 토스트 메시지 표시
+            }
+        }
     }
 }
 
 // 선택 가능한 경험 셀
 struct SelectableExperienceCell: View {
-    let experience: ExperienceData
+    let experience: ExperienceResponse
+    let similarityScore: Double
     let isSelected: Bool
     let onTap: () -> Void
+    let onMoreTapped: () -> Void
+    
+    // 태그 파싱
+    private var parsedTags: [String] {
+        experience.tags
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+    
+    // Category 변환
+    private var displayCategory: String {
+        CompetencyMapper.toDisplayTitle(experience.category)
+    }
+    
+    // 점수 계산
+    private var displayScore: Int {
+        Int((similarityScore * 100).rounded())
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // 상단: 제목과 점수
-            HStack {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                //  상단: 점수 + 더보기 버튼
+                HStack {
+                    Text("\(displayScore)점")
+                        .typo(.medium_13)
+                        .foregroundColor(.primary100)
+                    
+                    Spacer()
+                    
+                    Button {
+                        onMoreTapped()
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .resizable()
+                            .frame(width: 16, height: 4)
+                            .foregroundColor(.gray300)
+                            .rotationEffect(.degrees(90))  // 세로로 회전
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                //  중단: 제목
                 Text(experience.title)
-                    .typo(.semibold_16)
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                
-                Spacer()
-                
-                Text("\(experience.score)점")
                     .typo(.medium_15)
-                    .foregroundColor(.primary200)
-            }
-            
-            // 하단: 태그들
-            HStack(spacing: 8) {
-                ExperienceTag(
-                    text: experience.competency,
-                    icon: experience.competency,
-                    isCompetency: true
+                    .foregroundColor(.primary500)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                //  하단: 태그들
+                AdaptiveTagsView(
+                    competencyTag: displayCategory,
+                    tags: parsedTags
                 )
-                ExperienceTag(text: experience.type)
-                Spacer()
             }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.primary100 : Color.gray70, lineWidth: 1)
+            )
         }
-        .padding(16)
-        .background(isSelected ? Color.primary20 : Color.white)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.primary100 : Color.gray100, lineWidth: isSelected ? 2 : 1)
-        )
-        .onTapGesture {
-            onTap()
-        }
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .buttonStyle(PlainButtonStyle())
     }
 }

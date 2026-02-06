@@ -19,6 +19,7 @@ struct CoverLetterWorkspaceView: View {
     @State private var hasLoadedData = false
     
     @State private var hasSelectedExperiences: Bool = false
+    @State private var selectedExperienceIds: [String] = []
     
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
@@ -111,11 +112,21 @@ struct CoverLetterWorkspaceView: View {
                                 projectId: projectId,
                                 questionId: question.id,
                                 hasSelectedExperiences: $hasSelectedExperiences,
+                                selectedExperienceIds: $selectedExperienceIds,
                                 onUpdateCoverLetter: {
                                     selectedView = .coverLetter
                                 },
                                 onShowExperienceSelection: {
                                     showExperienceSelection = true
+                                },
+                                onGenerateDraft: {
+                                    Task {
+                                        await sendMessage(
+                                            questionId: question.id,
+                                            content: nil,  // 초안 생성은 content 없음
+                                            experienceIds: selectedExperienceIds
+                                        )
+                                    }
                                 }
                             )
                         }
@@ -180,15 +191,33 @@ struct CoverLetterWorkspaceView: View {
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {
-            ExperienceSelectionSheet(
-                isPresented: $showExperienceSelection,
-                onSelectExperiences: { selectedExperiences in
-                    print("선택된 경험들: \(selectedExperiences.map { $0.title })")
-                    // TODO: 경험 선택 후 메시지 전송
-                }
-            )
-        }
+              if let question = currentQuestion {
+                  ExperienceSelectionSheet(
+                      isPresented: $showExperienceSelection,
+                      questionId: question.id,  //  문항 ID
+                      initialSelectedIds: selectedExperienceIds,  //  기존 선택
+                      onConfirm: { selectedIds in
+                          selectedExperienceIds = selectedIds  //  임시 저장
+                          hasSelectedExperiences = !selectedIds.isEmpty
+                          
+                          print("경험 선택 완료: \(selectedIds)")
+                      }
+                  )
+              }
+          }
     }
+    private func sendMessage(
+           questionId: String,
+           content: String?,
+           experienceIds: [String]
+       ) async {
+           print(" SSE 메시지 전송")
+           print("  - questionId: \(questionId)")
+           print("  - content: \(content ?? "nil")")
+           print("  - experienceIds: \(experienceIds)")
+           
+           // TODO: SSE 스트리밍 구현
+       }
 }
 
 struct QuestionTabBar: View {
@@ -272,39 +301,59 @@ struct IconTextButton: View {
 }
 
 struct EmptyWorkspaceView: View {
-    let onSelectExperience: () -> Void
+    let hasSelectedExperiences: Bool  //  경험 선택 여부
+    let onSelectExperience: () -> Void  // 경험 선택 버튼
+    let onGenerateDraft: () -> Void  // 초안 생성 버튼
     
     var body: some View {
         VStack(spacing: 0) {
+            
             Image("app_status_empty2")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
             
-            Text("경험을 선택하면 초안이 생성돼요")
+            Text(descriptionText)
                 .typo(.medium_15)
                 .foregroundStyle(.gray100)
                 .padding(.top, 16.adjustedLayout)
             
             Button {
-                onSelectExperience()
+                if hasSelectedExperiences {
+                    onGenerateDraft()  //  초안 생성
+                } else {
+                    onSelectExperience()  // 경험 선택
+                }
             } label: {
-                Text("자기소개서 작성")
+                Text(buttonTitle)
                     .typo(.medium_15)
-                    .foregroundStyle(.primary200)
+                    .foregroundStyle(hasSelectedExperiences ? .white: .primary200)
                     .padding(.horizontal, 24.adjustedLayout)
                     .padding(.vertical, 7.5.adjustedLayout)
-                    .background(.primary50)
+                    .background(hasSelectedExperiences ? .primary100 : .primary50)
                     .cornerRadius(8.adjustedLayout)
             }
             .padding(.top, 17.adjustedLayout)
+            
         }
         .offset(y: -10.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 60.adjustedLayout)
+        .padding(.vertical, 105.adjustedLayout)
         .background(.white)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
+    }
+    
+    //  버튼 타이틀
+    private var buttonTitle: String {
+        hasSelectedExperiences ? "초안 생성하기" : "경험을 선택해주세요"
+    }
+    
+    // 설명 텍스트 (옵션)
+    private var descriptionText: String {
+        hasSelectedExperiences
+            ? "선택한 경험으로 초안을 생성할게요"
+            : "경험을 선택하면 초안이 생성돼요"
     }
 }
 
@@ -376,8 +425,10 @@ struct ChatMessagesView: View {
     let projectId: String
     let questionId: String
     @Binding var hasSelectedExperiences: Bool
+    @Binding var selectedExperienceIds: [String]
     let onUpdateCoverLetter: () -> Void
     let onShowExperienceSelection: () -> Void
+    let onGenerateDraft: () -> Void
     
     @StateObject private var viewModel: ChatMessagesViewModel
     
@@ -385,14 +436,18 @@ struct ChatMessagesView: View {
         projectId: String,
         questionId: String,
         hasSelectedExperiences: Binding<Bool>,
+        selectedExperienceIds: Binding<[String]>,
         onUpdateCoverLetter: @escaping () -> Void,
-        onShowExperienceSelection: @escaping () -> Void
+        onShowExperienceSelection: @escaping () -> Void,
+        onGenerateDraft: @escaping () -> Void
     ) {
         self.projectId = projectId
         self.questionId = questionId
         self._hasSelectedExperiences = hasSelectedExperiences
+        self._selectedExperienceIds = selectedExperienceIds
         self.onUpdateCoverLetter = onUpdateCoverLetter
         self.onShowExperienceSelection = onShowExperienceSelection
+        self.onGenerateDraft = onGenerateDraft
         _viewModel = StateObject(wrappedValue: ChatMessagesViewModel(
             projectId: projectId,
             questionId: questionId
@@ -402,12 +457,11 @@ struct ChatMessagesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if viewModel.isLoading && viewModel.messages.isEmpty {
-                // 초기 로딩
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
             } else if let error = viewModel.errorMessage {
-                // 에러 상태
+                // 에러 표시
                 VStack(spacing: 12) {
                     Text(error)
                         .typo(.regular_14_160)
@@ -424,18 +478,19 @@ struct ChatMessagesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
             } else if viewModel.messages.isEmpty {
-                // 채팅 히스토리가 비어있음 → EmptyView
-                EmptyWorkspaceView {
-                    print("========== 경험 선택 버튼 클릭 ==========")
-                    print("프로젝트 ID: \(projectId)")
-                    print("문항 ID: \(questionId)")
-                    print("======================================")
-                    
-                    onShowExperienceSelection()
-                }
+                // 빈 화면 (경험 선택 여부에 따라 버튼 변경)
+                EmptyWorkspaceView(
+                    hasSelectedExperiences: hasSelectedExperiences,
+                    onSelectExperience: {
+                        onShowExperienceSelection()
+                    },
+                    onGenerateDraft: {
+                        onGenerateDraft()  // 초안 생성 콜백
+                    }
+                )
                 
             } else {
-                //  채팅 메시지 표시
+                // 메시지 리스트
                 ForEach(viewModel.messages) { message in
                     ChatBubble(
                         message: message.content,
@@ -445,7 +500,6 @@ struct ChatMessagesView: View {
                     )
                 }
                 
-                // 더 불러오기
                 if viewModel.hasMore {
                     Button {
                         Task {
@@ -465,16 +519,15 @@ struct ChatMessagesView: View {
                 }
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .frame(maxHeight: .infinity)
+        .padding(.horizontal, viewModel.messages.isEmpty ? 0 : 20)
+        .padding(.vertical, viewModel.messages.isEmpty ? 0 : 16)
         .task {
             await viewModel.fetchChatHistory()
         }
         .onChange(of: viewModel.experienceIds) { newValue in
-            // ✅ experienceIds 변경 시 바인딩 자동 업데이트
             hasSelectedExperiences = !newValue.isEmpty
-            print("🔍 experienceIds 변경: \(newValue)")
-            print("🔍 hasSelectedExperiences → \(hasSelectedExperiences)")
+            selectedExperienceIds = newValue
         }
     }
 }
