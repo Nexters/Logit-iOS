@@ -139,10 +139,16 @@ struct CoverLetterWorkspaceView: View {
                     print("전송: \(message)")
                     print("프로젝트 ID: \(projectId)")
                     
-                    // 현재 선택된 문항 정보
-                    if !viewModel.questionList.isEmpty {
-                        let currentQuestion = viewModel.questionList[selectedQuestionIndex]
-                        print("문항 ID: \(currentQuestion.id)")
+                    guard let chatViewModel = currentChatViewModel else {
+                        print("ChatViewModel이 아직 초기화되지 않았습니다")
+                        return
+                    }
+                    
+                    Task {
+                        await chatViewModel.sendMessage(
+                            content: message,
+                            experienceIds: selectedExperienceIds
+                        )
                     }
                 },
                 onAttachmentTapped: {
@@ -363,6 +369,12 @@ struct ChatInputBar: View {
             Button {
                 // TODO: 추가 기능 (사진, 파일 등)
                 onAttachmentTapped()
+                UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
             } label: {
                 ZStack {
                     Circle()
