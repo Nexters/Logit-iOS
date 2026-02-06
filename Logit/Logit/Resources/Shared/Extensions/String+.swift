@@ -39,4 +39,23 @@ extension String {
     var onlyNumbers: String {
         self.filter { $0.isNumber }
     }
+    
+    /// ISO 8601 문자열을 Date로 변환
+       func toDate() -> Date? {
+           let formatter = ISO8601DateFormatter()
+           //  밀리초 있어도/없어도 둘 다 처리
+           return formatter.date(from: self)
+       }
+       
+       /// ISO 8601 문자열을 원하는 형식의 날짜 문자열로 변환
+       func toDateString(format: String = "yyyy.MM.dd") -> String {
+           guard let date = self.toDate() else {
+               return self  // 변환 실패 시 원본 반환
+           }
+           return date.toString(format: format)
+       }
+}
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
 }

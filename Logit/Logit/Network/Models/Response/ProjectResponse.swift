@@ -12,7 +12,7 @@ struct ProjectResponse: Decodable {
     let company: String
     let jobPosition: String
     let recruitNotice: String
-    let dueDate: String
+    let dueDate: String?
     let userId: String
     let createdAt: String
     let updatedAt: String
