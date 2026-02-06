@@ -12,7 +12,7 @@ struct ChatHistoryResponse: Decodable {
     let projectCreatedAt: String
     let questionId: String
     let question: String
-    let answer: String
+    let answer: String?
     let chats: [ChatMessage]
     let experienceIds: [String]
     let nextCursor: String?
@@ -34,7 +34,7 @@ struct ChatHistoryResponse: Decodable {
 }
 
 
-struct ChatMessage: Decodable {
+struct ChatMessage: Decodable,Equatable,Identifiable{
     let id: String
     let role: ChatRole
     let content: String

@@ -29,7 +29,7 @@ class DefaultExperienceRepository: ExperienceRepository {
     
     private let networkClient: NetworkClient
     
-    init(networkClient: NetworkClient) {
+    init(networkClient: NetworkClient = DefaultNetworkClient()) {
         self.networkClient = networkClient
     }
   
