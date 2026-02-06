@@ -10,7 +10,7 @@ import SwiftUI
 struct CoverLetterWorkspaceView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel: WorkspaceViewModel
-    let questions: [QuestionItem]  // AddFlow에서 전달받은 임시 데이터
+    let questions: [QuestionItem]
     let projectId: String
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
@@ -22,6 +22,8 @@ struct CoverLetterWorkspaceView: View {
     @State private var selectedExperienceIds: [String] = []
     @State private var currentChatViewModel: ChatMessagesViewModel?
     
+    @State private var showToast: Bool = false
+    
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
               selectedQuestionIndex < viewModel.questionList.count else {
@@ -29,7 +31,6 @@ struct CoverLetterWorkspaceView: View {
         }
         return viewModel.questionList[selectedQuestionIndex]
     }
-    
     
     enum ContentType {
         case chat, coverLetter
@@ -42,130 +43,162 @@ struct CoverLetterWorkspaceView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            CustomNavigationBar(
-                title: viewModel.navigationTitle,  //  동적 타이틀
-                showBackButton: true,
-                onBackTapped: { dismiss() }
-            )
-            
-            // 문항 탭 바 (API에서 가져온 데이터)
-            if !viewModel.questionList.isEmpty {
-                QuestionTabBar(
-                    questionCount: viewModel.questionList.count,
-                    selectedIndex: $selectedQuestionIndex
-                )
-                .onChange(of: selectedQuestionIndex) { newIndex in
-                    // 탭 전환 시 체크
-                    print("========== 문항 전환 ==========")
-                    print("선택된 Index: \(newIndex)")
-                    
-                    if newIndex < viewModel.questionList.count {
-                        let question = viewModel.questionList[newIndex]
-                        print("문항 ID: \(question.id)")
-                        print("문항 내용: \(question.question)")
-                    } else {
-                        print(" Index out of range")
-                    }
-                    print("==============================")
-                }
-            } else if viewModel.isLoading {
-                // 로딩 중
-                ProgressView()
-                    .padding(.vertical, 12)
-            } else {
-                // 임시: AddFlow에서 전달받은 questions 사용
-                QuestionTabBar(
-                    questionCount: questions.count,
-                    selectedIndex: $selectedQuestionIndex
-                )
-            }
-            
-            // 채팅 / 자기소개서 선택 버튼
-            HStack(spacing: 8) {
-                IconTextButton(
-                    selectedIconName: "chat_selected",
-                    unselectedIconName: "chat_unselected",
-                    title: "채팅",
-                    isSelected: selectedView == .chat,
-                    action: { selectedView = .chat }
+        ZStack {
+            VStack(spacing: 0) {
+                CustomNavigationBar(
+                    title: viewModel.navigationTitle,
+                    showBackButton: true,
+                    onBackTapped: { dismiss() }
                 )
                 
-                IconTextButton(
-                    selectedIconName: "coverLetter_selected",
-                    unselectedIconName: "coverLetter_unselected",
-                    title: "자기소개서",
-                    isSelected: selectedView == .coverLetter,
-                    action: { selectedView = .coverLetter }
-                )
+                // 문항 탭 바
+                if !viewModel.questionList.isEmpty {
+                    QuestionTabBar(
+                        questionCount: viewModel.questionList.count,
+                        selectedIndex: $selectedQuestionIndex
+                    )
+                    .onChange(of: selectedQuestionIndex) { newIndex in
+                        print("========== 문항 전환 ==========")
+                        print("선택된 Index: \(newIndex)")
+                        
+                        if newIndex < viewModel.questionList.count {
+                            let question = viewModel.questionList[newIndex]
+                            print("문항 ID: \(question.id)")
+                            print("문항 내용: \(question.question)")
+                        } else {
+                            print(" Index out of range")
+                        }
+                        print("==============================")
+                    }
+                } else if viewModel.isLoading {
+                    ProgressView()
+                        .padding(.vertical, 12)
+                } else {
+                    QuestionTabBar(
+                        questionCount: questions.count,
+                        selectedIndex: $selectedQuestionIndex
+                    )
+                }
                 
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            
-            // 채팅 스크롤 영역
-            ScrollView {
-                VStack(spacing: 0) {
-                    if selectedView == .chat {
-                        if let question = currentQuestion {
-                            ChatMessagesView(
-                                projectId: projectId,
-                                questionId: question.id,
-                                hasSelectedExperiences: $hasSelectedExperiences,
-                                selectedExperienceIds: $selectedExperienceIds,
-                                viewModelRef: $currentChatViewModel,  
-                                onUpdateCoverLetter: {
-                                    Task {
-                                        // questionList 다시 fetch
-                                        await viewModel.fetchQuestionList()
-                                        
-                                        // 자기소개서 탭으로 전환
-                                        selectedView = .coverLetter
-                                    }
-                                },
-                                onShowExperienceSelection: {
-                                    showExperienceSelection = true
-                                },
-                                onGenerateDraft: {}
-                            )
-                        }
-                    } else {
-                        // 자소서 뷰
-                        if let question = currentQuestion {
-                            CoverLetterContentView(
-                                question: question.question,
-                                answer: question.answer
-                            )
+                // 채팅 / 자기소개서 선택 버튼
+                HStack(spacing: 8) {
+                    IconTextButton(
+                        selectedIconName: "chat_selected",
+                        unselectedIconName: "chat_unselected",
+                        title: "채팅",
+                        isSelected: selectedView == .chat,
+                        action: { selectedView = .chat }
+                    )
+                    
+                    IconTextButton(
+                        selectedIconName: "coverLetter_selected",
+                        unselectedIconName: "coverLetter_unselected",
+                        title: "자기소개서",
+                        isSelected: selectedView == .coverLetter,
+                        action: { selectedView = .coverLetter }
+                    )
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                
+                // 채팅 스크롤 영역
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if selectedView == .chat {
+                            if let question = currentQuestion {
+                                ChatMessagesView(
+                                    projectId: projectId,
+                                    questionId: question.id,
+                                    hasSelectedExperiences: $hasSelectedExperiences,
+                                    selectedExperienceIds: $selectedExperienceIds,
+                                    viewModelRef: $currentChatViewModel,
+                                    onUpdateCoverLetter: {
+                                        // 업데이트 성공 처리
+                                        Task {
+                                            // questionList 다시 fetch
+                                            await viewModel.fetchQuestionList()
+                                            
+                                            //  토스트 표시
+                                            withAnimation(.spring()) {
+                                                showToast = true
+                                            }
+                                            
+                                            //  3초 후 자동 숨김
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                                withAnimation {
+                                                    showToast = false
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onShowExperienceSelection: {
+                                        showExperienceSelection = true
+                                    },
+                                    onGenerateDraft: {}
+                                )
+                            }
+                        } else {
+                            // 자소서 뷰
+                            if let question = currentQuestion {
+                                CoverLetterContentView(
+                                    question: question.question,
+                                    answer: question.answer
+                                )
+                            }
                         }
                     }
                 }
+                .scrollToMinDistance(minDisntance: 32)
+                
+                // 채팅 입력창
+                ChatInputBar(
+                    hasSelectedExperiences: hasSelectedExperiences,
+                    onSend: { message in
+                        print("전송: \(message)")
+                        print("프로젝트 ID: \(projectId)")
+                        
+                        guard let chatViewModel = currentChatViewModel else {
+                            print(" ChatViewModel이 아직 초기화되지 않았습니다")
+                            return
+                        }
+                        
+                        Task {
+                            await chatViewModel.sendMessage(
+                                content: message,
+                                experienceIds: selectedExperienceIds
+                            )
+                        }
+                    },
+                    onAttachmentTapped: {
+                        showExperienceSelection = true
+                    }
+                )
             }
-            .scrollToMinDistance(minDisntance: 32)
             
-            // 채팅 입력창
-            ChatInputBar(
-                hasSelectedExperiences: hasSelectedExperiences,
-                onSend: { message in
-                    print("전송: \(message)")
-                    print("프로젝트 ID: \(projectId)")
+            //  토스트 오버레이
+            if showToast {
+                VStack {
+                    Spacer()
                     
-                    guard let chatViewModel = currentChatViewModel else {
-                        print("ChatViewModel이 아직 초기화되지 않았습니다")
-                        return
-                    }
-                    
-                    Task {
-                        await chatViewModel.sendMessage(
-                            content: message,
-                            experienceIds: selectedExperienceIds
-                        )
-                    }
-                },
-                onAttachmentTapped: {
-                    showExperienceSelection = true
+                    ToastView(
+                        message: "자소서가 업데이트 됐어요",
+                        actionTitle: "바로가기",
+                        onAction: {
+                            // 자기소개서 탭으로 전환
+                            selectedView = .coverLetter
+                            
+                            // 토스트 숨김
+                            withAnimation {
+                                showToast = false
+                            }
+                        }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 74)
                 }
-            )
+            }
         }
         .onAppear {
             guard !hasLoadedData else {
@@ -182,7 +215,6 @@ struct CoverLetterWorkspaceView: View {
                 await projectDetail
                 await questionList
                 
-                // 디버깅
                 print("========== 데이터 할당 체크 ==========")
                 print("프로젝트 ID: \(projectId)")
                 print("문항 목록 개수: \(viewModel.questionList.count)")
@@ -202,33 +234,21 @@ struct CoverLetterWorkspaceView: View {
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .sheet(isPresented: $showExperienceSelection) {
-              if let question = currentQuestion {
-                  ExperienceSelectionSheet(
-                      isPresented: $showExperienceSelection,
-                      questionId: question.id,  //  문항 ID
-                      initialSelectedIds: selectedExperienceIds,  //  기존 선택
-                      onConfirm: { selectedIds in
-                          selectedExperienceIds = selectedIds  //  임시 저장
-                          hasSelectedExperiences = !selectedIds.isEmpty
-                          
-                          print("경험 선택 완료: \(selectedIds)")
-                      }
-                  )
-              }
-          }
+            if let question = currentQuestion {
+                ExperienceSelectionSheet(
+                    isPresented: $showExperienceSelection,
+                    questionId: question.id,
+                    initialSelectedIds: selectedExperienceIds,
+                    onConfirm: { selectedIds in
+                        selectedExperienceIds = selectedIds
+                        hasSelectedExperiences = !selectedIds.isEmpty
+                        
+                        print("경험 선택 완료: \(selectedIds)")
+                    }
+                )
+            }
+        }
     }
-    private func sendMessage(
-           questionId: String,
-           content: String?,
-           experienceIds: [String]
-       ) async {
-           print(" SSE 메시지 전송")
-           print("  - questionId: \(questionId)")
-           print("  - content: \(content ?? "nil")")
-           print("  - experienceIds: \(experienceIds)")
-           
-           // TODO: SSE 스트리밍 구현
-       }
 }
 
 struct QuestionTabBar: View {
@@ -796,3 +816,57 @@ struct CoverLetterContentView: View {
         .background(Color.white)
     }
 }
+
+struct ToastView: View {
+    let message: String
+    let actionTitle: String
+    let onAction: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // 체크 아이콘
+            ZStack {
+                Circle()
+                    .fill(Color.primary100)
+                    .frame(width: 24, height: 24)
+                
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .frame(width: 12, height: 12)
+                    .foregroundColor(.white)
+                    .fontWeight(.semibold)
+            }
+            
+            // 메시지
+            Text(message)
+                .typo(.regular_16_150)
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            
+            Spacer(minLength: 8)
+            
+            // 바로가기 버튼
+            Button {
+                onAction()
+            } label: {
+                Text(actionTitle)
+                    .typo(.regular_14_160)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.primary500)
+                    .clipShape(Capsule())
+            }
+            .fixedSize()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.primary400)
+        )
+        .padding(.horizontal, 20)
+    }
+}
+
