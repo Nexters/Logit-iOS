@@ -10,7 +10,6 @@ import SwiftUI
 struct ExperienceSelectionSheet: View {
     @Binding var isPresented: Bool
     @State private var showExperienceAddFlow = false
-    @Binding var hasData: Bool
     @State private var selectedExperiences: Set<String> = []
     @State private var experiences: [ExperienceData] = ExperienceDataStore.shared.experiences
     
@@ -103,7 +102,6 @@ struct ExperienceSelectionSheet: View {
             Button {
                 let selected = experiences.filter { selectedExperiences.contains($0.title) }
                 onSelectExperiences(selected)
-                hasData = true 
                 isPresented = false
             } label: {
                 Text("\(selectedExperiences.count)개 경험선택")

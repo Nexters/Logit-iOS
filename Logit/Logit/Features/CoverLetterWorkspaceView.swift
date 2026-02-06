@@ -14,7 +14,6 @@ struct CoverLetterWorkspaceView: View {
     let projectId: String
     @State private var selectedQuestionIndex: Int = 0
     @State private var selectedView: ContentType = .chat
-    @State private var hasData: Bool = false
     @State private var showExperienceSelection = false
     
     @State private var hasLoadedData = false
@@ -104,31 +103,22 @@ struct CoverLetterWorkspaceView: View {
             // 채팅 스크롤 영역
             ScrollView {
                 VStack(spacing: 0) {
-                    if hasData {
-                        if selectedView == .chat {
+                    if selectedView == .chat {
+                        if let question = currentQuestion {
                             ChatMessagesView(
+                                projectId: projectId,
+                                questionId: question.id,
                                 onUpdateCoverLetter: {
                                     selectedView = .coverLetter
+                                },
+                                onShowExperienceSelection: {
+                                    showExperienceSelection = true
                                 }
                             )
-                        } else {
-                            CoverLetterContentView()
                         }
                     } else {
-                        EmptyWorkspaceView {
-                            print("========== 경험 선택 버튼 클릭 ==========")
-                            print("프로젝트 ID: \(projectId)")
-                            
-                            if let question = currentQuestion {
-                                print("현재 문항 ID: \(question.id)")
-                                print("현재 문항: \(question.question)")
-                            } else {
-                                print(" currentQuestion이 nil입니다")
-                            }
-                            print("======================================")
-                            
-                            showExperienceSelection = true
-                        }
+                        // 자소서 뷰
+                        CoverLetterContentView()
                     }
                 }
             }
@@ -188,9 +178,9 @@ struct CoverLetterWorkspaceView: View {
         .sheet(isPresented: $showExperienceSelection) {
             ExperienceSelectionSheet(
                 isPresented: $showExperienceSelection,
-                hasData: $hasData,
                 onSelectExperiences: { selectedExperiences in
                     print("선택된 경험들: \(selectedExperiences.map { $0.title })")
+                    // TODO: 경험 선택 후 메시지 전송
                 }
             )
         }
@@ -378,15 +368,100 @@ struct ChatInputBar: View {
 
 // 채팅 메시지 리스트 뷰
 struct ChatMessagesView: View {
+    let projectId: String
+    let questionId: String
     let onUpdateCoverLetter: () -> Void
+    let onShowExperienceSelection: () -> Void
+    
+    @StateObject private var viewModel: ChatMessagesViewModel
+    
+    init(
+        projectId: String,
+        questionId: String,
+        onUpdateCoverLetter: @escaping () -> Void,
+        onShowExperienceSelection: @escaping () -> Void
+    ) {
+        self.projectId = projectId
+        self.questionId = questionId
+        self.onUpdateCoverLetter = onUpdateCoverLetter
+        self.onShowExperienceSelection = onShowExperienceSelection
+        _viewModel = StateObject(wrappedValue: ChatMessagesViewModel(
+            projectId: projectId,
+            questionId: questionId
+        ))
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // TODO: 실제 채팅 메시지들
-            ChatBubble(message: "저는 비전공자로 iOS 개발을 시작했지만, 사용자 중심의 문제 해결에 집중하며 성장해왔습니다. 특히 로그 데이터 분석을 통한 이탈률 개선 프로젝트에서, Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석하고 특정 화면에서의 높은 이탈률 원인을 파악했습니다. 이를 해결하기 위해 이미지 캐싱과 lazy loading을 적용하여 로딩 시간을 개선했고, 불필요한 네트워크 요청을 최적화한 결과 이탈률을 15% 감소시켰습니다. 이 과정에서 단순히 코드를 작성하는 것을 넘어, 데이터 기반으로 문제를 정의하고 기술적 해결책을 찾는 능력을 키웠습니다. 또한 신규 서비스 런칭 경험에서는 SwiftUI와 MVVM 아키텍처를 활용해 빠른 프로토타이핑과 확장 가능한 구조를 동시에 구현했으며, 출시 3개월 만에 MAU 10만을 달성하는 성과를 이뤘습니다. 앞으로도 사용자에게 진정한 가치를 전달하는 iOS 개발자로 성장하고 싶습니다.", isUser: false, showUpdateButton: true, onUpdateCoverLetter: onUpdateCoverLetter )
+            if viewModel.isLoading && viewModel.messages.isEmpty {
+                // 초기 로딩
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else if let error = viewModel.errorMessage {
+                // 에러 상태
+                VStack(spacing: 12) {
+                    Text(error)
+                        .typo(.regular_14_160)
+                        .foregroundColor(.gray200)
+                    
+                    Button("다시 시도") {
+                        Task {
+                            await viewModel.fetchChatHistory()
+                        }
+                    }
+                    .typo(.medium_13)
+                    .foregroundColor(.primary100)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else if viewModel.messages.isEmpty {
+                // 채팅 히스토리가 비어있음 → EmptyView
+                EmptyWorkspaceView {
+                    print("========== 경험 선택 버튼 클릭 ==========")
+                    print("프로젝트 ID: \(projectId)")
+                    print("문항 ID: \(questionId)")
+                    print("======================================")
+                    
+                    onShowExperienceSelection()
+                }
+                
+            } else {
+                //  채팅 메시지 표시
+                ForEach(viewModel.messages) { message in
+                    ChatBubble(
+                        message: message.content,
+                        isUser: message.role == .user,
+                        showUpdateButton: message.role == .assistant && message.id == viewModel.messages.last?.id,
+                        onUpdateCoverLetter: onUpdateCoverLetter
+                    )
+                }
+                
+                // 더 불러오기
+                if viewModel.hasMore {
+                    Button {
+                        Task {
+                            await viewModel.loadMoreMessages()
+                        }
+                    } label: {
+                        if viewModel.isLoading {
+                            ProgressView()
+                        } else {
+                            Text("이전 메시지 보기")
+                                .typo(.regular_14_160)
+                                .foregroundColor(.gray200)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+        .task {
+            await viewModel.fetchChatHistory()
+        }
     }
 }
 
