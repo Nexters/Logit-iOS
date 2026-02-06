@@ -369,12 +369,7 @@ struct ChatInputBar: View {
             Button {
                 // TODO: 추가 기능 (사진, 파일 등)
                 onAttachmentTapped()
-                UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder),
-                        to: nil,
-                        from: nil,
-                        for: nil
-                    )
+
             } label: {
                 ZStack {
                     Circle()
@@ -397,6 +392,12 @@ struct ChatInputBar: View {
                 Button {
                     onSend(messageText)
                     messageText = ""
+                    UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
                 } label: {
                     ZStack {
                         Circle()
@@ -463,6 +464,13 @@ struct ChatMessagesView: View {
         ))
     }
     
+    //  마지막 draft 메시지 ID
+    private var lastDraftId: String? {
+        viewModel.messages
+            .filter { $0.role == .assistant && $0.isDraft }
+            .last?.id
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if viewModel.isLoading && viewModel.messages.isEmpty {
@@ -495,7 +503,6 @@ struct ChatMessagesView: View {
                     },
                     onGenerateDraft: {
                         Task {
-                            //  ViewModel의 sendMessage 직접 호출
                             await viewModel.sendMessage(
                                 content: "선택한 경험을 바탕으로 자기소개서 초안을 작성해줘",
                                 experienceIds: selectedExperienceIds
@@ -505,44 +512,83 @@ struct ChatMessagesView: View {
                 )
                 
             } else {
-                // 메시지 리스트
-                ForEach(viewModel.messages) { message in
-                    ChatBubble(
-                        message: message.content,
-                        isUser: message.role == .user,
-                        showUpdateButton: message.role == .assistant && message.id == viewModel.messages.last?.id,
-                        isAnimated: false,
-                        onUpdateCoverLetter: onUpdateCoverLetter
-                    )
-                }
-                
-                //  스트리밍 중일 때 실시간 ChatBubble
-                if viewModel.isStreaming {
-                    ChatBubble(
-                        message: viewModel.streamingMessage,
-                        isUser: false,
-                        showUpdateButton: false,  // 아직 완료 안 됨
-                        isAnimated: true,
-                        onUpdateCoverLetter: nil
-                    )
-                }
-                
-                if viewModel.hasMore {
-                    Button {
-                        Task {
-                            await viewModel.loadMoreMessages()
+                // ScrollViewReader로 자동 스크롤
+                ScrollViewReader { proxy in
+                    VStack(alignment: .leading, spacing: 16) {
+                        // 메시지 리스트
+                        ForEach(viewModel.messages) { message in
+                            ChatBubble(
+                                message: message.content,
+                                isUser: message.role == .user,
+                                isDraft: message.isDraft,
+                                showUpdateButton: message.role == .assistant
+                                    && message.isDraft
+                                    && message.id == lastDraftId,  //  마지막 draft만
+                                isAnimated: false,
+                                onUpdateCoverLetter: onUpdateCoverLetter
+                            )
+                            .id(message.id)  //  스크롤용 ID
                         }
-                    } label: {
-                        if viewModel.isLoading {
-                            ProgressView()
-                        } else {
-                            Text("이전 메시지 보기")
-                                .typo(.regular_14_160)
-                                .foregroundColor(.gray200)
+                        
+                        // 스트리밍 중일 때 실시간 ChatBubble
+                        if viewModel.isStreaming {
+                            ChatBubble(
+                                message: viewModel.streamingMessage,
+                                isUser: false,
+                                isDraft: true,  // 의미상: 아직 완성 안 된 초안
+                                showUpdateButton: false,  // 스트리밍 중에는 버튼 안 보임
+                                isAnimated: true,
+                                onUpdateCoverLetter: nil
+                            )
+                            .id("streaming")  //  스트리밍용 고정 ID
+                        }
+                        
+                        // 스크롤 앵커 (투명한 뷰)
+                        Color.clear
+                            .frame(height: 1)
+                            .id("bottom")
+                        
+                        // 더보기 버튼
+                        if viewModel.hasMore {
+                            Button {
+                                Task {
+                                    await viewModel.loadMoreMessages()
+                                }
+                            } label: {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                } else {
+                                    Text("이전 메시지 보기")
+                                        .typo(.regular_14_160)
+                                        .foregroundColor(.gray200)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
                         }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    //  메시지 변경 시 자동 스크롤
+                    .onChange(of: viewModel.messages.count) { _ in
+                        withAnimation {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
+                    // 스트리밍 중 실시간 스크롤
+                    .onChange(of: viewModel.streamingMessage) { newValue in
+                        if !newValue.isEmpty {
+                            withAnimation {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
+                        }
+                    }
+                    //  스트리밍 시작 시 스크롤
+                    .onChange(of: viewModel.isStreaming) { isStreaming in
+                        if isStreaming {
+                            withAnimation {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -557,8 +603,8 @@ struct ChatMessagesView: View {
             selectedExperienceIds = newValue
         }
         .onAppear {
-               viewModelRef = viewModel  //  부모에게 ViewModel 전달
-           }
+            viewModelRef = viewModel
+        }
     }
 }
 
@@ -566,6 +612,7 @@ struct ChatMessagesView: View {
 struct ChatBubble: View {
     let message: String
     let isUser: Bool
+    let isDraft: Bool
     let showUpdateButton: Bool
     let isAnimated: Bool
     @State private var displayedText: String = ""
@@ -612,7 +659,7 @@ struct ChatBubble: View {
                         }
                         
                         // 자기소개서 업데이트 버튼
-                        if showUpdateButton && isTypingComplete {
+                        if showUpdateButton && isTypingComplete && isDraft {
                             Button {
                                 print("자기소개서 업데이트 버튼 클릭")
                                 onUpdateCoverLetter?()
