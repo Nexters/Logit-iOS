@@ -138,6 +138,7 @@ struct CoverLetterWorkspaceView: View {
                                     },
                                     onGenerateDraft: {}
                                 )
+                                .id(question.id)
                             }
                         } else {
                             // 자소서 뷰
@@ -146,6 +147,7 @@ struct CoverLetterWorkspaceView: View {
                                     question: question.question,
                                     answer: question.answer
                                 )
+                                .id(question.id)
                             }
                         }
                     }
