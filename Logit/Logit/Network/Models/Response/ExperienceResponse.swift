@@ -11,7 +11,7 @@ struct ExperienceResponse: Decodable {
     let action: String
     let category: String
     let createdAt: String
-    let endDate: String
+    let endDate: String?
     let experienceType: String
     let id: String
     let result: String

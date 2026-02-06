@@ -483,7 +483,7 @@ struct ChatMessagesView: View {
                     },
                     onGenerateDraft: {
                         Task {
-                            // ✅ ViewModel의 sendMessage 직접 호출
+                            //  ViewModel의 sendMessage 직접 호출
                             await viewModel.sendMessage(
                                 content: "선택한 경험을 바탕으로 자기소개서 초안을 작성해줘",
                                 experienceIds: selectedExperienceIds
@@ -499,16 +499,18 @@ struct ChatMessagesView: View {
                         message: message.content,
                         isUser: message.role == .user,
                         showUpdateButton: message.role == .assistant && message.id == viewModel.messages.last?.id,
+                        isAnimated: false,
                         onUpdateCoverLetter: onUpdateCoverLetter
                     )
                 }
                 
-                // ✅ 스트리밍 중일 때 실시간 ChatBubble
+                //  스트리밍 중일 때 실시간 ChatBubble
                 if viewModel.isStreaming {
                     ChatBubble(
                         message: viewModel.streamingMessage,
                         isUser: false,
                         showUpdateButton: false,  // 아직 완료 안 됨
+                        isAnimated: true,
                         onUpdateCoverLetter: nil
                     )
                 }
@@ -543,7 +545,7 @@ struct ChatMessagesView: View {
             selectedExperienceIds = newValue
         }
         .onAppear {
-               viewModelRef = viewModel  // ✅ 부모에게 ViewModel 전달
+               viewModelRef = viewModel  //  부모에게 ViewModel 전달
            }
     }
 }
@@ -553,6 +555,7 @@ struct ChatBubble: View {
     let message: String
     let isUser: Bool
     let showUpdateButton: Bool
+    let isAnimated: Bool
     @State private var displayedText: String = ""
     @State private var isTypingComplete: Bool = false
     let onUpdateCoverLetter: (() -> Void)?
@@ -614,14 +617,27 @@ struct ChatBubble: View {
             }
         }
         .onAppear {
-            if !isUser {
-                startTypingAnimation()
-            } else {
-                // 사용자 메시지는 즉시 표시
-                displayedText = message
-                isTypingComplete = true
-            }
-        }
+                  if !isUser {
+                      if isAnimated {
+                          // ⭐️ 실시간 스트리밍만 애니메이션
+                          startTypingAnimation()
+                      } else {
+                          // ⭐️ 히스토리는 바로 표시
+                          displayedText = message
+                          isTypingComplete = true
+                      }
+                  } else {
+                      displayedText = message
+                      isTypingComplete = true
+                  }
+              }
+              // ⭐️ 스트리밍 중 실시간 업데이트를 위한 onChange
+              .onChange(of: message) { newValue in
+                  if isAnimated && !isUser {
+                      // 스트리밍 중에는 실시간으로 텍스트 업데이트
+                      displayedText = newValue
+                  }
+              }
     }
     
     private func startTypingAnimation() {
