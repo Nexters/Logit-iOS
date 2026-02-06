@@ -570,6 +570,7 @@ struct ChatBubble: View {
     let isAnimated: Bool
     @State private var displayedText: String = ""
     @State private var isTypingComplete: Bool = false
+    @State private var rotationAngle: Double = 0
     let onUpdateCoverLetter: (() -> Void)?
     
     var body: some View {
@@ -590,20 +591,30 @@ struct ChatBubble: View {
                     Image("chatting_logo")
                         .resizable()
                         .frame(size: 24)
+                        .rotationEffect(.degrees(isAnimated && displayedText.isEmpty ? rotationAngle : 0))
                     
                     VStack(alignment: .leading, spacing: 12) {
-                        // 봇 메시지
-                        Text(displayedText)
-                            .typo(.regular_14_160)
-                            .foregroundColor(.black)
-                            .padding(.vertical, 10)
-                            .background(Color.clear)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // 로딩 상태 분기
+                        if isAnimated && displayedText.isEmpty {
+                            // 스트리밍 대기 중
+                            Text("응답 기다리는 중...")
+                                .typo(.regular_14_160)
+                                .foregroundColor(.gray200)
+                                .padding(.vertical, 10)
+                        } else {
+                            // 봇 메시지
+                            Text(displayedText)
+                                .typo(.regular_14_160)
+                                .foregroundColor(.black)
+                                .padding(.vertical, 10)
+                                .background(Color.clear)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         
-                        // 자기소개서 업데이트 버튼 (타이핑 완료 후 표시)
+                        // 자기소개서 업데이트 버튼
                         if showUpdateButton && isTypingComplete {
                             Button {
-                                print("자기소개서 업데이트 버튼 클릭 (시연용)")
+                                print("자기소개서 업데이트 버튼 클릭")
                                 onUpdateCoverLetter?()
                             } label: {
                                 HStack(spacing: 6) {
@@ -613,15 +624,13 @@ struct ChatBubble: View {
                                     Text("자기소개서 업데이트")
                                         .typo(.medium_13)
                                         .foregroundStyle(.primary600)
-                    
                                 }
-//                                .foregroundColor(.clear)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
                                 .background(Color.clear)
                                 .cornerRadius(8)
                             }
-                            .transition(.opacity.combined(with: .scale))  //  부드러운 등장 효과
+                            .transition(.opacity.combined(with: .scale))
                         }
                     }
                 }
@@ -629,46 +638,37 @@ struct ChatBubble: View {
             }
         }
         .onAppear {
-                  if !isUser {
-                      if isAnimated {
-                          // ⭐️ 실시간 스트리밍만 애니메이션
-                          startTypingAnimation()
-                      } else {
-                          // ⭐️ 히스토리는 바로 표시
-                          displayedText = message
-                          isTypingComplete = true
-                      }
-                  } else {
-                      displayedText = message
-                      isTypingComplete = true
-                  }
-              }
-              // ⭐️ 스트리밍 중 실시간 업데이트를 위한 onChange
-              .onChange(of: message) { newValue in
-                  if isAnimated && !isUser {
-                      // 스트리밍 중에는 실시간으로 텍스트 업데이트
-                      displayedText = newValue
-                  }
-              }
-    }
-    
-    private func startTypingAnimation() {
-        displayedText = ""
-        isTypingComplete = false  // ← 타이핑 시작 시 false
-        
-        let characters = Array(message)
-        
-        for (index, character) in characters.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.03) {
-                displayedText.append(character)
+            if !isUser {
+                if isAnimated {
+                    //  실시간 스트리밍 → 회전 애니메이션 시작
+                    startRotation()
+                } else {
+                    // 히스토리는 바로 표시
+                    displayedText = message
+                    isTypingComplete = true
+                }
+            } else {
+                displayedText = message
+                isTypingComplete = true
+            }
+        }
+        .onChange(of: message) { newValue in
+            if isAnimated && !isUser {
+                //  스트리밍 시작되면 텍스트 업데이트 + 회전 중지
+                displayedText = newValue
                 
-                if index == characters.count - 1 {
-                    // 타이핑 완료
-                    withAnimation(.easeIn(duration: 0.3)) {
-                        isTypingComplete = true  //  완료 후 true
-                    }
+                // 첫 글자 들어오면 타이핑 애니메이션 시작
+                if !newValue.isEmpty && displayedText.count == newValue.count {
+                    isTypingComplete = true  // 회전 애니메이션 중지
                 }
             }
+        }
+    }
+    
+    // 로고 회전 애니메이션
+    private func startRotation() {
+        withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
+            rotationAngle = 360
         }
     }
 }
