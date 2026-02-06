@@ -80,6 +80,32 @@ struct CoverLetterWorkspaceView: View {
                     )
                 }
                 
+                if let question = currentQuestion {
+                    HStack(spacing: 12) {
+                        Text(question.question)
+                            .typo(.bold_16)
+                            .foregroundColor(.gray400)
+                            .lineLimit(1)  // 한 줄 or 전체
+                        
+                        Spacer()
+                        
+                        // 화살표 버튼
+                        Button {
+                            withAnimation {
+//                                showQuestionDetail.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .resizable()
+                                .frame(width: 12, height: 8)
+                                .foregroundColor(.gray400)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(Color.gray20)
+                }
+                
                 // 채팅 / 자기소개서 선택 버튼
                 HStack(spacing: 8) {
                     IconTextButton(
@@ -97,7 +123,7 @@ struct CoverLetterWorkspaceView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.top, 0)
                 
                 // 채팅 스크롤 영역
                 ScrollView {
