@@ -25,7 +25,7 @@ struct MainTabView: View {
                     case .home:
                         HomeView()
                     case .search:
-                        Text("검색")
+                        Text("자소서")
                     case .add:
                         EmptyView()
                     case .activity:
@@ -76,7 +76,7 @@ struct CustomTabBar: View {
             
             TabBarItem(
                 icon: selectedTab == .search ? "file_selected" : "file",
-                title: "검색",
+                title: "자소서",
                 isSelected: selectedTab == .search
             ) {
                 selectedTab = .search
