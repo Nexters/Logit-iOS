@@ -103,7 +103,7 @@ struct CoverLetterWorkspaceView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(Color.gray20)
+                    .background(Color.white)
                 }
                 
                 // 채팅 / 자기소개서 선택 버튼

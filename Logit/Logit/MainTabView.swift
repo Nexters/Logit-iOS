@@ -25,7 +25,7 @@ struct MainTabView: View {
                     case .home:
                         HomeView()
                     case .search:
-                        Text("검색")
+                        Text("자소서")
                     case .add:
                         EmptyView()
                     case .activity:
@@ -63,6 +63,7 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
     let onAddTapped: () -> Void
+    @State private var showComingSoonAlert = false
     
     var body: some View {
         HStack(spacing: 0) {
@@ -76,7 +77,7 @@ struct CustomTabBar: View {
             
             TabBarItem(
                 icon: selectedTab == .search ? "file_selected" : "file",
-                title: "검색",
+                title: "자소서",
                 isSelected: selectedTab == .search
             ) {
                 selectedTab = .search
@@ -103,13 +104,17 @@ struct CustomTabBar: View {
                 title: "리포트",
                 isSelected: selectedTab == .profile
             ) {
-                selectedTab = .profile
+               // selectedTab = .profile
+                showComingSoonAlert = true
             }
         }
         .frame(height: 49)
         .background(
             .white
         )
+        .alert("아직 준비중인 기능이에요!!", isPresented: $showComingSoonAlert) {
+                    Button("확인", role: .cancel) { }
+                }
     }
 }
 
