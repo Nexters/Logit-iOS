@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ProjectListItemResponse: Decodable {
+struct ProjectListItemResponse: Decodable, Identifiable {
     let id: String
     let company: String
     let jobPosition: String
