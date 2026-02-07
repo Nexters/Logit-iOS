@@ -302,7 +302,7 @@ struct ExperienceTag: View {
                 .foregroundColor(.primary600)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(isCompetency ? Color(hex: "E3F5FF") : Color.gray50)
         .cornerRadius(6)

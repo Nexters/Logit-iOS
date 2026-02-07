@@ -299,11 +299,19 @@ struct SelectableExperienceCell: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                //  하단: 태그들
-                AdaptiveTagsView(
-                    competencyTag: displayCategory,
-                    tags: parsedTags
-                )
+                //  하단: 태그들 + 체크 아이콘
+                HStack(alignment: .bottom) {
+                    AdaptiveTagsView(
+                        competencyTag: displayCategory,
+                        tags: parsedTags
+                    )
+                    
+                    Spacer()
+                    
+                    Image(isSelected ? "checkmark_selected" : "checkmark_unselected")
+                        .resizable()
+                        .frame(width: 32, height: 32)
+                }
             }
             .padding(16)
             .background(Color.white)
