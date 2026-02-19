@@ -73,6 +73,6 @@ class WorkspaceViewModel: ObservableObject {
         guard let detail = projectDetail else {
             return "프로젝트"
         }
-        return "\(detail.company) - \(detail.jobPosition)"
+        return "\(detail.company) \(detail.jobPosition)"
     }
 }

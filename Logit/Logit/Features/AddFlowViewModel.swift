@@ -57,7 +57,6 @@ class AddFlowViewModel: ObservableObject {
     }
     
     func createProject() async {
-        // CreateProjectRequest 생성
         let request = CreateProjectRequest(
             company: companyName,
             companyTalent: companyTalent,
@@ -75,24 +74,20 @@ class AddFlowViewModel: ObservableObject {
         print("프로젝트 생성 요청")
         print("기업명: \(companyName)")
         print("직무명: \(jobPosition)")
-        print("채용 공고: \(recruitNotice)")
-        print("기업 인재상: \(companyTalent)")
-        print("문항 개수: \(questions.count)")
         
         do {
             let response = try await projectRepository.createProject(request: request)
-            print(" 프로젝트 생성 성공!")
-            print("응답: \(response)")
-            print("프로젝트 ID: \(response.id)")
+            print("프로젝트 생성 성공!")
+            print("프로젝트 ID: \(response.project.id)")
+            print("생성된 문항 개수: \(response.questions.count)")
             
-            print("문항 등록 시작")
-          //  try await createQuestionsInParallel(projectId: response.id)
-            print("모든 문항 등록 완료!")
+            // Workspace로 이동 (project.id 사용)
+            rootScreen = .workspace(
+                projectId: response.project.id,
+                questions: questions
+            )
             
-            // TODO: 성공 후 처리 (예: Workspace로 이동)
-            rootScreen = .workspace(projectId: response.id, questions: questions)
-                       
-            //  스택 초기화
+            // 스택 초기화
             path = NavigationPath()
             
         } catch {

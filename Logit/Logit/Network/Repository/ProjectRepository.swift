@@ -9,7 +9,7 @@ import Foundation
 
 protocol ProjectRepository {
     /// 프로젝트  생성
-    func createProject(request: CreateProjectRequest) async throws -> ProjectResponse
+    func createProject(request: CreateProjectRequest) async throws -> ProjectCreateResponse
     /// 프로젝트  목록 조회
     func getProjectList(skip: Int, limit: Int) async throws -> [ProjectListItemResponse]
     /// 프로젝트  상세 조회
@@ -29,7 +29,7 @@ final class DefaultProjectRepository: ProjectRepository {
     }
     
     // 프로젝트 생성
-    func createProject(request: CreateProjectRequest) async throws -> ProjectResponse {
+    func createProject(request: CreateProjectRequest) async throws -> ProjectCreateResponse {
         return try await networkClient.request(
             endpoint: ProjectEndpoint.createProject,
             body: request
