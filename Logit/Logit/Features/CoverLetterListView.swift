@@ -78,75 +78,29 @@ struct CoverLetterListView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let question = viewModel.currentQuestionDetail {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // 문항 제목
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("문항 \(selectedQuestionIndex + 1)")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.secondary)
-                            
-                            Text(question.question)
-                                .font(.system(size: 20, weight: .bold))
-                            
-                            Text("최대 \(question.maxLength)자")
-                                .font(.system(size: 13))
-                                .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 16) {
+                        // 문항
+                        Text(question.question)
+                            .typo(.bold_16)
+                            .foregroundStyle(.gray400)
+                        
+                        // 답변
+                        if let answer = question.answer, !answer.isEmpty {
+                            Text(answer)
+                                .typo(.regular_14_160)
+                                .foregroundStyle(.black)
+                        } else {
+                            Text("아직 작성된 답변이 없습니다.")
+                                .typo(.regular_14_160)
+                                .foregroundStyle(.gray300)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
                         
-                        Divider()
-                        
-                        // 답변 내용
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("답변")
-                                .font(.system(size: 16, weight: .semibold))
-                            
-                            if let answer = question.answer, !answer.isEmpty {
-                                Text(answer)
-                                    .font(.system(size: 15))
-                                    .lineSpacing(6)
-                            } else {
-                                Text("아직 작성된 답변이 없습니다.")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // ID 확인용 (개발용)
-//                        VStack(alignment: .leading, spacing: 8) {
-//                            Divider()
-//                            
-//                            Text("디버그 정보")
-//                                .font(.system(size: 14, weight: .semibold))
-//                                .foregroundStyle(.secondary)
-//                            
-//                            Text("Project ID: \(question.projectId)")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.secondary)
-//                            
-//                            Text("Question ID: \(question.id)")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.secondary)
-//                            
-//                            Text("User ID: \(question.userId)")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.secondary)
-//                            
-//                            Text("Created At: \(question.createdAt)")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.secondary)
-//                            
-//                            Text("Updated At: \(question.updatedAt)")
-//                                .font(.system(size: 12))
-//                                .foregroundStyle(.secondary)
-//                        }
-//                        .padding(.horizontal, 20)
-//                        .padding(.top, 20)
-////                        
                         Spacer()
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 69)
                 }
             } else if viewModel.selectedProject != nil {
                 // 프로젝트는 선택됐는데 문항이 없는 경우
