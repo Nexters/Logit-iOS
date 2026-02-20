@@ -25,7 +25,7 @@ struct MainTabView: View {
                     case .home:
                         HomeView()
                     case .search:
-                        Text("자소서")
+                        CoverLetterListView()
                     case .add:
                         EmptyView()
                     case .activity:

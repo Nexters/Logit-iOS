@@ -8,10 +8,10 @@
 import Foundation
 
 struct QuestionDetailResponse: Decodable {
-    let answer: String
+    let answer: String?
     let createdAt: String
     let id: String
-    let maxLength: Int
+    let maxLength: Int?
     let projectId: String
     let question: String
     let updatedAt: String
