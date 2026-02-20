@@ -31,7 +31,7 @@ struct MainTabView: View {
                     case .activity:
                         ExperienceListView()
                     case .report:
-                        Text("리포트")
+                        ReportView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -104,8 +104,8 @@ struct CustomTabBar: View {
                 title: "리포트",
                 isSelected: selectedTab == .report
             ) {
-               // selectedTab = .profile
-                showComingSoonAlert = true
+                selectedTab = .report
+//                showComingSoonAlert = true
             }
         }
         .frame(height: 49)
