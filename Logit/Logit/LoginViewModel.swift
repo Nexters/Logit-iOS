@@ -7,6 +7,8 @@
 
 import Foundation
 import AuthenticationServices
+import GoogleSignIn
+import UIKit
 
 @MainActor
 class LoginViewModel: ObservableObject {
@@ -73,5 +75,57 @@ class LoginViewModel: ObservableObject {
         guard let nameComponents else { return nil }
         let parts = [nameComponents.familyName, nameComponents.givenName].compactMap { $0 }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
+    // MARK: - Google Login
+
+    func handleGoogleLogin() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController else {
+            errorMessage = "화면 정보를 가져오지 못했습니다."
+            return
+        }
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { [weak self] signInResult, error in
+            if let error {
+                Task { @MainActor in
+                    self?.errorMessage = error.localizedDescription
+                }
+                return
+            }
+
+            guard let idToken = signInResult?.user.idToken?.tokenString else {
+                Task { @MainActor in
+                    self?.errorMessage = "Google 인증 토큰을 가져오지 못했습니다."
+                }
+                return
+            }
+
+            Task {
+                await self?.loginWithGoogle(idToken: idToken)
+            }
+        }
+    }
+
+    private func loginWithGoogle(idToken: String) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let request = GoogleLoginRequest(idToken: idToken)
+            let response = try await authRepository.googleLogin(request: request)
+
+            TokenManager.shared.saveTokens(
+                access: response.accessToken,
+                refresh: response.refreshToken
+            )
+
+            print("구글 로그인 성공 - isNewUser: \(response.isNewUser)")
+            loginResult = response
+        } catch {
+            errorMessage = error.localizedDescription
+            print("구글 로그인 실패: \(error)")
+        }
     }
 }

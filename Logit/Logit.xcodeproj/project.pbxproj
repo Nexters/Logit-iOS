@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		46009C992F4A5BB000B70D2D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 46009C982F4A5BB000B70D2D /* GoogleSignIn */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		46E007F72F1B469C00CD1C64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				46009C992F4A5BB000B70D2D /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = Logit;
 			packageProductDependencies = (
+				46009C982F4A5BB000B70D2D /* GoogleSignIn */,
 			);
 			productName = Logit;
 			productReference = 46E007E92F1B469900CD1C64 /* Logit.app */;
@@ -208,6 +214,9 @@
 			);
 			mainGroup = 46E007E02F1B469900CD1C64;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				46009C972F4A5BB000B70D2D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 46E007EA2F1B469900CD1C64 /* Products */;
 			projectDirPath = "";
@@ -581,6 +590,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		46009C972F4A5BB000B70D2D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		46009C982F4A5BB000B70D2D /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 46009C972F4A5BB000B70D2D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 46E007E12F1B469900CD1C64 /* Project object */;
 }

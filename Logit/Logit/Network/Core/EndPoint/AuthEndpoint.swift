@@ -18,7 +18,7 @@ enum AuthEndpoint: Endpoint {
     var path: String {
         switch self {
         case .googleLogin:
-            return "/api/v1/auth/google"
+            return "/api/v1/auth/google/mobile"
         case .googleCallback:
             return "/api/v1/auth/google/callback"
         case .appleLogin:
@@ -32,9 +32,9 @@ enum AuthEndpoint: Endpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .googleLogin, .googleCallback:
+        case .googleCallback:
             return .get
-        case .appleLogin, .refreshToken, .logout:
+        case .googleLogin, .appleLogin, .refreshToken, .logout:
             return .post
         }
     }

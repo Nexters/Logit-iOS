@@ -9,6 +9,7 @@ import Foundation
 
 protocol AuthRepository {
     func appleLogin(request: AppleLoginRequest) async throws -> AppleLoginResponse
+    func googleLogin(request: GoogleLoginRequest) async throws -> AppleLoginResponse
 }
 
 class DefaultAuthRepository: AuthRepository {
@@ -22,6 +23,13 @@ class DefaultAuthRepository: AuthRepository {
     func appleLogin(request: AppleLoginRequest) async throws -> AppleLoginResponse {
         return try await networkClient.request(
             endpoint: AuthEndpoint.appleLogin,
+            body: request
+        )
+    }
+
+    func googleLogin(request: GoogleLoginRequest) async throws -> AppleLoginResponse {
+        return try await networkClient.request(
+            endpoint: AuthEndpoint.googleLogin,
             body: request
         )
     }

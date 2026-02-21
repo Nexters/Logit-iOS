@@ -35,7 +35,7 @@ struct LoginView: View {
             // 하단 버튼
             VStack(spacing: 12) {
                 Button(action: {
-                    // 구글 로그인 액션
+                    viewModel.handleGoogleLogin()
                 }) {
                     HStack(spacing: 0) {
                         Image("google")
