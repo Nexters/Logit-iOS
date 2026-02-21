@@ -9,148 +9,193 @@ import SwiftUI
 import Charts
 
 struct ReportView: View {
+    @StateObject private var viewModel = ReportViewModel()
+
     var body: some View {
+        Group {
+            if viewModel.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.showError {
+                VStack(spacing: 12) {
+                    Text(viewModel.errorMessage ?? "오류가 발생했습니다.")
+                        .typo(.regular_15)
+                        .foregroundStyle(.gray)
+                        .multilineTextAlignment(.center)
+
+                    Button("다시 시도") {
+                        Task { await viewModel.fetchExperienceSummary() }
+                    }
+                    .typo(.medium_15)
+                    .foregroundStyle(Color.primary100)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                contentView
+            }
+        }
+        .task {
+            await viewModel.fetchExperienceSummary()
+        }
+    }
+
+    // MARK: - Main Content
+
+    private var contentView: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // 흰색 영역
-                VStack {
-                    Text("로짓님의 프로파일")
-                        .typo(.bold_20)
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 10)
-                        .padding(.leading, 20)
-                    
-                    VStack(spacing: 0) {
-                        Image("Frame 2087332000")
-                            .resizable()
-                            .frame(width: 100, height: 36)
-                            .padding(.top, 16)
-                        
-                        Image("기술적 전문성")
-                            .resizable()
-                            .frame(width: 154, height: 154)
-                            .padding(.top, 17.98)
-                        
-                        Text("도구와 기술 스택을 능숙하게\n활용하는 기술적 전문가")
-                            .typo(.bold_20)
-                            .foregroundStyle(.gradient(.reportCardTextColor))
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 13.02)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 320)
-                    .background(.gradient(.reportCard))
-                    .cornerRadius(20)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 11)
-                    
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("기술적 전문성이 가장 두드러져요")
-                            .typo(.bold_18)
-                            .foregroundStyle(.black)
-                        
-                        Text("{각 해쉬태그 별 전문성을 강조하는 지정 멘트}")
-                            .typo(.regular_15)
-                            .foregroundStyle(.gray)
-                        
-                        FlowTagsView(
-                            competencyTag: "전문성",
-                            tags: ["고객이해력", "소통력", "실행력", "문제해결력", "고객이해력"],
-                            allCompetency: true
-                        )
-                        .padding(.top, 28)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 34)
-                    .padding(.bottom, 30)
-                }
-                .background(.white)
-                
-                // 하단 그래프 영역
-                VStack(spacing: 0) {
-                    // 그래프 카드들 추가 예정
-                    
-                    // 흰색 카드
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("{최다 경험 유형}이 두드러져요")
-                            .typo(.bold_18)
-                            .foregroundStyle(.black)
-                        
-                        Text("{최소 경험 유형}을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
-                            .typo(.regular_15)
-                            .foregroundStyle(.gray)
-                        
-                        ReportBarChartView()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .background(.white)
-                    .cornerRadius(16)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 21)
-                    
-                    // 두 번째 카드
-                       VStack(alignment: .leading, spacing: 5) {
-                           Text("{최다 해쉬태그}에 강점이 있어요")
-                               .typo(.bold_18)
-                               .foregroundStyle(.black)
-                           
-                           Text("{각 해쉬태그 별 전문성을 강조하는 지정 멘트}")
-                               .typo(.regular_15)
-                               .foregroundStyle(.gray)
-                           
-                           ReportDonutChartView()
-                           
-                           // 그래프 영역 추가 예정
-                       }
-                       .frame(maxWidth: .infinity, alignment: .leading)
-                       .padding(20)
-                       .background(.white)
-                       .cornerRadius(16)
-                       .padding(.horizontal, 20)
-                       .padding(.top, 16)
-                    
-                    // 세 번째 카드
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("{최다 경험 유형} 경험이 가장 많아요")
-                            .typo(.bold_18)
-                            .foregroundStyle(.black)
-                        
-                        Text("{각 경험 유형별 강점을 강조하는 지정 멘트}")
-                            .typo(.regular_15)
-                            .foregroundStyle(.gray)
-                        
-                        ReportHorizontalBarChartView()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .background(.white)
-                    .cornerRadius(16)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, 64)
-                .background(Color.gray20)
+                // 프로필 카드 영역
+                profileSection
+
+                // 그래프 카드 영역
+                graphSection
             }
         }
         .scrollIndicators(.hidden)
     }
+
+    // MARK: - Profile Section
+
+    private var profileSection: some View {
+        VStack {
+            Text("로짓님의 프로파일")
+                .typo(.bold_20)
+                .foregroundStyle(.black)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 10)
+                .padding(.leading, 20)
+
+            VStack(spacing: 0) {
+                Image("Frame 2087332000")
+                    .resizable()
+                    .frame(width: 100, height: 36)
+                    .padding(.top, 16)
+
+                Image(viewModel.topCategory)
+                    .resizable()
+                    .frame(width: 154, height: 154)
+                    .padding(.top, 17.98)
+
+                Text(viewModel.categoryDescription)
+                    .typo(.bold_20)
+                    .foregroundStyle(.gradient(.reportCardTextColor))
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 13.02)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 320)
+            .background(.gradient(.reportCard))
+            .cornerRadius(20)
+            .padding(.horizontal, 20)
+            .padding(.top, 11)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(viewModel.topCategoryDisplay)이 가장 두드러져요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text(viewModel.categoryDescription)
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                FlowTagsView(
+                    competencyTag: viewModel.topCategoryDisplay,
+                    tags: viewModel.profileTags,
+                    allCompetency: true
+                )
+                .padding(.top, 28)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 34)
+            .padding(.bottom, 30)
+        }
+        .background(.white)
+    }
+
+    // MARK: - Graph Section
+
+    private var graphSection: some View {
+        VStack(spacing: 0) {
+            // 카드 1: 세로 바 차트 (경험 유형)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(viewModel.topType)이 두드러져요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text("\(viewModel.weakestType)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                ReportBarChartView(data: viewModel.barChartData)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(.white)
+            .cornerRadius(16)
+            .padding(.horizontal, 20)
+            .padding(.top, 21)
+
+            // 카드 2: 도넛 차트 (역량 카테고리)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(viewModel.topCategoryDisplay)에 강점이 있어요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text("나의 역량 카테고리 분포를 확인해보세요")
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                ReportDonutChartView(
+                    data: viewModel.donutChartData,
+                    total: viewModel.totalCategoryCount
+                )
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(.white)
+            .cornerRadius(16)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+
+            // 카드 3: 가로 바 차트 (해시태그)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(viewModel.topTag) 경험이 가장 많아요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text("자주 사용하는 키워드를 확인해보세요")
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                ReportHorizontalBarChartView(data: viewModel.horizontalBarChartData)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(.white)
+            .cornerRadius(16)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 64)
+        .background(Color.gray20)
+    }
 }
 
+
+// MARK: - Flow Tags View
 
 struct FlowTagsView: View {
     let competencyTag: String
     let tags: [String]
     var allCompetency: Bool = false
     let spacing: CGFloat = 8
-    
+
     private var allTags: [(String, Bool)] {
         [(competencyTag, true)] + tags.map { ($0, allCompetency) }
     }
-    
+
     var body: some View {
         FlowLayout(spacing: spacing) {
             ForEach(Array(allTags.enumerated()), id: \.offset) { _, tag in
@@ -164,10 +209,12 @@ struct FlowTagsView: View {
 }
 
 
+// MARK: - Report Tag
+
 struct ReportTag: View {
     let text: String
     var icon: String? = nil
-    
+
     var body: some View {
         HStack(spacing: 6) {
             if let icon = icon {
@@ -175,19 +222,22 @@ struct ReportTag: View {
                     .resizable()
                     .frame(width: 16, height: 16)
             }
-            
+
             Text(text)
                 .typo(.regular_15)
                 .foregroundColor(.primary600)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 8.31) 
+        .padding(.horizontal, 8.31)
         .padding(.vertical, 6.5)
         .background(Color(hex: "E3F5FF"))
         .cornerRadius(11.08)
         .fixedSize(horizontal: true, vertical: false)
     }
 }
+
+
+// MARK: - Bar Chart (세로)
 
 struct BarChartData: Identifiable {
     let id = UUID()
@@ -198,18 +248,10 @@ struct BarChartData: Identifiable {
 }
 
 struct ReportBarChartView: View {
-    let data: [BarChartData] = [
-        BarChartData(label: "고객 중심", value: 62, color: Color(hex: "A8EDD8"), textColor: Color(hex: "A8EDD8")),
-        BarChartData(label: "분석력",   value: 80, color: Color(hex: "A8D4F5"), textColor: Color(hex: "A8D4F5")),
-        BarChartData(label: "분석력",   value: 62, color: Color(hex: "B8B8F0"), textColor: Color(hex: "B8B8F0")),
-        BarChartData(label: "책임감",   value: 24, color: Color(hex: "C8B8E8"), textColor:  Color(hex: "C8B8E8")),
-        BarChartData(label: "문제해결력", value: 2, color: Color(hex: "E8B8E8"), textColor:  Color(hex: "E8B8E8")),
-        BarChartData(label: "분석력",   value: 4,  color: Color(hex: "F5C8D8"), textColor:  Color(hex: "F5C8D8")),
-    ]
-    
+    let data: [BarChartData]
+
     var body: some View {
         VStack(spacing: 0) {
-            // 차트 영역
             Chart(data) { item in
                 BarMark(
                     x: .value("label", item.id.uuidString),
@@ -217,7 +259,12 @@ struct ReportBarChartView: View {
                     width: .fixed(20)
                 )
                 .foregroundStyle(item.color)
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 8, bottomTrailingRadius: 8, topTrailingRadius: 8))
+                .clipShape(UnevenRoundedRectangle(
+                    topLeadingRadius: 8,
+                    bottomLeadingRadius: 8,
+                    bottomTrailingRadius: 8,
+                    topTrailingRadius: 8
+                ))
                 .annotation(position: .top) {
                     Text("\(Int(item.value))")
                         .typo(.bold_14)
@@ -230,11 +277,12 @@ struct ReportBarChartView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 40)
-            
 
-            // 범례 영역
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
-                ForEach(data) { (item: BarChartData) in
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
+                spacing: 12
+            ) {
+                ForEach(data) { item in
                     HStack(spacing: 6) {
                         Rectangle()
                             .fill(item.color)
@@ -255,6 +303,9 @@ struct ReportBarChartView: View {
     }
 }
 
+
+// MARK: - Donut Chart (도넛)
+
 struct DonutChartData: Identifiable {
     let id = UUID()
     let label: String
@@ -263,22 +314,13 @@ struct DonutChartData: Identifiable {
     let textColor: Color
 }
 
-
 struct ReportDonutChartView: View {
-    let data: [DonutChartData] = [
-        DonutChartData(label: "고객 중심", value: 33, color: Color(hex: "A8EDD8"), textColor: Color(hex: "4AB89A")),
-        DonutChartData(label: "분석력",   value: 29, color: Color(hex: "A8D4F5"), textColor: Color(hex: "4A90C4")),
-        DonutChartData(label: "분석력",   value: 22, color: Color(hex: "B8B8F0"), textColor: Color(hex: "6B6BC4")),
-        DonutChartData(label: "책임감",   value: 13, color: Color(hex: "C8B8E8"), textColor: Color(hex: "9B6BC4")),
-        DonutChartData(label: "문제해결력", value: 5, color: Color(hex: "E8B8E8"), textColor: Color(hex: "C46BAA")),
-        DonutChartData(label: "분석력",   value: 2,  color: Color(hex: "F5C8D8"), textColor: Color(hex: "C46B8A")),
-    ]
-    
-    var total: Int { Int(data.reduce(0) { $0 + $1.value }) }
-    
-    var adjustedData: [DonutChartData] {
-        let total = data.reduce(0) { $0 + $1.value }
-        let minValue = total * 0.07
+    let data: [DonutChartData]
+    let total: Int
+
+    private var adjustedData: [DonutChartData] {
+        let sum = data.reduce(0) { $0 + $1.value }
+        let minValue = sum * 0.07
         return data.map { item in
             DonutChartData(
                 label: item.label,
@@ -288,14 +330,13 @@ struct ReportDonutChartView: View {
             )
         }
     }
-    
-    func originalValue(at index: Int) -> Double {
+
+    private func originalValue(at index: Int) -> Double {
         data[index].value
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            // 도넛 차트
             ZStack {
                 Chart(Array(adjustedData.enumerated()), id: \.offset) { index, item in
                     SectorMark(
@@ -312,8 +353,7 @@ struct ReportDonutChartView: View {
                     }
                 }
                 .frame(size: 185)
-                
-                // 가운데 텍스트
+
                 VStack(spacing: 4) {
                     Text("경험키워드")
                         .typo(.bold_18)
@@ -325,9 +365,11 @@ struct ReportDonutChartView: View {
             }
             .padding(.top, 16)
             .padding(.bottom, 40)
-            
-            // 범례
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
+                spacing: 12
+            ) {
                 ForEach(Array(data.enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 6) {
                         Circle()
@@ -350,6 +392,8 @@ struct ReportDonutChartView: View {
 }
 
 
+// MARK: - Horizontal Bar Chart (가로)
+
 struct HorizontalBarChartData: Identifiable {
     let id = UUID()
     let rank: Int
@@ -359,20 +403,12 @@ struct HorizontalBarChartData: Identifiable {
 }
 
 struct ReportHorizontalBarChartView: View {
-    let data: [HorizontalBarChartData] = [
-        HorizontalBarChartData(rank: 1, label: "고객 중심", value: 33, color: Color(hex: "A8EDD8")),
-        HorizontalBarChartData(rank: 2, label: "분석력",   value: 29, color: Color(hex: "A8D4F5")),
-        HorizontalBarChartData(rank: 3, label: "책임감",   value: 22, color: Color(hex: "B8B8F0")),
-        HorizontalBarChartData(rank: 4, label: "문제해결력", value: 13, color: Color(hex: "C8B8E8")),
-        HorizontalBarChartData(rank: 5, label: "소통력",   value: 5,  color: Color(hex: "E8B8E8")),
-        HorizontalBarChartData(rank: 6, label: "실행력",   value: 2,  color: Color(hex: "F5C8D8")),
-    ]
-    
-    var maxValue: Double { data.map { $0.value }.max() ?? 1 }
-    
+    let data: [HorizontalBarChartData]
+
+    private var maxValue: Double { data.map { $0.value }.max() ?? 1 }
+
     var body: some View {
         VStack(spacing: 0) {
-            // 막대 차트
             VStack(spacing: 15) {
                 ForEach(data) { item in
                     HStack(spacing: 8) {
@@ -380,13 +416,13 @@ struct ReportHorizontalBarChartView: View {
                             .typo(.bold_12)
                             .foregroundStyle(item.color)
                             .frame(width: 20, alignment: .center)
-                        
+
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 6)
                                     .fill(Color.gray100)
                                     .frame(maxWidth: .infinity)
-                                
+
                                 RoundedRectangle(cornerRadius: 6)
                                     .fill(item.color)
                                     .frame(width: geo.size.width * 0.7 * (item.value / maxValue))
@@ -399,9 +435,11 @@ struct ReportHorizontalBarChartView: View {
             .padding(.top, 16)
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
-            
-            // 범례
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
+                spacing: 12
+            ) {
                 ForEach(Array(data.enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 6) {
                         Circle()

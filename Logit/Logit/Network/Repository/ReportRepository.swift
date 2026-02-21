@@ -17,15 +17,15 @@ class DefaultReportRepository: ReportRepository {
     
     private let networkClient: NetworkClient
     
-    init(networkClient: NetworkClient) {
+    init(networkClient: NetworkClient = DefaultNetworkClient()) {
         self.networkClient = networkClient
     }
-    
+
     // 경험 요약 조회
     func getExperienceSummary() async throws -> ExperienceSummaryResponse {
         return try await networkClient.request(
             endpoint: ReportEndpoint.getExperienceSummary,
-            body: nil
+            body: nil as Empty?
         )
     }
 }
