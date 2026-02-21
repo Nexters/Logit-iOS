@@ -90,6 +90,27 @@ struct ReportView: View {
                     .cornerRadius(16)
                     .padding(.horizontal, 20)
                     .padding(.top, 21)
+                    
+                    // 두 번째 카드
+                       VStack(alignment: .leading, spacing: 5) {
+                           Text("{최다 해쉬태그}에 강점이 있어요")
+                               .typo(.bold_18)
+                               .foregroundStyle(.black)
+                           
+                           Text("{각 해쉬태그 별 전문성을 강조하는 지정 멘트}")
+                               .typo(.regular_15)
+                               .foregroundStyle(.gray)
+                           
+                           ReportDonutChartView()
+                           
+                           // 그래프 영역 추가 예정
+                       }
+                       .frame(maxWidth: .infinity, alignment: .leading)
+                       .padding(20)
+                       .background(.white)
+                       .cornerRadius(16)
+                       .padding(.horizontal, 20)
+                       .padding(.top, 16)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 24)
@@ -154,16 +175,17 @@ struct BarChartData: Identifiable {
     let label: String
     let value: Double
     let color: Color
+    let textColor: Color
 }
 
 struct ReportBarChartView: View {
     let data: [BarChartData] = [
-        BarChartData(label: "고객 중심", value: 62, color: Color(hex: "A8EDD8")),
-        BarChartData(label: "분석력",   value: 80, color: Color(hex: "A8D4F5")),
-        BarChartData(label: "분석력",   value: 62, color: Color(hex: "B8B8F0")),
-        BarChartData(label: "책임감",   value: 24, color: Color(hex: "C8B8E8")),
-        BarChartData(label: "문제해결력", value: 2, color: Color(hex: "E8B8E8")),
-        BarChartData(label: "분석력",   value: 4,  color: Color(hex: "F5C8D8")),
+        BarChartData(label: "고객 중심", value: 62, color: Color(hex: "A8EDD8"), textColor: Color(hex: "A8EDD8")),
+        BarChartData(label: "분석력",   value: 80, color: Color(hex: "A8D4F5"), textColor: Color(hex: "A8D4F5")),
+        BarChartData(label: "분석력",   value: 62, color: Color(hex: "B8B8F0"), textColor: Color(hex: "B8B8F0")),
+        BarChartData(label: "책임감",   value: 24, color: Color(hex: "C8B8E8"), textColor:  Color(hex: "C8B8E8")),
+        BarChartData(label: "문제해결력", value: 2, color: Color(hex: "E8B8E8"), textColor:  Color(hex: "E8B8E8")),
+        BarChartData(label: "분석력",   value: 4,  color: Color(hex: "F5C8D8"), textColor:  Color(hex: "F5C8D8")),
     ]
     
     var body: some View {
@@ -196,6 +218,99 @@ struct ReportBarChartView: View {
                 ForEach(data) { (item: BarChartData) in
                     HStack(spacing: 6) {
                         Rectangle()
+                            .fill(item.color)
+                            .frame(width: 10, height: 10)
+                        Text(item.label)
+                            .typo(.regular_13)
+                            .foregroundStyle(.black)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer()
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(.white)
+        .cornerRadius(16)
+    }
+}
+
+struct DonutChartData: Identifiable {
+    let id = UUID()
+    let label: String
+    let value: Double
+    let color: Color
+    let textColor: Color
+}
+
+
+struct ReportDonutChartView: View {
+    let data: [DonutChartData] = [
+        DonutChartData(label: "고객 중심", value: 33, color: Color(hex: "A8EDD8"), textColor: Color(hex: "4AB89A")),
+        DonutChartData(label: "분석력",   value: 29, color: Color(hex: "A8D4F5"), textColor: Color(hex: "4A90C4")),
+        DonutChartData(label: "분석력",   value: 22, color: Color(hex: "B8B8F0"), textColor: Color(hex: "6B6BC4")),
+        DonutChartData(label: "책임감",   value: 13, color: Color(hex: "C8B8E8"), textColor: Color(hex: "9B6BC4")),
+        DonutChartData(label: "문제해결력", value: 5, color: Color(hex: "E8B8E8"), textColor: Color(hex: "C46BAA")),
+        DonutChartData(label: "분석력",   value: 2,  color: Color(hex: "F5C8D8"), textColor: Color(hex: "C46B8A")),
+    ]
+    
+    var total: Int { Int(data.reduce(0) { $0 + $1.value }) }
+    
+    var adjustedData: [DonutChartData] {
+        let total = data.reduce(0) { $0 + $1.value }
+        let minValue = total * 0.07
+        return data.map { item in
+            DonutChartData(
+                label: item.label,
+                value: max(item.value, minValue),
+                color: item.color,
+                textColor: item.textColor
+            )
+        }
+    }
+    
+    func originalValue(at index: Int) -> Double {
+        data[index].value
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 도넛 차트
+            ZStack {
+                Chart(Array(adjustedData.enumerated()), id: \.offset) { index, item in
+                    SectorMark(
+                        angle: .value("value", item.value),
+                        innerRadius: .ratio(0.68),
+                        angularInset: 4
+                    )
+                    .foregroundStyle(item.color)
+                    .cornerRadius(8)
+                    .annotation(position: .overlay) {
+                        Text("\(Int(originalValue(at: index)))")
+                            .typo(.bold_14)
+                            .foregroundStyle(item.textColor)
+                    }
+                }
+                .frame(size: 185)
+                
+                // 가운데 텍스트
+                VStack(spacing: 4) {
+                    Text("경험키워드")
+                        .typo(.bold_18)
+                        .foregroundStyle(.black)
+                    Text("\(total)개 집계")
+                        .typo(.regular_13)
+                        .foregroundStyle(.gray)
+                }
+            }
+            .padding(.top, 16)
+            
+            // 범례
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
+                ForEach(Array(data.enumerated()), id: \.offset) { _, item in
+                    HStack(spacing: 6) {
+                        Circle()
                             .fill(item.color)
                             .frame(width: 10, height: 10)
                         Text(item.label)
