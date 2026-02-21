@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct LoginView: View {
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = LoginViewModel()
+
     var body: some View {
         ZStack {
             // 중앙 컨텐츠
@@ -56,22 +60,56 @@ struct LoginView: View {
                             .stroke(Color.gray, lineWidth: 1)
                     )
                 }
-                Button(action: {
-                    // 애플 로그인 액션
-                }) {
-                    Text("Apple로 시작하기")
-                        .typo(.regular_19)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 49.adjustedHeight)
-                        .background(Color.black)
-                        .foregroundColor(.white)
+
+                Text("Apple로 시작하기")
+                    .typo(.regular_19)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 49.adjustedHeight)
+                    .background(Color.black)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    .overlay(
+                        SignInWithAppleButton(.signIn) { request in
+                            request.requestedScopes = [.fullName, .email]
+                        } onCompletion: { result in
+                            switch result {
+                            case .success(let authorization):
+                                viewModel.handleAppleLogin(authorization)
+                            case .failure(let error):
+                                print("Apple 로그인 실패: \(error.localizedDescription)")
+                            }
+                        }
+                        .signInWithAppleButtonStyle(.black)
                         .cornerRadius(8)
-                }
+                        .environment(\.colorScheme, .dark)
+                    )
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 38)
             .frame(maxHeight: .infinity, alignment: .bottom)
+
+            // 로딩 오버레이
+            if viewModel.isLoading {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.5)
+            }
         }
         .background(.white)
+        .onChange(of: viewModel.loginResult) { _, result in
+            guard let result else { return }
+            if result.isNewUser {
+                appState.isShowingSignUpSheet = true
+            } else {
+                appState.appPhase = .main
+            }
+        }
+        .alert("로그인 실패", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("확인") { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
