@@ -111,9 +111,28 @@ struct ReportView: View {
                        .cornerRadius(16)
                        .padding(.horizontal, 20)
                        .padding(.top, 16)
+                    
+                    // 세 번째 카드
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("{최다 경험 유형} 경험이 가장 많아요")
+                            .typo(.bold_18)
+                            .foregroundStyle(.black)
+                        
+                        Text("{각 경험 유형별 강점을 강조하는 지정 멘트}")
+                            .typo(.regular_15)
+                            .foregroundStyle(.gray)
+                        
+                        ReportHorizontalBarChartView()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .background(.white)
+                    .cornerRadius(16)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 24)
+                .padding(.bottom, 64)
                 .background(Color.gray20)
             }
         }
@@ -305,6 +324,7 @@ struct ReportDonutChartView: View {
                 }
             }
             .padding(.top, 16)
+            .padding(.bottom, 40)
             
             // 범례
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
@@ -326,5 +346,77 @@ struct ReportDonutChartView: View {
         }
         .background(.white)
         .cornerRadius(16)
+    }
+}
+
+
+struct HorizontalBarChartData: Identifiable {
+    let id = UUID()
+    let rank: Int
+    let label: String
+    let value: Double
+    let color: Color
+}
+
+struct ReportHorizontalBarChartView: View {
+    let data: [HorizontalBarChartData] = [
+        HorizontalBarChartData(rank: 1, label: "고객 중심", value: 33, color: Color(hex: "A8EDD8")),
+        HorizontalBarChartData(rank: 2, label: "분석력",   value: 29, color: Color(hex: "A8D4F5")),
+        HorizontalBarChartData(rank: 3, label: "책임감",   value: 22, color: Color(hex: "B8B8F0")),
+        HorizontalBarChartData(rank: 4, label: "문제해결력", value: 13, color: Color(hex: "C8B8E8")),
+        HorizontalBarChartData(rank: 5, label: "소통력",   value: 5,  color: Color(hex: "E8B8E8")),
+        HorizontalBarChartData(rank: 6, label: "실행력",   value: 2,  color: Color(hex: "F5C8D8")),
+    ]
+    
+    var maxValue: Double { data.map { $0.value }.max() ?? 1 }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 막대 차트
+            VStack(spacing: 15) {
+                ForEach(data) { item in
+                    HStack(spacing: 8) {
+                        Text("\(Int(item.value))")
+                            .typo(.bold_12)
+                            .foregroundStyle(item.color)
+                            .frame(width: 20, alignment: .center)
+                        
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.gray100)
+                                    .frame(maxWidth: .infinity)
+                                
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(item.color)
+                                    .frame(width: geo.size.width * 0.7 * (item.value / maxValue))
+                            }
+                        }
+                        .frame(height: 14.17)
+                    }
+                }
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+            
+            // 범례
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 12) {
+                ForEach(Array(data.enumerated()), id: \.offset) { _, item in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(item.color)
+                            .frame(width: 10, height: 10)
+                        Text(item.label)
+                            .typo(.regular_13)
+                            .foregroundStyle(.black)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer()
+                    }
+                }
+            }
+            .padding(16)
+        }
     }
 }
