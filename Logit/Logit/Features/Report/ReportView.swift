@@ -65,50 +65,18 @@ struct ReportView: View {
                 .padding(.vertical, 10)
                 .padding(.leading, 20)
 
-            VStack(spacing: 0) {
-                Image("Frame 2087332000")
+            if let asset = NSDataAsset(name: viewModel.topCategoryImageName),
+               let uiImage = UIImage(data: asset.data) {
+                Image(uiImage: uiImage)
                     .resizable()
-                    .frame(width: 100, height: 36)
-                    .padding(.top, 16)
-
-                Image(viewModel.topCategory)
-                    .resizable()
-                    .frame(width: 154, height: 154)
-                    .padding(.top, 17.98)
-
-                Text(viewModel.categoryDescription)
-                    .typo(.bold_20)
-                    .foregroundStyle(.gradient(.reportCardTextColor))
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 13.02)
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 320)
+                    .clipped()
+                    .cornerRadius(20)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 11)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 320)
-            .background(.gradient(.reportCard))
-            .cornerRadius(20)
-            .padding(.horizontal, 20)
-            .padding(.top, 11)
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text("\(viewModel.topCategoryDisplay)이 가장 두드러져요")
-                    .typo(.bold_18)
-                    .foregroundStyle(.black)
-
-                Text(viewModel.categoryDescription)
-                    .typo(.regular_15)
-                    .foregroundStyle(.gray)
-
-                FlowTagsView(
-                    competencyTag: viewModel.topCategoryDisplay,
-                    tags: viewModel.profileTags,
-                    allCompetency: true
-                )
-                .padding(.top, 28)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.top, 34)
-            .padding(.bottom, 30)
         }
         .background(.white)
     }
@@ -117,13 +85,13 @@ struct ReportView: View {
 
     private var graphSection: some View {
         VStack(spacing: 0) {
-            // 카드 1: 세로 바 차트 (경험 유형)
+            // 카드 1: 세로 바 차트 (역량 카테고리)
             VStack(alignment: .leading, spacing: 5) {
-                Text("\(viewModel.topType)이 두드러져요")
+                Text("\(viewModel.topCategoryDisplay)이 두드러져요")
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("\(viewModel.weakestType)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                Text("\(viewModel.weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -136,13 +104,13 @@ struct ReportView: View {
             .padding(.horizontal, 20)
             .padding(.top, 21)
 
-            // 카드 2: 도넛 차트 (역량 카테고리)
+            // 카드 2: 도넛 차트 (해시태그)
             VStack(alignment: .leading, spacing: 5) {
-                Text("\(viewModel.topCategoryDisplay)에 강점이 있어요")
+                Text("\(viewModel.topTag)에 강점이 있어요")
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("나의 역량 카테고리 분포를 확인해보세요")
+                Text("자주 사용하는 키워드를 확인해보세요")
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -158,13 +126,13 @@ struct ReportView: View {
             .padding(.horizontal, 20)
             .padding(.top, 16)
 
-            // 카드 3: 가로 바 차트 (해시태그)
+            // 카드 3: 가로 바 차트 (경험 유형)
             VStack(alignment: .leading, spacing: 5) {
-                Text("\(viewModel.topTag) 경험이 가장 많아요")
+                Text("\(viewModel.topType) 경험이 가장 많아요")
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("자주 사용하는 키워드를 확인해보세요")
+                Text("\(viewModel.weakestType)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 

@@ -151,10 +151,13 @@ class ReportViewModel: ObservableObject {
 
     // MARK: - Dynamic Text
 
-    /// 도넛 가운데 경험키워드 총 개수
-    var totalCategoryCount: Int {
-        summary?.categoryCounts.reduce(0) { $0 + $1.count } ?? 0
+    /// 도넛 가운데 경험키워드 총 개수 (tagCounts 합계)
+    var totalTagCount: Int {
+        summary?.tagCounts.reduce(0) { $0 + $1.count } ?? 0
     }
+
+    /// (하위 호환) 기존 이름 유지
+    var totalCategoryCount: Int { totalTagCount }
 
     /// 가장 많은 역량 카테고리 (API 값)
     var topCategory: String {
@@ -174,6 +177,12 @@ class ReportViewModel: ObservableObject {
     /// 가장 적은 경험 유형
     var weakestType: String {
         summary?.typeCounts.sorted { $0.count < $1.count }.first?.type ?? ""
+    }
+
+    /// 가장 적은 역량 카테고리 (표시용)
+    var weakestCategoryDisplay: String {
+        let weakest = summary?.categoryCounts.sorted { $0.count < $1.count }.first?.category ?? ""
+        return CompetencyMapper.toDisplayTitle(weakest)
     }
 
     /// 가장 많은 해시태그
@@ -206,4 +215,20 @@ class ReportViewModel: ObservableObject {
         "유연한 적응력": "변화에 유연하게 적응하며 성장하는 인재",
         "끈기있는 책임감": "맡은 일을 끝까지 해내는 책임감 있는 인재"
     ]
+
+    private static let categoryImageNames: [String: String] = [
+        "고객 가치 지향": "property_1_01",
+        "기술적 전문성": "property_1_02",
+        "협력적 소통": "property_1_03",
+        "주도적 실행력": "property_1_04",
+        "논리적 분석력": "property_1_05",
+        "창의적 문제해결": "property_1_06",
+        "유연한 적응력": "property_1_07",
+        "끈기있는 책임감": "property_1_08"
+    ]
+
+    /// 현재 topCategory에 해당하는 WebP 이미지 이름
+    var topCategoryImageName: String {
+        Self.categoryImageNames[topCategory] ?? "property_1_01"
+    }
 }
