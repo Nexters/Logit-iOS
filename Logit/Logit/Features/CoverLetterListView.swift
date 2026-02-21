@@ -17,6 +17,7 @@ struct CoverLetterListView: View {
             HStack {
                 Text("자기소개서")
                     .typo(.semibold_17)
+                    .foregroundStyle(.black)
                 
                 Spacer()
                 
@@ -128,6 +129,7 @@ struct CoverLetterListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .background(.white)
         .task {
             await viewModel.fetchProjects()
         }
