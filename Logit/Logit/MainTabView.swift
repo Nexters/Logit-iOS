@@ -12,7 +12,7 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
     
     enum Tab {
-        case home, search, add, activity, profile
+        case home, search, add, activity, report
     }
     
     var body: some View {
@@ -30,8 +30,8 @@ struct MainTabView: View {
                         EmptyView()
                     case .activity:
                         ExperienceListView()
-                    case .profile:
-                        Text("리포트")
+                    case .report:
+                        ReportView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -100,12 +100,12 @@ struct CustomTabBar: View {
             }
             
             TabBarItem(
-                icon: selectedTab == .profile ? "report_selected" : "report",
+                icon: selectedTab == .report ? "report_selected" : "report",
                 title: "리포트",
-                isSelected: selectedTab == .profile
+                isSelected: selectedTab == .report
             ) {
-               // selectedTab = .profile
-                showComingSoonAlert = true
+                selectedTab = .report
+//                showComingSoonAlert = true
             }
         }
         .frame(height: 49)

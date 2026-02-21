@@ -37,6 +37,7 @@ struct ExperienceCardView: View {
             VStack(alignment: .leading, spacing: 2.adjustedLayout) {
                 Text(title)
                     .typo(.semibold_18)
+                    .foregroundStyle(.primary600)
                 
                 Text("관련경험 \(count)개")
                     .typo(.medium_16)
