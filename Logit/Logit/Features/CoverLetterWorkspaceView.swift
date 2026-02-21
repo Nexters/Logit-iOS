@@ -481,6 +481,7 @@ struct ChatMessagesView: View {
     
     @StateObject private var viewModel: ChatMessagesViewModel
     @Binding var viewModelRef: ChatMessagesViewModel?
+    @State private var anchorMessageId: String? = nil
     
     init(
         projectId: String,
@@ -557,52 +558,11 @@ struct ChatMessagesView: View {
                 // ScrollViewReader로 자동 스크롤
                 ScrollViewReader { proxy in
                     VStack(alignment: .leading, spacing: 16) {
-                        // 메시지 리스트
-                        ForEach(viewModel.messages) { message in
-                            ChatBubble(
-                                message: message.content,
-                                isUser: message.role == .user,
-                                isDraft: message.isDraft,
-                                showUpdateButton: message.role == .assistant
-                                    && message.isDraft
-                                    && message.id == lastDraftId,  //  마지막 draft만
-                                isAnimated: false,
-                                chatId: message.id,
-                                onUpdateCoverLetter: {  chatId in
-                                    Task {
-                                        await viewModel.updateAnswer(chatId: chatId)
-                                        
-                                        // 성공 후 자기소개서 탭으로 전환
-                                        onUpdateCoverLetter()
-                                    }
-                                }
-                            )
-                            .id(message.id)  //  스크롤용 ID
-                        }
-                        
-                        // 스트리밍 중일 때 실시간 ChatBubble
-                        if viewModel.isStreaming {
-                            ChatBubble(
-                                message: viewModel.streamingMessage,
-                                isUser: false,
-                                isDraft: true,  // 의미상: 아직 완성 안 된 초안
-                                showUpdateButton: false,  // 스트리밍 중에는 버튼 안 보임
-                                isAnimated: true,
-                                chatId: nil,
-                                onUpdateCoverLetter: nil
-                            )
-                            .id("streaming")  //  스트리밍용 고정 ID
-                        }
-                        
-                        // 스크롤 앵커 (투명한 뷰)
-                        Color.clear
-                            .frame(height: 1)
-                            .id("bottom")
-                        
-                        // 더보기 버튼
+                        // 더보기 버튼 (상단 - 오래된 메시지 불러오기)
                         if viewModel.hasMore {
                             Button {
                                 Task {
+                                    anchorMessageId = viewModel.messages.first?.id
                                     await viewModel.loadMoreMessages()
                                 }
                             } label: {
@@ -617,11 +577,59 @@ struct ChatMessagesView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                         }
+
+                        // 메시지 리스트
+                        ForEach(viewModel.messages) { message in
+                            ChatBubble(
+                                message: message.content,
+                                isUser: message.role == .user,
+                                isDraft: message.isDraft,
+                                showUpdateButton: message.role == .assistant
+                                    && message.isDraft
+                                    && message.id == lastDraftId,  //  마지막 draft만
+                                isAnimated: false,
+                                chatId: message.id,
+                                onUpdateCoverLetter: {  chatId in
+                                    Task {
+                                        await viewModel.updateAnswer(chatId: chatId)
+
+                                        // 성공 후 자기소개서 탭으로 전환
+                                        onUpdateCoverLetter()
+                                    }
+                                }
+                            )
+                            .id(message.id)  //  스크롤용 ID
+                        }
+
+                        // 스트리밍 중일 때 실시간 ChatBubble
+                        if viewModel.isStreaming {
+                            ChatBubble(
+                                message: viewModel.streamingMessage,
+                                isUser: false,
+                                isDraft: true,  // 의미상: 아직 완성 안 된 초안
+                                showUpdateButton: false,  // 스트리밍 중에는 버튼 안 보임
+                                isAnimated: true,
+                                chatId: nil,
+                                onUpdateCoverLetter: nil
+                            )
+                            .id("streaming")  //  스트리밍용 고정 ID
+                        }
+
+                        // 스크롤 앵커 (투명한 뷰)
+                        Color.clear
+                            .frame(height: 1)
+                            .id("bottom")
                     }
                     //  메시지 변경 시 자동 스크롤
                     .onChange(of: viewModel.messages.count) { _ in
-                        withAnimation {
-                            proxy.scrollTo("bottom", anchor: .bottom)
+                        if let anchor = anchorMessageId {
+                            // 이전 메시지 로드 후 → 기존 첫 메시지 위치 유지
+                            proxy.scrollTo(anchor, anchor: .top)
+                            anchorMessageId = nil
+                        } else {
+                            withAnimation {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
                         }
                     }
                     // 스트리밍 중 실시간 스크롤

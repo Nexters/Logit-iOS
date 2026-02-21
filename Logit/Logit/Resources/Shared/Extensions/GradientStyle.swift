@@ -12,6 +12,7 @@ enum GradientStyle {
     case empty100
     case empty200
     case experienceCard
+    case reportCard
     
     var gradient: LinearGradient {
         switch self {
@@ -55,8 +56,38 @@ enum GradientStyle {
                 startPoint: UnitPoint(x: 1, y: -0.08),
                 endPoint: UnitPoint(x: 0.21, y: 0.71)
             )
+            
+        case .reportCard:
+            return LinearGradient(
+                stops: [
+                    Gradient.Stop(color: Color(red: 0.84, green: 0.91, blue: 1), location: 0.00),
+                    Gradient.Stop(color: Color(red: 0.94, green: 0.98, blue: 1), location: 0.50),
+                    Gradient.Stop(color: Color(red: 0.87, green: 0.98, blue: 0.98), location: 1.00),
+                ],
+                startPoint: UnitPoint(x: 1, y: -0.08),
+                endPoint: UnitPoint(x: 0.21, y: 0.71)
+            )
         }
     }
 }
 
 
+enum RadialGradientStyle {
+    case reportCardTextColor
+    
+    var gradient: RadialGradient {
+        switch self {
+        case .reportCardTextColor:
+            return RadialGradient(
+                stops: [
+                    Gradient.Stop(color: Color(hex: "#3C508C"), location: 0.00),
+                    Gradient.Stop(color: Color(hex: "#7B90CE"), location: 0.50),
+                    Gradient.Stop(color: Color(hex: "#AFD3DC"), location: 1.00),
+                ],
+                center: .center,
+                startRadius: 0,
+                endRadius: 200
+            )
+        }
+    }
+}
