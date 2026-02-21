@@ -34,6 +34,7 @@ struct ReportView: View {
                 contentView
             }
         }
+        .background(Color.white.ignoresSafeArea())
         .task {
             await viewModel.fetchExperienceSummary()
         }

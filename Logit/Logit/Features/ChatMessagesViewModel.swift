@@ -100,9 +100,9 @@ class ChatMessagesViewModel: ObservableObject {
             )
             
             print("추가 메시지 로드 성공: \(response.chats.count)개")
-            
-            // 기존 메시지에 추가
-            messages.append(contentsOf: response.chats)
+
+            // 오래된 메시지는 앞에 붙여야 함
+            messages.insert(contentsOf: response.chats, at: 0)
             nextCursor = response.nextCursor
             hasMore = response.hasMore
             
