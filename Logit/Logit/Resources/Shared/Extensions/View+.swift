@@ -24,6 +24,12 @@ extension ShapeStyle where Self == LinearGradient {
     static func gradient(_ style: GradientStyle) -> LinearGradient {
         style.gradient
     }
+    
+    static func gradient(_ style: RadialGradientStyle) -> RadialGradient {
+        style.gradient
+    }
+    
+    
 }
 
 extension View {
