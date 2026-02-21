@@ -91,7 +91,9 @@ struct ExperienceTypeSection: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(height: 155.adjustedHeight)
+            .background(.white)
         }
         .padding(.horizontal, 20.adjustedLayout)
+        .background(.white)
     }
 }

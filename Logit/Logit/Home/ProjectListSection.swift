@@ -38,6 +38,7 @@ struct ProjectListSection: View {
                 ProjectEmptyView()
             }
         }
+        .background(.white)
     }
 }
 
