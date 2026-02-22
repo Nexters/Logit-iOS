@@ -14,26 +14,26 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             HomeHeaderView()
-            
-            ExperienceTypeSection()
-                .padding(.top, 22.adjustedLayout)
-            
-            ProjectListSection(
-                hasProjects: viewModel.hasProjects,
-                projects: viewModel.projects,
-                isLoading: viewModel.isLoading
-            )
-            .padding(.top, 43.adjustedLayout)
-            
-            Spacer()
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ExperienceTypeSection()
+                        .padding(.top, 22.adjustedLayout)
+
+                    ProjectListSection(
+                        hasProjects: viewModel.hasProjects,
+                        projects: viewModel.projects,
+                        isLoading: viewModel.isLoading
+                    )
+                    .padding(.top, 43.adjustedLayout)
+                }
+            }
+            .refreshable {
+                await viewModel.fetchProjects()
+            }
         }
         .background(.white)
         .task {
-            // 화면이 나타날 때 프로젝트 목록 조회
-            await viewModel.fetchProjects()
-        }
-        .refreshable {
-            // Pull to refresh
             await viewModel.fetchProjects()
         }
     }

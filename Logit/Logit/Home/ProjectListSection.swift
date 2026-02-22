@@ -81,24 +81,22 @@ struct ProjectEmptyView: View {
 
 struct ProjectListView: View {
     let projects: [ProjectListItemResponse]
-    
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(projects.indices, id: \.self) { index in
-                    ProjectCardCell(
-                        project: projects[index]
-                    )
-                    
-                    if index < projects.count - 1 {
-                        Divider()
-                            .background(Color.gray100)
-                            .padding(.horizontal, 20.adjustedLayout)
-                    }
+        VStack(spacing: 0) {
+            ForEach(projects.indices, id: \.self) { index in
+                ProjectCardCell(
+                    project: projects[index]
+                )
+
+                if index < projects.count - 1 {
+                    Divider()
+                        .background(Color.gray100)
+                        .padding(.horizontal, 20.adjustedLayout)
                 }
             }
-            .padding(.bottom, (49 + 20).adjustedLayout)
         }
+        .padding(.bottom, (49 + 20).adjustedLayout)
     }
 }
 
