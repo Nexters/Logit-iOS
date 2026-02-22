@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct ExperienceTypeSection: View {
+    let userName: String
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12.adjustedLayout) {
-            Text("로짓님의 경험 유형")
+            Text("\(userName)님의 경험 유형")
                 .typo(.bold_18)
                 .foregroundStyle(.black)
             

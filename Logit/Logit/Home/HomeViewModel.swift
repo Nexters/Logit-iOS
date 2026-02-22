@@ -12,39 +12,55 @@ class HomeViewModel: ObservableObject {
     @Published var projects: [ProjectListItemResponse] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-    
+    @Published var userName: String = ""
+
     private let projectRepository: ProjectRepository
-    
-    init(projectRepository: ProjectRepository = DefaultProjectRepository()) {
+    private let userRepository: UserRepository
+
+    init(
+        projectRepository: ProjectRepository = DefaultProjectRepository(),
+        userRepository: UserRepository = DefaultUserRepository(networkClient: DefaultNetworkClient())
+    ) {
         self.projectRepository = projectRepository
+        self.userRepository = userRepository
     }
-    
+
     func fetchProjects() async {
         isLoading = true
         errorMessage = nil
-        
+
         do {
             // 전체 프로젝트 가져오기 (skip: 0, limit: 100)
             let fetchedProjects = try await projectRepository.getProjectList(
                 skip: 0,
                 limit: 100
             )
-            
+
             projects = fetchedProjects
             print(" 프로젝트 목록 조회 성공: \(fetchedProjects.count)개")
-            
+
         } catch {
             print(" 프로젝트 목록 조회 실패: \(error)")
             errorMessage = "프로젝트 목록을 불러올 수 없습니다."
-            
+
             if let apiError = error as? APIError {
                 print("API Error: \(apiError.localizedDescription)")
             }
         }
-        
+
         isLoading = false
     }
-    
+
+    func fetchCurrentUser() async {
+        do {
+            let user = try await userRepository.getCurrentUser()
+            userName = user.fullName
+            print("유저 정보 조회 성공: \(user.fullName)")
+        } catch {
+            print("유저 정보 조회 실패: \(error)")
+        }
+    }
+
     var hasProjects: Bool {
         !projects.isEmpty
     }
