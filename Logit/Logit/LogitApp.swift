@@ -10,7 +10,7 @@ import GoogleSignIn
 
 @main
 struct LogitApp: App {
-    @StateObject private var appState = AppState(mockScenario: .noToken)
+    @StateObject private var appState = AppState(mockScenario: .existingUser)
 
     var body: some Scene {
         WindowGroup {

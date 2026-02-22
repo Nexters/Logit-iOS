@@ -63,7 +63,6 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
     let onAddTapped: () -> Void
-    @State private var showComingSoonAlert = false
     
     var body: some View {
         HStack(spacing: 0) {
@@ -105,16 +104,10 @@ struct CustomTabBar: View {
                 isSelected: selectedTab == .report
             ) {
                 selectedTab = .report
-//                showComingSoonAlert = true
             }
         }
-        .frame(height: 49)
-        .background(
-            .white
-        )
-        .alert("아직 준비중인 기능이에요!!", isPresented: $showComingSoonAlert) {
-                    Button("확인", role: .cancel) { }
-                }
+        .frame(height: 63)
+        .background(.white)
     }
 }
 
@@ -133,9 +126,11 @@ struct TabBarItem: View {
                     .frame(width: 25, height: 25)
                 
                 Text(title)
-                    .font(.system(size: 10)) // TODO: - medium 10으로 교체 해야함
+                    .typo(.medium_10)
                     .foregroundStyle(isSelected ? .black : .primary400)
             }
+            .padding(.top, 12)
+            .padding(.bottom, 12)
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
