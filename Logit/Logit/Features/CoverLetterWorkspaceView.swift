@@ -278,7 +278,8 @@ struct CoverLetterWorkspaceView: View {
 struct QuestionTabBar: View {
     let questionCount: Int
     @Binding var selectedIndex: Int
-    
+    var onAddTapped: () -> Void = {}
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -289,6 +290,18 @@ struct QuestionTabBar: View {
                         action: { selectedIndex = index }
                     )
                 }
+
+                Button(action: onAddTapped) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray300)
+                        .frame(width: 34, height: 34)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray100, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
