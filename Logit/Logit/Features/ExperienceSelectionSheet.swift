@@ -274,7 +274,7 @@ struct SelectableExperienceCell: View {
             VStack(alignment: .leading, spacing: 12) {
                 //  상단: 점수 + 더보기 버튼
                 HStack {
-                    Text("\(displayScore)점")
+                    Text("공고 매칭 점수: \(displayScore)점")
                         .typo(.medium_13)
                         .foregroundColor(.primary100)
                     
@@ -299,19 +299,11 @@ struct SelectableExperienceCell: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                //  하단: 태그들 + 체크 아이콘
-                HStack(alignment: .bottom) {
-                    AdaptiveTagsView(
-                        competencyTag: displayCategory,
-                        tags: parsedTags
-                    )
-                    
-                    Spacer()
-                    
-                    Image(isSelected ? "checkmark_selected" : "checkmark_unselected")
-                        .resizable()
-                        .frame(width: 32, height: 32)
-                }
+                //  하단: 태그들
+                AdaptiveTagsView(
+                    competencyTag: displayCategory,
+                    tags: parsedTags
+                )
             }
             .padding(16)
             .background(Color.white)
