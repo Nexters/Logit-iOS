@@ -29,10 +29,38 @@ struct ApplicationInfoView: View {
                     PageIndicator(currentPage: 1, totalPages: 2)
                         .padding(.top, 16)
                     
-                    Text("지원기업 정보 입력")
-                        .typo(.bold_18)
-                        .padding(.top, 13.25)
-                    
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("지원기업 정보 입력")
+                            .typo(.bold_18)
+
+                        Spacer()
+
+                        Button {
+                            viewModel.loadExampleData()
+                        } label: {
+                            if viewModel.isExampleLoaded {
+                                Text("작성된 예시로 등록해보세요")
+                                    .typo(.regular_12)
+                                    .foregroundColor(.primary100)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                            } else {
+                                Text("예시 불러오기")
+                                    .typo(.regular_12)
+                                    .foregroundColor(.primary400)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(.gray70, lineWidth: 1)
+                                            .background(.gray20)
+                                    )
+                            }
+                        }
+                        .disabled(viewModel.isExampleLoaded)
+                    }
+                    .padding(.top, 13.25)
+
                     Text("지원하는 기업의 정보를 알려주세요")
                         .typo(.regular_15)
                         .foregroundColor(.gray300)
