@@ -12,6 +12,35 @@ struct LoginView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = LoginViewModel()
 
+    // TODO: 실제 URL로 교체
+    private let termsOfServiceURL = URL(string: "https://your-domain.com/terms")!
+    private let privacyPolicyURL = URL(string: "https://your-domain.com/privacy")!
+
+    private var termsAndPrivacyText: some View {
+        var baseText = AttributedString("계속하면 ")
+        baseText.foregroundColor = Color.gray300
+
+        var termsText = AttributedString("이용약관")
+        termsText.link = termsOfServiceURL
+        termsText.foregroundColor = .blue
+        termsText.underlineStyle = Text.LineStyle(pattern: .solid, color: .blue)
+
+        var dotText = AttributedString(" · ")
+        dotText.foregroundColor = Color.gray300
+
+        var privacyText = AttributedString("개인정보 처리방침")
+        privacyText.link = privacyPolicyURL
+        privacyText.foregroundColor = .blue
+        privacyText.underlineStyle = Text.LineStyle(pattern: .solid, color: .blue)
+
+        var endText = AttributedString("에 동의합니다.")
+        endText.foregroundColor = Color.gray300
+
+        return Text(baseText + termsText + dotText + privacyText + endText)
+            .typo(.regular_12)
+            .multilineTextAlignment(.center)
+    }
+
     var body: some View {
         ZStack {
             // 중앙 컨텐츠
@@ -31,6 +60,7 @@ struct LoginView: View {
                     .foregroundStyle(.gray100)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
             
             // 하단 버튼
             VStack(spacing: 12) {
@@ -45,26 +75,26 @@ struct LoginView: View {
                             .padding(.leading, 16)
                         
                         Text("Google로 시작하기")
-                            .typo(.regular_19)
+                            .typo(.regular_18)
                             .frame(maxWidth: .infinity)
                         
                         Spacer()
                             .frame(width: 38)
                     }
-                    .frame(height: 49.adjustedHeight)
+                    .frame(height: 52.adjustedHeight)
                     .background(Color.white)
                     .foregroundColor(.black)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray, lineWidth: 1)
+                            .stroke(Color.gray100, lineWidth: 1)
                     )
                 }
 
                 Text("Apple로 시작하기")
                     .typo(.regular_19)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 49.adjustedHeight)
+                    .frame(height: 52.adjustedHeight)
                     .background(Color.black)
                     .foregroundColor(.white)
                     .cornerRadius(8)
@@ -83,9 +113,11 @@ struct LoginView: View {
                         .cornerRadius(8)
                         .environment(\.colorScheme, .dark)
                     )
+
+                termsAndPrivacyText
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 38)
+            .padding(.bottom, 63)
             .frame(maxHeight: .infinity, alignment: .bottom)
 
             // 로딩 오버레이
