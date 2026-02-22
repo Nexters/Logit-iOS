@@ -6,16 +6,19 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct LogitApp: App {
-    @StateObject private var appState = AppState(mockScenario: .existingUser)
-    
+    @StateObject private var appState = AppState(mockScenario: .noToken)
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
-            
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }
