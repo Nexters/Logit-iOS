@@ -24,6 +24,10 @@ struct CoverLetterWorkspaceView: View {
     
     @State private var showToast: Bool = false
     @State private var showEditQuestions: Bool = false
+    @State private var showQuestionDetail: Bool = false
+    @State private var editingQuestionText: String = ""
+    @State private var editingMaxLength: String = ""
+    @State private var overlayEditorHeight: CGFloat = 44
     
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
@@ -31,6 +35,125 @@ struct CoverLetterWorkspaceView: View {
             return nil
         }
         return viewModel.questionList[selectedQuestionIndex]
+    }
+
+    private func dismissQuestionDetail() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showQuestionDetail = false
+        }
+        // 애니메이션 완료 후 저장 — 동시에 상태 변경이 일어나면 번쩍임 발생
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
+            saveQuestionEdits()
+        }
+    }
+
+    private func saveQuestionEdits() {
+        guard let question = currentQuestion, !editingQuestionText.isEmpty else { return }
+        Task {
+            await viewModel.saveQuestions(
+                editedItems: [EditableQuestionItem(
+                    questionId: question.id,
+                    title: editingQuestionText,
+                    characterLimit: editingMaxLength
+                )],
+                deletedQuestionIds: []
+            )
+        }
+    }
+
+    /// TextEditor 콘텐츠 높이를 텍스트 기준으로 계산
+    private func overlayEditorContentHeight(text: String) -> CGFloat {
+        // HStack 가용 너비: 화면 너비 - 좌우 패딩(40) - spacing(12) - chevron 이미지(12) - UITextView 내부 패딩(10)
+        let contentWidth = max(1, UIScreen.main.bounds.width - 74)
+        let font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        let rect = (text.isEmpty ? " " : text).boundingRect(
+            with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        )
+        // UITextView 내부 상하 패딩 ~8pt씩 = 16pt, 최소 44pt
+        return min(max(44, ceil(rect.height) + 16), 220)
+    }
+
+    @ViewBuilder
+    private var questionDetailOverlay: some View {
+        VStack(spacing: 0) {
+            // 상단 흰색 영역: 네비게이션 + 탭바 + 질문 편집 + 글자수
+            VStack(spacing: 0) {
+                CustomNavigationBar(
+                    title: viewModel.navigationTitle,
+                    showBackButton: true,
+                    onBackTapped: { dismiss() }
+                )
+
+                if !viewModel.questionList.isEmpty {
+                    QuestionTabBar(
+                        questionCount: viewModel.questionList.count,
+                        selectedIndex: $selectedQuestionIndex,
+                        onAddTapped: { showEditQuestions = true }
+                    )
+                }
+
+                // 질문 편집 행
+                HStack(alignment: .top, spacing: 12) {
+                    TextEditor(text: $editingQuestionText)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.gray400)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .frame(height: overlayEditorHeight)
+                        .onChange(of: editingQuestionText) { _, newValue in
+                            let h = overlayEditorContentHeight(text: newValue)
+                            if abs(h - overlayEditorHeight) > 1 {
+                                overlayEditorHeight = h
+                            }
+                        }
+
+                    Button {
+                        dismissQuestionDetail()
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .resizable()
+                            .frame(width: 12, height: 8)
+                            .foregroundColor(.gray400)
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+
+                Divider()
+                    .padding(.horizontal, 20)
+
+                // 글자수 편집 행
+                HStack(spacing: 4) {
+                    TextField("", text: $editingMaxLength)
+                        .keyboardType(.numberPad)
+                        .font(.system(size: 15))
+                        .foregroundColor(.gray400)
+                        .fixedSize()
+
+                    Text("자")
+                        .font(.system(size: 15))
+                        .foregroundColor(.gray400)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+            }
+            .background(Color.white)
+
+            // 하단 dimmed 영역 — 탭하면 저장 후 닫기
+            Color.black.opacity(0.4)
+                .onTapGesture {
+                    dismissQuestionDetail()
+                }
+        }
+        .transition(.opacity)
     }
     
     enum ContentType {
@@ -45,6 +168,8 @@ struct CoverLetterWorkspaceView: View {
     
     var body: some View {
         ZStack {
+            Color.white.ignoresSafeArea()
+
             VStack(spacing: 0) {
                 CustomNavigationBar(
                     title: viewModel.navigationTitle,
@@ -59,10 +184,10 @@ struct CoverLetterWorkspaceView: View {
                         selectedIndex: $selectedQuestionIndex,
                         onAddTapped: { showEditQuestions = true }
                     )
-                    .onChange(of: selectedQuestionIndex) { newIndex in
+                    .onChange(of: selectedQuestionIndex) { oldIndex, newIndex in
                         print("========== 문항 전환 ==========")
                         print("선택된 Index: \(newIndex)")
-                        
+
                         if newIndex < viewModel.questionList.count {
                             let question = viewModel.questionList[newIndex]
                             print("문항 ID: \(question.id)")
@@ -71,6 +196,29 @@ struct CoverLetterWorkspaceView: View {
                             print(" Index out of range")
                         }
                         print("==============================")
+
+                        if showQuestionDetail {
+                            // 탭 전환 시 이전 문항 저장
+                            if oldIndex < viewModel.questionList.count, !editingQuestionText.isEmpty {
+                                let oldQ = viewModel.questionList[oldIndex]
+                                Task {
+                                    await viewModel.saveQuestions(
+                                        editedItems: [EditableQuestionItem(
+                                            questionId: oldQ.id,
+                                            title: editingQuestionText,
+                                            characterLimit: editingMaxLength
+                                        )],
+                                        deletedQuestionIds: []
+                                    )
+                                }
+                            }
+                            // 새 문항 편집 데이터 로드
+                            if newIndex < viewModel.questionList.count {
+                                let q = viewModel.questionList[newIndex]
+                                editingQuestionText = q.question
+                                editingMaxLength = q.maxLength.map { String($0) } ?? ""
+                            }
+                        }
                     }
                 } else if viewModel.isLoading {
                     ProgressView()
@@ -84,26 +232,29 @@ struct CoverLetterWorkspaceView: View {
                 }
                 
                 if let question = currentQuestion {
-                    HStack(spacing: 12) {
-                        Text(question.question)
-                            .typo(.bold_16)
-                            .foregroundColor(.gray400)
-                            .lineLimit(1)  // 한 줄 or 전체
-                        
-                        Spacer()
-                        
-                        // 화살표 버튼
-                        Button {
-                            withAnimation {
-//                                showQuestionDetail.toggle()
-                            }
-                        } label: {
+                    Button {
+                        editingQuestionText = question.question
+                        editingMaxLength = question.maxLength.map { String($0) } ?? ""
+                        overlayEditorHeight = overlayEditorContentHeight(text: question.question)
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showQuestionDetail = true
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text(question.question)
+                                .typo(.bold_16)
+                                .foregroundColor(.gray400)
+                                .lineLimit(1)
+
+                            Spacer()
+
                             Image(systemName: "chevron.down")
                                 .resizable()
                                 .frame(width: 12, height: 8)
                                 .foregroundColor(.gray400)
                         }
                     }
+                    .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
                     .background(Color.white)
@@ -204,6 +355,11 @@ struct CoverLetterWorkspaceView: View {
                 )
             }
             
+            // 질문 상세/편집 오버레이
+            if showQuestionDetail {
+                questionDetailOverlay
+            }
+
             //  토스트 오버레이
             if showToast {
                 VStack {
