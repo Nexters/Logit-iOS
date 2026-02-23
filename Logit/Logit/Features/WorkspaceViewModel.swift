@@ -70,12 +70,22 @@ class WorkspaceViewModel: ObservableObject {
         }
     }
     
-    func saveQuestions(editedItems: [EditableQuestionItem]) async {
+    func saveQuestions(editedItems: [EditableQuestionItem], deletedQuestionIds: [String] = []) async {
         isSavingQuestions = true
         defer { isSavingQuestions = false }
 
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
+                // 삭제
+                for questionId in deletedQuestionIds {
+                    group.addTask {
+                        try await self.questionRepository.deleteQuestion(
+                            projectId: self.projectId,
+                            questionId: questionId
+                        )
+                    }
+                }
+                // 수정 / 생성
                 for item in editedItems {
                     if let questionId = item.questionId {
                         // 기존 문항 수정

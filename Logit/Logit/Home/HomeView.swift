@@ -33,10 +33,12 @@ struct HomeView: View {
             }
         }
         .background(.white)
-        .task {
-            async let projects: () = viewModel.fetchProjects()
-            async let user: () = viewModel.fetchCurrentUser()
-            _ = await (projects, user)
+        .onAppear {
+            Task {
+                async let projects: () = viewModel.fetchProjects()
+                async let user: () = viewModel.fetchCurrentUser()
+                _ = await (projects, user)
+            }
         }
     }
 }

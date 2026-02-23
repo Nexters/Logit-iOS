@@ -16,6 +16,7 @@ class HomeViewModel: ObservableObject {
 
     private let projectRepository: ProjectRepository
     private let userRepository: UserRepository
+    private var projectCreatedObserver: NSObjectProtocol?
 
     init(
         projectRepository: ProjectRepository = DefaultProjectRepository(),
@@ -23,6 +24,21 @@ class HomeViewModel: ObservableObject {
     ) {
         self.projectRepository = projectRepository
         self.userRepository = userRepository
+        projectCreatedObserver = NotificationCenter.default.addObserver(
+            forName: .projectCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.fetchProjects()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = projectCreatedObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     func fetchProjects() async {

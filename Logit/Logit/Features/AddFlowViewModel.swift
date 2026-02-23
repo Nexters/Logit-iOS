@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let projectCreated = Notification.Name("projectCreated")
+}
+
 @MainActor
 class AddFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
@@ -95,9 +99,12 @@ class AddFlowViewModel: ObservableObject {
                 projectId: response.project.id,
                 questions: questions
             )
-            
+
             // 스택 초기화
             path = NavigationPath()
+
+            // 프로젝트 목록 갱신 노티
+            NotificationCenter.default.post(name: .projectCreated, object: nil)
             
         } catch {
             print(" 프로젝트 생성 실패: \(error)")

@@ -17,6 +17,7 @@ struct EditQuestionsView: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var editableQuestions: [EditableQuestionItem] = []
+    @State private var deletedQuestionIds: [String] = []
 
     private let maxQuestionsCount = 5
 
@@ -44,17 +45,37 @@ struct EditQuestionsView: View {
                         .padding(.top, 3)
 
                     VStack(spacing: 20) {
-                        ForEach(Array(editableQuestions.enumerated()), id: \.element.id) { index, _ in
+                        ForEach(editableQuestions) { item in
+                            let index = editableQuestions.firstIndex(where: { $0.id == item.id }) ?? 0
                             QuestionInputRow(
                                 questionNumber: index + 1,
                                 questionTitle: Binding(
-                                    get: { editableQuestions[index].title },
-                                    set: { editableQuestions[index].title = $0 }
+                                    get: {
+                                        editableQuestions.first(where: { $0.id == item.id })?.title ?? ""
+                                    },
+                                    set: {
+                                        if let i = editableQuestions.firstIndex(where: { $0.id == item.id }) {
+                                            editableQuestions[i].title = $0
+                                        }
+                                    }
                                 ),
                                 characterLimit: Binding(
-                                    get: { editableQuestions[index].characterLimit },
-                                    set: { editableQuestions[index].characterLimit = $0 }
-                                )
+                                    get: {
+                                        editableQuestions.first(where: { $0.id == item.id })?.characterLimit ?? ""
+                                    },
+                                    set: {
+                                        if let i = editableQuestions.firstIndex(where: { $0.id == item.id }) {
+                                            editableQuestions[i].characterLimit = $0
+                                        }
+                                    }
+                                ),
+                                showDelete: editableQuestions.count > 1,
+                                onDelete: {
+                                    if let questionId = item.questionId {
+                                        deletedQuestionIds.append(questionId)
+                                    }
+                                    editableQuestions.removeAll { $0.id == item.id }
+                                }
                             )
                         }
 
@@ -92,7 +113,10 @@ struct EditQuestionsView: View {
 
                     Button {
                         Task {
-                            await viewModel.saveQuestions(editedItems: editableQuestions)
+                            await viewModel.saveQuestions(
+                                editedItems: editableQuestions,
+                                deletedQuestionIds: deletedQuestionIds
+                            )
                             dismiss()
                         }
                     } label: {

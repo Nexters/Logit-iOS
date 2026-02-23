@@ -21,13 +21,29 @@ class CoverLetterListViewModel: ObservableObject {
     
     private let projectRepository: ProjectRepository
     private let questionRepository: QuestionRepository
-    
+    private var projectCreatedObserver: NSObjectProtocol?
+
     init(
         projectRepository: ProjectRepository = DefaultProjectRepository(),
         questionRepository: QuestionRepository = DefaultQuestionRepository()
     ) {
         self.projectRepository = projectRepository
         self.questionRepository = questionRepository
+        projectCreatedObserver = NotificationCenter.default.addObserver(
+            forName: .projectCreated,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.fetchProjects()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = projectCreatedObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
     // 1. 프로젝트 목록 조회

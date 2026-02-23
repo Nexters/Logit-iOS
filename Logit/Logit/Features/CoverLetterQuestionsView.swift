@@ -42,17 +42,32 @@ struct CoverLetterQuestionsView: View {
                         .padding(.top, 3)
                     
                     VStack(spacing: 20) {
-                        ForEach(Array(viewModel.questions.enumerated()), id: \.element.id) { index, question in
+                        ForEach(viewModel.questions) { question in
+                            let index = viewModel.questions.firstIndex(where: { $0.id == question.id }) ?? 0
                             QuestionInputRow(
                                 questionNumber: index + 1,
                                 questionTitle: Binding(
-                                    get: { viewModel.questions[index].title },
-                                    set: { viewModel.questions[index].title = $0 }
+                                    get: {
+                                        viewModel.questions.first(where: { $0.id == question.id })?.title ?? ""
+                                    },
+                                    set: {
+                                        if let i = viewModel.questions.firstIndex(where: { $0.id == question.id }) {
+                                            viewModel.questions[i].title = $0
+                                        }
+                                    }
                                 ),
                                 characterLimit: Binding(
-                                    get: { viewModel.questions[index].characterLimit },
-                                    set: { viewModel.questions[index].characterLimit = $0 }
-                                )
+                                    get: {
+                                        viewModel.questions.first(where: { $0.id == question.id })?.characterLimit ?? ""
+                                    },
+                                    set: {
+                                        if let i = viewModel.questions.firstIndex(where: { $0.id == question.id }) {
+                                            viewModel.questions[i].characterLimit = $0
+                                        }
+                                    }
+                                ),
+                                showDelete: viewModel.questions.count > 1,
+                                onDelete: { viewModel.questions.removeAll { $0.id == question.id } }
                             )
                         }
                         
@@ -115,12 +130,14 @@ struct QuestionInputRow: View {
     let questionNumber: Int
     @Binding var questionTitle: String
     @Binding var characterLimit: String
+    var showDelete: Bool = false
+    var onDelete: () -> Void = {}
     @FocusState private var focusedField: Field?
-    
+
     enum Field {
         case title, limit
     }
-    
+
     var body: some View {
         HStack(spacing: 8) {
             // 문항 제목 입력
@@ -138,7 +155,7 @@ struct QuestionInputRow: View {
                             lineWidth: 1
                         )
                 )
-            
+
             // 글자 수 제한 입력
             HStack(spacing: 4) {
                 TextField("글자수", text: $characterLimit)
@@ -156,7 +173,7 @@ struct QuestionInputRow: View {
                             characterLimit = filtered
                         }
                     }
-                
+
                 Text("자")
                     .font(.system(size: 15))
                     .foregroundColor(.black)
@@ -171,6 +188,21 @@ struct QuestionInputRow: View {
                         lineWidth: 1
                     )
             )
+
+            // 삭제 버튼 (2개 이상일 때만)
+            if showDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16))
+                        .foregroundColor(.gray300)
+                        .frame(width: 34, height: 44)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray100, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
         }
     }
 }

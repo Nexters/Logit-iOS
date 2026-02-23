@@ -130,8 +130,10 @@ struct CoverLetterListView: View {
             }
         }
         .background(.white)
-        .task {
-            await viewModel.fetchProjects()
+        .onAppear {
+            Task {
+                await viewModel.fetchProjects()
+            }
         }
         .refreshable {
             await viewModel.fetchProjects()
