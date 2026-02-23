@@ -43,10 +43,6 @@ class ExperienceFlowViewModel: ObservableObject {
         path.append(ExperienceFlowRoute.starMethod)
     }
     
-    func navigateToExperienceType() {
-        path.append(ExperienceFlowRoute.experienceType)
-    }
-    
     func navigateBack() {
         if !path.isEmpty {
             path.removeLast()
@@ -137,8 +133,6 @@ class ExperienceFlowViewModel: ObservableObject {
         switch route {
         case .starMethod:
             ExperienceStarMethodView()
-        case .experienceType:
-            ExperienceTypeSelectionView()
         }
     }
 }

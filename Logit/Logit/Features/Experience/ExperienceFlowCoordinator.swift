@@ -44,5 +44,4 @@ struct ExperienceFlowCoordinator: View {
 
 enum ExperienceFlowRoute: Hashable {
     case starMethod        // 2단계: STAR 기반 경험 정리
-    case experienceType    // 3단계: 경험 유형 선택
 }

@@ -23,7 +23,7 @@ struct ExperienceInfoInputView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    PageIndicator(currentPage: 1, totalPages: 3)
+                    PageIndicator(currentPage: 1, totalPages: 2)
                         .padding(.top, 16)
                     
                     HStack(alignment: .center, spacing: 0) {
