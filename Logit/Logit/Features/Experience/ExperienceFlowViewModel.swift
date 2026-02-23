@@ -7,17 +7,45 @@
 
 import SwiftUI
 
+enum ExperienceMethod: String, CaseIterable {
+    case star = "STAR"
+    case psi  = "PSI"
+    case free = "FREE"
+
+    var displayName: String {
+        switch self {
+        case .star: return "STAR"
+        case .psi:  return "PSI"
+        case .free: return "자유형식"
+        }
+    }
+}
+
 @MainActor
 class ExperienceFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
-    
+
+    // 경험 정리 방법
+    @Published var selectedMethod: ExperienceMethod = .star
+
     // 데이터
     @Published var experienceTitle: String = ""
     @Published var experienceType: String?
+
+    // STAR
     @Published var situation: String = ""
     @Published var task: String = ""
     @Published var action: String = ""
     @Published var result: String = ""
+
+    // PSI
+    @Published var problem: String = ""
+    @Published var solution: String = ""
+    @Published var impact: String = ""
+
+    // 자유형식
+    @Published var freeText: String = ""
+
     @Published var selectedCompetency: String?
     
     @Published var startDate: Date?
@@ -55,18 +83,48 @@ class ExperienceFlowViewModel: ObservableObject {
          
          do {
              // Request 생성
-             let request = CreateExperienceRequest(
-                 action: action,
-                 endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
-                 experienceType: experienceType ?? "",
-                 formatType: "STAR",
-                 result: result,
-                 situation: situation,
-                 startDate: startDate?.toString() ?? "",
-                 tags: selectedCompetency ?? "",
-                 task: task,
-                 title: experienceTitle
-             )
+             let request: CreateExperienceRequest
+             switch selectedMethod {
+             case .star:
+                 request = CreateExperienceRequest(
+                     action: action,
+                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     experienceType: experienceType ?? "",
+                     formatType: "STAR",
+                     result: result,
+                     situation: situation,
+                     startDate: startDate?.toString() ?? "",
+                     tags: selectedCompetency ?? "",
+                     task: task,
+                     title: experienceTitle
+                 )
+             case .psi:
+                 request = CreateExperienceRequest(
+                     action: solution,
+                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     experienceType: experienceType ?? "",
+                     formatType: "PSI",
+                     result: impact,
+                     situation: problem,
+                     startDate: startDate?.toString() ?? "",
+                     tags: selectedCompetency ?? "",
+                     task: "",
+                     title: experienceTitle
+                 )
+             case .free:
+                 request = CreateExperienceRequest(
+                     action: "",
+                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     experienceType: experienceType ?? "",
+                     formatType: "FREE",
+                     result: "",
+                     situation: freeText,
+                     startDate: startDate?.toString() ?? "",
+                     tags: selectedCompetency ?? "",
+                     task: "",
+                     title: experienceTitle
+                 )
+             }
              
              // API 호출
              let response: ExperienceResponse = try await experienceRepository.createExperience(request)

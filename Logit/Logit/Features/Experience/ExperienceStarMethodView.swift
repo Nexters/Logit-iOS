@@ -10,6 +10,7 @@ import SwiftUI
 struct ExperienceStarMethodView: View {
     @EnvironmentObject var viewModel: ExperienceFlowViewModel
     @Environment(\.dismiss) var dismiss
+    @State private var isMethodDropdownOpen: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -60,43 +61,158 @@ struct ExperienceStarMethodView: View {
                         .typo(.regular_15)
                         .foregroundColor(.gray300)
                         .padding(.top, 3)
-                    
+
+                    // 경험 정리법 드롭다운
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("경험 정리법")
+                            .typo(.medium_15)
+                            .foregroundColor(.black)
+
+                        // 선택 버튼
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isMethodDropdownOpen.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                Text(viewModel.selectedMethod.displayName)
+                                    .typo(.medium_15)
+                                    .foregroundColor(.black)
+                                Spacer()
+                                Image(systemName: isMethodDropdownOpen ? "chevron.up" : "chevron.down")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray300)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 13)
+                            .contentShape(Rectangle())
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        isMethodDropdownOpen ? Color.primary100 : Color.gray100,
+                                        lineWidth: 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+
+                        // 드롭다운 목록
+                        if isMethodDropdownOpen {
+                            VStack(spacing: 0) {
+                                ForEach(ExperienceMethod.allCases, id: \.self) { method in
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            viewModel.selectedMethod = method
+                                            isMethodDropdownOpen = false
+                                        }
+                                    } label: {
+                                        HStack {
+                                            Text(method.displayName)
+                                                .typo(.regular_15)
+                                                .foregroundColor(
+                                                    viewModel.selectedMethod == method ? .primary100 : .black
+                                                )
+                                            Spacer()
+                                            if viewModel.selectedMethod == method {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 13))
+                                                    .foregroundColor(.primary100)
+                                            }
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 13)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+
+                                    if method != ExperienceMethod.allCases.last {
+                                        Divider()
+                                            .padding(.horizontal, 16)
+                                    }
+                                }
+                            }
+                            .background(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray100, lineWidth: 1)
+                            )
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .padding(.top, 16)
+
                     VStack(spacing: 20) {
-                        InputFieldView(
-                            title: "Situation (상황)",
-                            placeholder: "어떤 일이 일어났는지 배경을 기술합니다.",
-                            isRequired: true,
-                            maxLength: 1000,
-                            largeHeight: 74,
-                            text: $viewModel.situation
-                        )
-                        
-                        InputFieldView(
-                            title: "Task (과제/목표)",
-                            placeholder: "해결해야 했던 과제를 기술합니다.",
-                            isRequired: true,
-                            maxLength: 1000,
-                            largeHeight: 74,
-                            text: $viewModel.task
-                        )
-                        
-                        InputFieldView(
-                            title: "Action (행동)",
-                            placeholder: "문제를 해결하기 위해 한 행동을 기술합니다.",
-                            isRequired: true,
-                            maxLength: 1000,
-                            largeHeight: 74,
-                            text: $viewModel.action
-                        )
-                        
-                        InputFieldView(
-                            title: "Result (결과)",
-                            placeholder: "행동으로 얻은 성과와 배운 점을 서술합니다.",
-                            isRequired: false,
-                            maxLength: 1000,
-                            largeHeight: 74,
-                            text: $viewModel.result
-                        )
+                        switch viewModel.selectedMethod {
+                        case .star:
+                            InputFieldView(
+                                title: "Situation (상황)",
+                                placeholder: "어떤 일이 일어났는지 배경을 기술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.situation
+                            )
+                            InputFieldView(
+                                title: "Task (과제/목표)",
+                                placeholder: "해결해야 했던 과제를 기술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.task
+                            )
+                            InputFieldView(
+                                title: "Action (행동)",
+                                placeholder: "문제를 해결하기 위해 한 행동을 기술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.action
+                            )
+                            InputFieldView(
+                                title: "Result (결과)",
+                                placeholder: "행동으로 얻은 성과와 배운 점을 서술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.result
+                            )
+
+                        case .psi:
+                            InputFieldView(
+                                title: "Problem (문제)",
+                                placeholder: "직면했던 문제나 상황을 기술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.problem
+                            )
+                            InputFieldView(
+                                title: "Solution (해결책)",
+                                placeholder: "문제를 해결하기 위해 취한 행동을 기술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.solution
+                            )
+                            InputFieldView(
+                                title: "Impact (영향/결과)",
+                                placeholder: "해결 후 얻은 성과와 배운 점을 서술합니다.",
+                                isRequired: true,
+                                maxLength: 1000,
+                                largeHeight: 74,
+                                text: $viewModel.impact
+                            )
+
+                        case .free:
+                            InputFieldView(
+                                title: "경험 내용",
+                                placeholder: "경험을 자유롭게 서술합니다.",
+                                isRequired: true,
+                                maxLength: 3000,
+                                largeHeight: 200,
+                                text: $viewModel.freeText
+                            )
+                        }
                     }
                     .padding(.top, 24)
                     
@@ -140,10 +256,19 @@ struct ExperienceStarMethodView: View {
     }
     
     private var isFormValid: Bool {
-        !viewModel.situation.isEmpty &&
-        !viewModel.task.isEmpty &&
-        !viewModel.action.isEmpty &&
-        !viewModel.result.isEmpty
+        switch viewModel.selectedMethod {
+        case .star:
+            return !viewModel.situation.isEmpty &&
+                   !viewModel.task.isEmpty &&
+                   !viewModel.action.isEmpty &&
+                   !viewModel.result.isEmpty
+        case .psi:
+            return !viewModel.problem.isEmpty &&
+                   !viewModel.solution.isEmpty &&
+                   !viewModel.impact.isEmpty
+        case .free:
+            return !viewModel.freeText.isEmpty
+        }
     }
 }
 
