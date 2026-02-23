@@ -12,6 +12,7 @@ class WorkspaceViewModel: ObservableObject {
     @Published var projectDetail: ProjectDetailResponse?
     @Published var questionList: [QuestionResponse] = []
     @Published var isLoading: Bool = false
+    @Published var isSavingQuestions: Bool = false
     @Published var errorMessage: String?
     
     private let projectRepository: ProjectRepository
@@ -69,6 +70,53 @@ class WorkspaceViewModel: ObservableObject {
         }
     }
     
+    func saveQuestions(editedItems: [EditableQuestionItem]) async {
+        isSavingQuestions = true
+        defer { isSavingQuestions = false }
+
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for item in editedItems {
+                    if let questionId = item.questionId {
+                        // 기존 문항 수정
+                        group.addTask {
+                            let req = UpdateQuestionRequest(
+                                answer: nil,
+                                maxLength: Int(item.characterLimit),
+                                question: item.title
+                            )
+                            _ = try await self.questionRepository.updateQuestion(
+                                projectId: self.projectId,
+                                questionId: questionId,
+                                request: req
+                            )
+                        }
+                    } else {
+                        // 새 문항 생성
+                        group.addTask {
+                            let req = CreateQuestionRequest(
+                                maxLength: Int(item.characterLimit) ?? 0,
+                                question: item.title
+                            )
+                            _ = try await self.questionRepository.createQuestion(
+                                projectId: self.projectId,
+                                request: req
+                            )
+                        }
+                    }
+                }
+                for try await _ in group {}
+            }
+            await fetchQuestionList()
+            print("문항 저장 완료")
+        } catch {
+            print("문항 저장 실패: \(error)")
+            if let apiError = error as? APIError {
+                print("API Error: \(apiError.localizedDescription)")
+            }
+        }
+    }
+
     var navigationTitle: String {
         guard let detail = projectDetail else {
             return "프로젝트"

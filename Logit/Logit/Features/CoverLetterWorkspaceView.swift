@@ -23,6 +23,7 @@ struct CoverLetterWorkspaceView: View {
     @State private var currentChatViewModel: ChatMessagesViewModel?
     
     @State private var showToast: Bool = false
+    @State private var showEditQuestions: Bool = false
     
     private var currentQuestion: QuestionResponse? {
         guard !viewModel.questionList.isEmpty,
@@ -55,7 +56,8 @@ struct CoverLetterWorkspaceView: View {
                 if !viewModel.questionList.isEmpty {
                     QuestionTabBar(
                         questionCount: viewModel.questionList.count,
-                        selectedIndex: $selectedQuestionIndex
+                        selectedIndex: $selectedQuestionIndex,
+                        onAddTapped: { showEditQuestions = true }
                     )
                     .onChange(of: selectedQuestionIndex) { newIndex in
                         print("========== 문항 전환 ==========")
@@ -76,7 +78,8 @@ struct CoverLetterWorkspaceView: View {
                 } else {
                     QuestionTabBar(
                         questionCount: questions.count,
-                        selectedIndex: $selectedQuestionIndex
+                        selectedIndex: $selectedQuestionIndex,
+                        onAddTapped: { showEditQuestions = true }
                     )
                 }
                 
@@ -257,6 +260,9 @@ struct CoverLetterWorkspaceView: View {
         }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
+        .fullScreenCover(isPresented: $showEditQuestions) {
+            EditQuestionsView(viewModel: viewModel)
+        }
         .sheet(isPresented: $showExperienceSelection) {
             if let question = currentQuestion {
                 ExperienceSelectionSheet(
