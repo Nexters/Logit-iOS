@@ -57,12 +57,13 @@ class ExperienceFlowViewModel: ObservableObject {
              // Request 생성
              let request = CreateExperienceRequest(
                  action: action,
-                 category: selectedCompetency ?? "",
-                 endDate: isOngoing ? "" : (endDate?.toString() ?? ""),
+                 endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
                  experienceType: experienceType ?? "",
+                 formatType: "STAR",
                  result: result,
                  situation: situation,
                  startDate: startDate?.toString() ?? "",
+                 tags: selectedCompetency ?? "",
                  task: task,
                  title: experienceTitle
              )
