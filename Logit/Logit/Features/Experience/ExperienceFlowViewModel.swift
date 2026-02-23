@@ -41,10 +41,10 @@ class ExperienceFlowViewModel: ObservableObject {
     // PSI
     @Published var problem: String = ""
     @Published var solution: String = ""
-    @Published var impact: String = ""
+    @Published var insight: String = ""
 
-    // 자유형식
-    @Published var freeText: String = ""
+    // FREE
+    @Published var content: String = ""
 
     @Published var selectedCompetency: String?
     
@@ -84,45 +84,60 @@ class ExperienceFlowViewModel: ObservableObject {
          do {
              // Request 생성
              let request: CreateExperienceRequest
+             let commonEndDate = isOngoing ? nil : (endDate?.toString() ?? "")
+             let commonStartDate = startDate?.toString() ?? ""
+
              switch selectedMethod {
              case .star:
                  request = CreateExperienceRequest(
-                     action: action,
-                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     endDate: commonEndDate,
                      experienceType: experienceType ?? "",
                      formatType: "STAR",
-                     result: result,
-                     situation: situation,
-                     startDate: startDate?.toString() ?? "",
+                     startDate: commonStartDate,
                      tags: selectedCompetency ?? "",
+                     title: experienceTitle,
+                     situation: situation,
                      task: task,
-                     title: experienceTitle
+                     action: action,
+                     result: result,
+                     problem: nil,
+                     solution: nil,
+                     insight: nil,
+                     content: nil
                  )
              case .psi:
                  request = CreateExperienceRequest(
-                     action: solution,
-                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     endDate: commonEndDate,
                      experienceType: experienceType ?? "",
                      formatType: "PSI",
-                     result: impact,
-                     situation: problem,
-                     startDate: startDate?.toString() ?? "",
+                     startDate: commonStartDate,
                      tags: selectedCompetency ?? "",
-                     task: "",
-                     title: experienceTitle
+                     title: experienceTitle,
+                     situation: nil,
+                     task: nil,
+                     action: nil,
+                     result: nil,
+                     problem: problem,
+                     solution: solution,
+                     insight: insight,
+                     content: nil
                  )
              case .free:
                  request = CreateExperienceRequest(
-                     action: "",
-                     endDate: isOngoing ? nil : (endDate?.toString() ?? ""),
+                     endDate: commonEndDate,
                      experienceType: experienceType ?? "",
                      formatType: "FREE",
-                     result: "",
-                     situation: freeText,
-                     startDate: startDate?.toString() ?? "",
+                     startDate: commonStartDate,
                      tags: selectedCompetency ?? "",
-                     task: "",
-                     title: experienceTitle
+                     title: experienceTitle,
+                     situation: nil,
+                     task: nil,
+                     action: nil,
+                     result: nil,
+                     problem: nil,
+                     solution: nil,
+                     insight: nil,
+                     content: content
                  )
              }
              

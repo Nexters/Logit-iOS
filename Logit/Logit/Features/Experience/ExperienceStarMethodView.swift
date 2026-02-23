@@ -195,12 +195,12 @@ struct ExperienceStarMethodView: View {
                                 text: $viewModel.solution
                             )
                             InputFieldView(
-                                title: "Impact (영향/결과)",
-                                placeholder: "해결 후 얻은 성과와 배운 점을 서술합니다.",
+                                title: "Insight (인사이트)",
+                                placeholder: "경험을 통해 얻은 인사이트와 배운 점을 서술합니다.",
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
-                                text: $viewModel.impact
+                                text: $viewModel.insight
                             )
 
                         case .free:
@@ -210,7 +210,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 3000,
                                 largeHeight: 200,
-                                text: $viewModel.freeText
+                                text: $viewModel.content
                             )
                         }
                     }
@@ -265,9 +265,9 @@ struct ExperienceStarMethodView: View {
         case .psi:
             return !viewModel.problem.isEmpty &&
                    !viewModel.solution.isEmpty &&
-                   !viewModel.impact.isEmpty
+                   !viewModel.insight.isEmpty
         case .free:
-            return !viewModel.freeText.isEmpty
+            return !viewModel.content.isEmpty
         }
     }
 }
