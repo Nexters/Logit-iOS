@@ -141,6 +141,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.situation
                             )
                             InputFieldView(
@@ -149,6 +150,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.task
                             )
                             InputFieldView(
@@ -157,6 +159,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.action
                             )
                             InputFieldView(
@@ -165,6 +168,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.result
                             )
 
@@ -175,6 +179,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.problem
                             )
                             InputFieldView(
@@ -183,6 +188,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.solution
                             )
                             InputFieldView(
@@ -191,6 +197,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 1000,
                                 largeHeight: 74,
+                                isDynamic: true,
                                 text: $viewModel.insight
                             )
 
@@ -201,6 +208,7 @@ struct ExperienceStarMethodView: View {
                                 isRequired: true,
                                 maxLength: 3000,
                                 largeHeight: 200,
+                                isDynamic: true,
                                 text: $viewModel.content
                             )
                         }

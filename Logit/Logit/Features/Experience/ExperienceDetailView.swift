@@ -73,22 +73,42 @@ struct ExperienceDetailView: View {
                         }
                         .padding(.top, 24)
 
-                        // STAR 섹션들
-                        if !e.situation.isEmpty {
-                            ExperienceSTARSection(label: "Situation (상황)", content: e.situation)
+                        // STAR 섹션
+                        if let situation = e.situation, !situation.isEmpty {
+                            ExperienceSTARSection(label: "Situation (상황)", content: situation)
                                 .padding(.top, 32)
                         }
-                        if !e.task.isEmpty {
-                            ExperienceSTARSection(label: "Task (과제/목표)", content: e.task)
+                        if let task = e.task, !task.isEmpty {
+                            ExperienceSTARSection(label: "Task (과제/목표)", content: task)
                                 .padding(.top, 24)
                         }
-                        if !e.action.isEmpty {
-                            ExperienceSTARSection(label: "Action (행동)", content: e.action)
+                        if let action = e.action, !action.isEmpty {
+                            ExperienceSTARSection(label: "Action (행동)", content: action)
                                 .padding(.top, 24)
                         }
-                        if !e.result.isEmpty {
-                            ExperienceSTARSection(label: "Result (결과)", content: e.result)
+                        if let result = e.result, !result.isEmpty {
+                            ExperienceSTARSection(label: "Result (결과)", content: result)
                                 .padding(.top, 24)
+                        }
+
+                        // PSI 섹션
+                        if let problem = e.problem, !problem.isEmpty {
+                            ExperienceSTARSection(label: "Problem (문제)", content: problem)
+                                .padding(.top, 32)
+                        }
+                        if let solution = e.solution, !solution.isEmpty {
+                            ExperienceSTARSection(label: "Solution (해결책)", content: solution)
+                                .padding(.top, 24)
+                        }
+                        if let insight = e.insight, !insight.isEmpty {
+                            ExperienceSTARSection(label: "Insight (인사이트)", content: insight)
+                                .padding(.top, 24)
+                        }
+
+                        // FREE 섹션
+                        if let content = e.content, !content.isEmpty {
+                            ExperienceSTARSection(label: "경험 내용", content: content)
+                                .padding(.top, 32)
                         }
                     }
                     .padding(.horizontal, 20)

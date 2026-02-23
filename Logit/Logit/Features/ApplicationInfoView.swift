@@ -165,15 +165,18 @@ struct InputFieldView: View {
     let isRequired: Bool
     let maxLength: Int?
     var largeHeight: CGFloat? = nil
+    var isDynamic: Bool = false
     @Binding var text: String
     @FocusState private var isFocused: Bool
-    
+    @State private var dynamicHeight: CGFloat
+
     init(
         title: String,
         placeholder: String,
         isRequired: Bool = false,
         maxLength: Int? = nil,
         largeHeight: CGFloat? = nil,
+        isDynamic: Bool = false,
         text: Binding<String>
     ) {
         self.title = title
@@ -181,69 +184,112 @@ struct InputFieldView: View {
         self.isRequired = isRequired
         self.maxLength = maxLength
         self.largeHeight = largeHeight
+        self.isDynamic = isDynamic
         self._text = text
+        self._dynamicHeight = State(initialValue: largeHeight ?? 74)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 2) {
                 Text(title)
                     .typo(.medium_16)
                     .foregroundColor(.black)
-                
+
                 if isRequired {
                     Text("*")
                         .typo(.medium_16)
                         .foregroundColor(.alert)
                 }
-                
+
                 Spacer()
-                
+
                 if let maxLength = maxLength {
                     HStack(spacing: 0) {
                         Text("\(text.count)")
                             .typo(.regular_15)
                             .foregroundColor(text.count > maxLength ? .alert : .black)
-                        
+
                         Text(" / \(maxLength)")
                             .typo(.regular_15)
                             .foregroundColor(.gray200)
                     }
                 }
             }
-            
-            if let height = largeHeight {  // largeHeight가 있으면 TextEditor
-                ZStack(alignment: .topLeading) {
-                    TextEditor(text: $text)
-                        .font(.system(size: 15))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .frame(height: height)
-                        .scrollContentBackground(.hidden)
-                        .background(Color.clear)
-                        .focused($isFocused)
-                        .onChange(of: text) { oldValue, newValue in
-                            if let maxLength = maxLength, newValue.count > maxLength {
-                                text = String(newValue.prefix(maxLength))
+
+            if let height = largeHeight {
+                if isDynamic {
+                    GeometryReader { geo in
+                        ZStack(alignment: .topLeading) {
+                            TextEditor(text: $text)
+                                .font(.system(size: 15))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .frame(height: dynamicHeight)
+                                .scrollContentBackground(.hidden)
+                                .background(Color.clear)
+                                .focused($isFocused)
+                                .onChange(of: text) { _, newValue in
+                                    if let maxLength = maxLength, newValue.count > maxLength {
+                                        text = String(newValue.prefix(maxLength))
+                                    }
+                                    let calculated = textContentHeight(text: newValue, width: geo.size.width)
+                                    if calculated > 0 { dynamicHeight = max(height, calculated) }
+                                }
+
+                            if text.isEmpty {
+                                Text(placeholder)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.gray100)
+                                    .padding(.leading, 19)
+                                    .padding(.top, 16)
+                                    .allowsHitTesting(false)
                             }
                         }
-                    
-                    if text.isEmpty {
-                        Text(placeholder)
-                            .font(.system(size: 15))
-                            .foregroundColor(.gray100)
-                            .padding(.leading, 19)
-                            .padding(.top, 16)
-                            .allowsHitTesting(false)
+                        .onChange(of: geo.size, initial: true) { _, size in
+                            guard size.width > 0 else { return }
+                            let calculated = textContentHeight(text: text, width: size.width)
+                            if calculated > 0 { dynamicHeight = max(height, calculated) }
+                        }
                     }
+                    .frame(height: dynamicHeight)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(isFocused ? Color.primary100 : Color.gray100, lineWidth: 1)
+                    )
+                } else {
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $text)
+                            .font(.system(size: 15))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .frame(height: height)
+                            .scrollContentBackground(.hidden)
+                            .background(Color.clear)
+                            .focused($isFocused)
+                            .onChange(of: text) { oldValue, newValue in
+                                if let maxLength = maxLength, newValue.count > maxLength {
+                                    text = String(newValue.prefix(maxLength))
+                                }
+                            }
+
+                        if text.isEmpty {
+                            Text(placeholder)
+                                .font(.system(size: 15))
+                                .foregroundColor(.gray100)
+                                .padding(.leading, 19)
+                                .padding(.top, 16)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(
+                                isFocused ? Color.primary100 : Color.gray100,
+                                lineWidth: 1
+                            )
+                    )
                 }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(
-                            isFocused ? Color.primary100 : Color.gray100,
-                            lineWidth: 1
-                        )
-                )
             } else {
                 TextField(placeholder, text: $text)
                     .font(.system(size: 15))
@@ -266,5 +312,20 @@ struct InputFieldView: View {
                     }
             }
         }
+    }
+
+    private func textContentHeight(text: String, width: CGFloat) -> CGFloat {
+        guard width > 0 else { return 0 }
+        // 14px custom padding + ~5px UITextView internal padding = 19px per side
+        let textWidth = max(1, width - 38)
+        let font = UIFont.systemFont(ofSize: 15)
+        let boundingRect = (text.isEmpty ? " " : text).boundingRect(
+            with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        )
+        // 8px custom top/bottom + ~8px UITextView top/bottom inset = 32px total vertical
+        return ceil(boundingRect.height) + 32
     }
 }
