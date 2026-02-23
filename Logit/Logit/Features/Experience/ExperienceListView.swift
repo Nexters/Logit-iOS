@@ -10,6 +10,7 @@ import SwiftUI
 struct ExperienceListView: View {
     @StateObject private var viewModel: ExperienceListViewModel
     @State private var showExperienceAddFlow = false
+    @State private var selectedExperienceId: String? = nil
     
     init() {
         let networkClient = DefaultNetworkClient()
@@ -43,7 +44,7 @@ struct ExperienceListView: View {
                         ForEach(viewModel.experiences, id: \.id) { experience in
                             ExperienceListCell(experience: experience)
                                 .onTapGesture {
-                                    print("선택된 경험: \(experience.title)")
+                                    selectedExperienceId = experience.id
                                 }
                                 .onAppear {
                                     // 마지막에서 3개 전에 미리 로드
@@ -88,6 +89,12 @@ struct ExperienceListView: View {
                 }
             }
         }
+        .fullScreenCover(item: Binding(
+            get: { selectedExperienceId.map { SelectedExperienceID(id: $0) } },
+            set: { selectedExperienceId = $0?.id }
+        )) { target in
+            ExperienceDetailView(experienceId: target.id)
+        }
         .alert("오류", isPresented: $viewModel.showError) {
             Button("확인", role: .cancel) { }
         } message: {
@@ -98,6 +105,10 @@ struct ExperienceListView: View {
             await viewModel.fetchExperiences()
         }
     }
+}
+
+private struct SelectedExperienceID: Identifiable {
+    let id: String
 }
 
 struct ExperienceListHeader: View {
