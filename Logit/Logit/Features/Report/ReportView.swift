@@ -291,7 +291,7 @@ struct ReportBarChartView: View {
             ) {
                 ForEach(data) { item in
                     HStack(spacing: 6) {
-                        Rectangle()
+                        Circle()
                             .fill(item.color)
                             .frame(width: 10, height: 10)
                         Text(item.label)
@@ -385,7 +385,7 @@ struct ReportDonutChartView: View {
             ) {
                 ForEach(Array(data.enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 6) {
-                        Rectangle()
+                        Circle()
                             .fill(item.color)
                             .frame(width: 10, height: 10)
                         Text(item.label)
@@ -455,7 +455,7 @@ struct ReportHorizontalBarChartView: View {
             ) {
                 ForEach(Array(data.enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 6) {
-                        Rectangle()
+                        Circle()
                             .fill(item.color)
                             .frame(width: 10, height: 10)
                         Text(item.label)

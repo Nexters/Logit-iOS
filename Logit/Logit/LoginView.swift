@@ -13,8 +13,8 @@ struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
 
     // TODO: 실제 URL로 교체
-    private let termsOfServiceURL = URL(string: "https://your-domain.com/terms")!
-    private let privacyPolicyURL = URL(string: "https://your-domain.com/privacy")!
+    private let termsOfServiceURL = URL(string: "https://docs.logit.ai.kr/policys/tos")!
+    private let privacyPolicyURL = URL(string: "https://docs.logit.ai.kr/policys/privacy-policy")!
 
     private var termsAndPrivacyText: some View {
         var baseText = AttributedString("계속하면 ")

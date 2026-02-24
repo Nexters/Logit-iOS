@@ -25,10 +25,10 @@ struct SettingsView: View {
             // 프로필 영역
             HStack(spacing: 20) {
                 // 프로필 이미지
-                Circle()
-                    .fill(Color.primary50)
-                    .frame(width: 48, height: 48)
-
+                Image("app_user")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(size: 48.adjustedLayout)
                 // 닉네임
                 Text(viewModel.userName)
                     .typo(.bold_20)
