@@ -92,6 +92,9 @@ class AppState: ObservableObject {
     func logout() {
         mockAccessToken = nil
         mockIsRegistrationComplete = false
+        isShowingSettings = false
+        isShowingAddFlow = false
+        selectedProjectId = nil
         appPhase = .login
     }
 

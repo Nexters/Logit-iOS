@@ -9,8 +9,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
     @State private var isNotificationEnabled: Bool = false
-    
+    @State private var showLogoutAlert: Bool = false
+    @StateObject private var viewModel = SettingsViewModel()
+
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
@@ -18,89 +21,114 @@ struct SettingsView: View {
                 showBackButton: true,
                 onBackTapped: { dismiss() }
             )
-            
+
             // 프로필 영역
             HStack(spacing: 20) {
                 // 프로필 이미지
                 Circle()
                     .fill(Color.primary50)
                     .frame(width: 48, height: 48)
-                
+
                 // 닉네임
-                Text("로짓")
+                Text(viewModel.userName)
                     .typo(.bold_20)
                     .foregroundColor(.gray400)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
-            
+
             // 구분선
             Rectangle()
                 .fill(Color.gray100)
                 .frame(height: 2)
                 .padding(.top, 26)
-            
+
             // 알림 설정
             HStack {
                 Text("알림 설정")
                     .typo(.semibold_16)
                     .foregroundColor(.black)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 20)
             .padding(.top, 30)
-            
+
             HStack {
                 Text("커리어 리포트 업데이트 알림")
                     .typo(.regular_14_140)
                     .foregroundColor(.gray400)
-                
+
                 Spacer()
-                
+
                 Toggle("", isOn: $isNotificationEnabled)
                     .labelsHidden()
                     .scaleEffect(0.8)
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)
-            
+
             // 구분선
             Rectangle()
                 .fill(Color.gray100)
                 .frame(height: 2)
                 .padding(.top, 34)
-            
+
             // 다음 섹션 타이틀
             HStack {
                 Text("고객 지원 및 정보")
                     .typo(.semibold_16)
                     .foregroundColor(.black)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 20)
             .padding(.top, 30)
-            
+
             VStack(spacing: 0) {
                 SettingsRow(title: "문의하기") {
                     print("문의하기 클릭")
                 }
-                
+
                 SettingsRow(title: "로그아웃") {
-                    print("로그아웃 클릭")
+                    showLogoutAlert = true
                 }
-                
+
                 SettingsRow(title: "회원탈퇴") {
                     print("회원탈퇴 클릭")
                 }
             }
             .padding(.top, 14)
-            
+
             Spacer()
         }
+        .task {
+            await viewModel.fetchCurrentUser()
+        }
+        .alert("로그아웃", isPresented: $showLogoutAlert) {
+            Button("취소", role: .cancel) { }
+            Button("로그아웃", role: .destructive) {
+                Task { await viewModel.logout() }
+            }
+        } message: {
+            Text("정말 로그아웃 하시겠어요?")
+        }
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.logoutError != nil },
+            set: { if !$0 { viewModel.logoutError = nil } }
+        )) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.logoutError ?? "")
+        }
+        .onChange(of: viewModel.isLoggedOut) { loggedOut in
+            if loggedOut {
+                appState.logout()
+            }
+        }
+        .disabled(viewModel.isLoggingOut)
     }
 }
 
