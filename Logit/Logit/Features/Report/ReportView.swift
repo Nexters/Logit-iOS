@@ -10,6 +10,7 @@ import Charts
 
 struct ReportView: View {
     @StateObject private var viewModel = ReportViewModel()
+    @State private var showExperienceAddFlow = false
 
     var body: some View {
         Group {
@@ -30,6 +31,10 @@ struct ReportView: View {
                     .foregroundStyle(Color.primary100)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.isEmpty {
+                EmptyExperienceView {
+                    showExperienceAddFlow = true
+                }
             } else {
                 contentView
             }
@@ -37,6 +42,11 @@ struct ReportView: View {
         .background(Color.white.ignoresSafeArea())
         .task {
             await viewModel.fetchExperienceSummary()
+        }
+        .fullScreenCover(isPresented: $showExperienceAddFlow) {
+            ExperienceFlowCoordinator {
+                Task { await viewModel.fetchExperienceSummary() }
+            }
         }
     }
 
@@ -59,7 +69,7 @@ struct ReportView: View {
 
     private var profileSection: some View {
         VStack {
-            Text("로짓님의 프로파일")
+            Text("\(viewModel.userName)님의 프로파일")
                 .typo(.bold_20)
                 .foregroundStyle(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,6 +88,29 @@ struct ReportView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 11)
             }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(viewModel.userName)님의 강점들을 모아봤어요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text(viewModel.categoryDescription)
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                if !viewModel.allCategoryTags.isEmpty {
+                    FlowLayout(spacing: 8) {
+                        ForEach(viewModel.allCategoryTags, id: \.self) { tag in
+                            ExperienceTag(text: tag, icon: tag, isCompetency: true)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 20)
         }
         .background(.white)
     }
@@ -219,12 +252,15 @@ struct BarChartData: Identifiable {
 struct ReportBarChartView: View {
     let data: [BarChartData]
 
+    private var maxValue: Double { data.map { $0.value }.max() ?? 0 }
+    private var minRenderValue: Double { max(maxValue * 0.08, 0.3) }
+
     var body: some View {
         VStack(spacing: 0) {
             Chart(data) { item in
                 BarMark(
                     x: .value("label", item.id.uuidString),
-                    y: .value("value", item.value),
+                    y: .value("value", max(item.value, minRenderValue)),
                     width: .fixed(20)
                 )
                 .foregroundStyle(item.color)
@@ -235,9 +271,11 @@ struct ReportBarChartView: View {
                     topTrailingRadius: 8
                 ))
                 .annotation(position: .top) {
-                    Text("\(Int(item.value))")
-                        .typo(.bold_14)
-                        .foregroundStyle(item.color)
+                    if item.value > 0 {
+                        Text("\(Int(item.value))")
+                            .typo(.bold_14)
+                            .foregroundStyle(item.color)
+                    }
                 }
             }
             .chartXAxis(.hidden)
@@ -289,6 +327,12 @@ struct ReportDonutChartView: View {
 
     private var adjustedData: [DonutChartData] {
         let sum = data.reduce(0) { $0 + $1.value }
+        // 모든 값이 0이면 균등 분할로 도넛 형태 유지
+        if sum == 0 {
+            return data.map { item in
+                DonutChartData(label: item.label, value: 1, color: item.color, textColor: item.textColor)
+            }
+        }
         let minValue = sum * 0.07
         return data.map { item in
             DonutChartData(
