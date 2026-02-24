@@ -22,6 +22,7 @@ class ChatMessagesViewModel: ObservableObject {
     private let projectId: String
     private let questionId: String
     private let chatRepository: ChatRepository
+    private let questionRepository: QuestionRepository
     
     var hasSelectedExperiences: Bool {
         !experienceIds.isEmpty
@@ -33,11 +34,13 @@ class ChatMessagesViewModel: ObservableObject {
         chatRepository: ChatRepository = DefaultChatRepository(
             sseClient: DefaultSSEClient(),
             networkClient: DefaultNetworkClient()
-        )
+        ),
+        questionRepository: QuestionRepository = DefaultQuestionRepository()
     ) {
         self.projectId = projectId
         self.questionId = questionId
         self.chatRepository = chatRepository
+        self.questionRepository = questionRepository
     }
     
     /// 초기 채팅 히스토리 로드
@@ -217,45 +220,55 @@ class ChatMessagesViewModel: ObservableObject {
       }
     
     /// 자기소개서 업데이트
-        func updateAnswer(chatId: String) async {
-            guard !isLoading else {
-                print(" 이미 처리 중입니다")
-                return
-            }
-            
-            isLoading = true
-            errorMessage = nil
-            
-            do {
-                let response = try await chatRepository.updateAnswer(chatId: chatId)
-                
-                print("자기소개서 업데이트 성공")
-                print("  - chatId: \(chatId)")
-                print("  - 업데이트된 답변: \(response.answer)")
-                
-                // 로컬 상태 업데이트
-                answer = response.answer
-                
-                //  해당 메시지의 isDraft를 false로 변경
-                if let index = messages.firstIndex(where: { $0.id == chatId }) {
-                    messages[index] = ChatMessage(
-                        id: messages[index].id,
-                        role: messages[index].role,
-                        content: messages[index].content,
-                        isDraft: false,  //  업데이트 완료
-                        createdAt: messages[index].createdAt
-                    )
-                }
-                
-            } catch {
-                print(" 자기소개서 업데이트 실패: \(error)")
-                errorMessage = "자기소개서 업데이트에 실패했습니다."
-                
-                if let apiError = error as? APIError {
-                    errorMessage = apiError.localizedDescription
-                }
-            }
-            
-            isLoading = false
+    func updateAnswer(chatId: String) async {
+        guard !isLoading else {
+            print(" 이미 처리 중입니다")
+            return
         }
+
+        guard let message = messages.first(where: { $0.id == chatId }) else {
+            print(" chatId에 해당하는 메시지를 찾을 수 없습니다: \(chatId)")
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let req = UpdateQuestionRequest(answer: message.content)
+            _ = try await questionRepository.updateQuestion(
+                projectId: projectId,
+                questionId: questionId,
+                request: req
+            )
+
+            print("자기소개서 업데이트 성공")
+            print("  - chatId: \(chatId)")
+            print("  - 저장된 답변: \(message.content)")
+
+            // 로컬 상태 업데이트
+            answer = message.content
+
+            // 해당 메시지의 isDraft를 false로 변경
+            if let index = messages.firstIndex(where: { $0.id == chatId }) {
+                messages[index] = ChatMessage(
+                    id: messages[index].id,
+                    role: messages[index].role,
+                    content: messages[index].content,
+                    isDraft: false,
+                    createdAt: messages[index].createdAt
+                )
+            }
+
+        } catch {
+            print(" 자기소개서 업데이트 실패: \(error)")
+            errorMessage = "자기소개서 업데이트에 실패했습니다."
+
+            if let apiError = error as? APIError {
+                errorMessage = apiError.localizedDescription
+            }
+        }
+
+        isLoading = false
+    }
 }

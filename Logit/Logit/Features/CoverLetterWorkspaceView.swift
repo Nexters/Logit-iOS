@@ -22,6 +22,8 @@ struct CoverLetterWorkspaceView: View {
     @State private var selectedExperienceIds: [String] = []
     @State private var currentChatViewModel: ChatMessagesViewModel?
     
+    @State private var editingAnswer: String = ""
+    @State private var originalAnswer: String = ""
     @State private var showToast: Bool = false
     @State private var showEditQuestions: Bool = false
     @State private var showQuestionDetail: Bool = false
@@ -197,6 +199,11 @@ struct CoverLetterWorkspaceView: View {
                         }
                         print("==============================")
 
+                        if selectedView == .coverLetter, newIndex < viewModel.questionList.count {
+                            let questionId = viewModel.questionList[newIndex].id
+                            Task { await viewModel.fetchQuestionDetail(questionId: questionId) }
+                        }
+
                         if showQuestionDetail {
                             // 탭 전환 시 이전 문항 저장
                             if oldIndex < viewModel.questionList.count, !editingQuestionText.isEmpty {
@@ -267,11 +274,16 @@ struct CoverLetterWorkspaceView: View {
                         isSelected: selectedView == .chat,
                         action: { selectedView = .chat }
                     )
-                    
+
                     IconTextButton(
                         title: "자기소개서",
                         isSelected: selectedView == .coverLetter,
-                        action: { selectedView = .coverLetter }
+                        action: {
+                            selectedView = .coverLetter
+                            if let question = currentQuestion {
+                                Task { await viewModel.fetchQuestionDetail(questionId: question.id) }
+                            }
+                        }
                     )
                     
                     Spacer()
@@ -279,10 +291,10 @@ struct CoverLetterWorkspaceView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 0)
                 
-                // 채팅 스크롤 영역
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if selectedView == .chat {
+                // 채팅 탭: ScrollView
+                if selectedView == .chat {
+                    ScrollView {
+                        VStack(spacing: 0) {
                             if let question = currentQuestion {
                                 ChatMessagesView(
                                     projectId: projectId,
@@ -291,21 +303,14 @@ struct CoverLetterWorkspaceView: View {
                                     selectedExperienceIds: $selectedExperienceIds,
                                     viewModelRef: $currentChatViewModel,
                                     onUpdateCoverLetter: {
-                                        // 업데이트 성공 처리
                                         Task {
-                                            // questionList 다시 fetch
                                             await viewModel.fetchQuestionList()
-                                            
-                                            //  토스트 표시
-                                            withAnimation(.spring()) {
-                                                showToast = true
+                                            if let question = currentQuestion {
+                                                await viewModel.fetchQuestionDetail(questionId: question.id)
                                             }
-                                            
-                                            //  3초 후 자동 숨김
+                                            withAnimation(.spring()) { showToast = true }
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                                withAnimation {
-                                                    showToast = false
-                                                }
+                                                withAnimation { showToast = false }
                                             }
                                         }
                                     },
@@ -316,43 +321,78 @@ struct CoverLetterWorkspaceView: View {
                                 )
                                 .id(question.id)
                             }
+                        }
+                    }
+                    .scrollToMinDistance(minDisntance: 32)
+                } else {
+                    // 자소서 탭: TextEditor가 남은 공간 전체 차지
+                    if let question = currentQuestion {
+                        if viewModel.isLoadingDetail {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
-                            // 자소서 뷰
-                            if let question = currentQuestion {
-                                CoverLetterContentView(
-                                    question: question.question,
-                                    answer: question.answer
-                                )
-                                .id(question.id)
-                            }
+                            CoverLetterContentView(
+                                question: question.question,
+                                editingAnswer: $editingAnswer,
+                                maxLength: question.maxLength,
+                                isCompleted: viewModel.currentQuestionDetail?.isCompleted ?? false,
+                                onComplete: {
+                                    Task {
+                                        await viewModel.markQuestionComplete(questionId: question.id)
+                                    }
+                                }
+                            )
+                            .id(question.id)
                         }
                     }
                 }
-                .scrollToMinDistance(minDisntance: 32)
                 
-                // 채팅 입력창
-                ChatInputBar(
-                    hasSelectedExperiences: hasSelectedExperiences,
-                    onSend: { message in
-                        print("전송: \(message)")
-                        print("프로젝트 ID: \(projectId)")
-                        
-                        guard let chatViewModel = currentChatViewModel else {
-                            print(" ChatViewModel이 아직 초기화되지 않았습니다")
-                            return
+                // 하단 입력 영역 (탭에 따라 분기)
+                if selectedView == .chat {
+                    ChatInputBar(
+                        hasSelectedExperiences: hasSelectedExperiences,
+                        onSend: { message in
+                            print("전송: \(message)")
+                            print("프로젝트 ID: \(projectId)")
+
+                            guard let chatViewModel = currentChatViewModel else {
+                                print(" ChatViewModel이 아직 초기화되지 않았습니다")
+                                return
+                            }
+
+                            Task {
+                                await chatViewModel.sendMessage(
+                                    content: message,
+                                    experienceIds: selectedExperienceIds
+                                )
+                            }
+                        },
+                        onAttachmentTapped: {
+                            showExperienceSelection = true
                         }
-                        
+                    )
+                } else {
+                    // 자기소개서 탭 저장하기 버튼
+                    let isChanged = editingAnswer != originalAnswer
+                    Button {
+                        guard let question = currentQuestion else { return }
                         Task {
-                            await chatViewModel.sendMessage(
-                                content: message,
-                                experienceIds: selectedExperienceIds
-                            )
+                            await viewModel.saveAnswer(questionId: question.id, answer: editingAnswer)
                         }
-                    },
-                    onAttachmentTapped: {
-                        showExperienceSelection = true
+                    } label: {
+                        Text("저장하기")
+                            .typo(.bold_16)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(isChanged ? Color.primary100 : Color.gray100)
+                            .cornerRadius(12)
                     }
-                )
+                    .disabled(!isChanged)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                }
             }
             
             // 질문 상세/편집 오버레이
@@ -413,6 +453,11 @@ struct CoverLetterWorkspaceView: View {
                 }
                 print("====================================")
             }
+        }
+        .onChange(of: viewModel.currentQuestionDetail) { _, detail in
+            let answer = detail?.answer ?? ""
+            editingAnswer = answer
+            originalAnswer = answer
         }
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
@@ -963,49 +1008,73 @@ struct ChatBubble: View {
 
 struct CoverLetterContentView: View {
     let question: String
-    let answer: String?
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // 제목
+    @Binding var editingAnswer: String
+    let maxLength: Int?
+    let isCompleted: Bool
+    let onComplete: () -> Void
 
-                // 자기소개서 본문
-                if let answer = answer, !answer.isEmpty {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // answer를 단락별로 나눠서 표시
-                        ForEach(answer.components(separatedBy: "\n\n"), id: \.self) { paragraph in
-                            if !paragraph.isEmpty {
-                                Text(paragraph)
-                                    .typo(.regular_14_160)
-                                    .foregroundColor(.black)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 20)
-                    .background(Color.gray20)
-                    .cornerRadius(12)
-                } else {
-                    //  answer가 없을 때
-                    VStack(spacing: 12) {
-                        Text("아직 작성된 자기소개서가 없습니다.")
-                            .typo(.regular_14_160)
-                            .foregroundColor(.gray200)
-                        
-                        Text("채팅에서 초안을 생성하고 업데이트해보세요.")
-                            .typo(.regular_12)
-                            .foregroundColor(.gray300)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 60)
-                }
-                
+    private var isOverLimit: Bool {
+        guard let max = maxLength else { return false }
+        return editingAnswer.count > max
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // 상단: 글자수 + 작성완료 버튼
+            HStack(alignment: .center) {
+                Text("\(editingAnswer.count) / \(maxLength ?? 0)")
+                    .typo(.regular_14_160)
+                    .foregroundColor(isOverLimit ? .red : .gray300)
+
                 Spacer()
+
+                Button(action: onComplete) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(isCompleted ? .primary100 : .gray300)
+                        Text("작성완료")
+                            .typo(.medium_13)
+                            .foregroundColor(isCompleted ? .primary100 : .gray300)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(isCompleted ? Color.primary100 : Color.gray200, lineWidth: 1)
+                    )
+                }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 40)
+            .padding(.vertical, 12)
+
+            Divider()
+                .padding(.horizontal, 20)
+
+            // 본문 편집 영역
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $editingAnswer)
+                    .typo(.regular_14_160)
+                    .foregroundColor(.black)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if editingAnswer.isEmpty {
+                    Text("채팅에서 초안을 생성하고 업데이트해보세요.")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.gray200)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                        .allowsHitTesting(false)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
     }
 }

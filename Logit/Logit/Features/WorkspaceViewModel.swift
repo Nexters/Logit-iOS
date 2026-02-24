@@ -11,7 +11,9 @@ import Foundation
 class WorkspaceViewModel: ObservableObject {
     @Published var projectDetail: ProjectDetailResponse?
     @Published var questionList: [QuestionResponse] = []
+    @Published var currentQuestionDetail: QuestionDetailResponse?
     @Published var isLoading: Bool = false
+    @Published var isLoadingDetail: Bool = false
     @Published var isSavingQuestions: Bool = false
     @Published var errorMessage: String?
     
@@ -70,6 +72,50 @@ class WorkspaceViewModel: ObservableObject {
         }
     }
     
+    func saveAnswer(questionId: String, answer: String) async {
+        do {
+            let req = UpdateQuestionRequest(answer: answer)
+            _ = try await questionRepository.updateQuestion(
+                projectId: projectId,
+                questionId: questionId,
+                request: req
+            )
+            await fetchQuestionDetail(questionId: questionId)
+            print("자기소개서 저장 성공: \(questionId)")
+        } catch {
+            print("자기소개서 저장 실패: \(error)")
+        }
+    }
+
+    func markQuestionComplete(questionId: String) async {
+        do {
+            _ = try await questionRepository.completeQuestion(
+                projectId: projectId,
+                questionId: questionId
+            )
+            await fetchQuestionList()
+            await fetchQuestionDetail(questionId: questionId)
+            print("문항 작성완료 처리 성공: \(questionId)")
+        } catch {
+            print("문항 작성완료 처리 실패: \(error)")
+        }
+    }
+
+    func fetchQuestionDetail(questionId: String) async {
+        isLoadingDetail = true
+        do {
+            let detail = try await questionRepository.getQuestionDetail(
+                projectId: projectId,
+                questionId: questionId
+            )
+            currentQuestionDetail = detail
+            print("문항 상세 조회 성공: \(detail.question)")
+        } catch {
+            print("문항 상세 조회 실패: \(error)")
+        }
+        isLoadingDetail = false
+    }
+
     func saveQuestions(editedItems: [EditableQuestionItem], deletedQuestionIds: [String] = []) async {
         isSavingQuestions = true
         defer { isSavingQuestions = false }

@@ -7,20 +7,22 @@
 
 import Foundation
 
-struct QuestionDetailResponse: Decodable {
+struct QuestionDetailResponse: Decodable,Equatable {
     let answer: String?
     let createdAt: String
     let id: String
+    let isCompleted: Bool
     let maxLength: Int?
     let projectId: String
     let question: String
     let updatedAt: String
     let userId: String
-    
+
     enum CodingKeys: String, CodingKey {
         case answer
         case createdAt = "created_at"
         case id
+        case isCompleted = "is_completed"
         case maxLength = "max_length"
         case projectId = "project_id"
         case question
