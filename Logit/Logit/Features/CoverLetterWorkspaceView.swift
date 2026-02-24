@@ -441,6 +441,7 @@ struct QuestionTabBar: View {
     let questionCount: Int
     @Binding var selectedIndex: Int
     var onAddTapped: () -> Void = {}
+    var showAddButton: Bool = true
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -453,17 +454,19 @@ struct QuestionTabBar: View {
                     )
                 }
 
-                Button(action: onAddTapped) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray300)
-                        .frame(width: 34, height: 34)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray100, lineWidth: 1)
-                        )
+                if showAddButton {
+                    Button(action: onAddTapped) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray300)
+                            .frame(width: 34, height: 34)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray100, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)

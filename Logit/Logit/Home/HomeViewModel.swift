@@ -70,8 +70,8 @@ class HomeViewModel: ObservableObject {
     func fetchCurrentUser() async {
         do {
             let user = try await userRepository.getCurrentUser()
-            userName = user.fullName
-            print("유저 정보 조회 성공: \(user.fullName)")
+            userName = user.fullName ?? ""
+            print("유저 정보 조회 성공: \(user.fullName ?? "")")
         } catch {
             print("유저 정보 조회 실패: \(error)")
         }
@@ -81,3 +81,4 @@ class HomeViewModel: ObservableObject {
         !projects.isEmpty
     }
 }
+    

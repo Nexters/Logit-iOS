@@ -35,28 +35,17 @@ struct ExperienceInfoInputView: View {
                         Button {
                             viewModel.loadExampleData()
                         } label: {
-                            if viewModel.isExampleLoaded {
-                                //  로드 후: 텍스트만
-                                Text("작성된 예시로 등록해보세요")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary100)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                            } else {
-                                //  로드 전: 버튼 스타일
-                                Text("예시 불러오기")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary400)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(.gray70, lineWidth: 1)
-                                            .background(.gray20)
-                                    )
-                            }
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
                         }
-                        .disabled(viewModel.isExampleLoaded)
                     }
                     .padding(.top, 13.25)
                     

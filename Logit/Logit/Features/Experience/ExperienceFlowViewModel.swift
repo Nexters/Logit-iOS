@@ -173,8 +173,6 @@ class ExperienceFlowViewModel: ObservableObject {
     }
     
     func loadExampleData() {
-        guard !isExampleLoaded else { return }
-        
         experienceTitle = "iOS 앱 개발 인턴"
         experienceType = "인턴"
         
