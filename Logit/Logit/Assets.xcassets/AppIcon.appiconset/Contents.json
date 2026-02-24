@@ -1,29 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "정사각형 로고.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
+      "filename" : "정사각형 로고 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

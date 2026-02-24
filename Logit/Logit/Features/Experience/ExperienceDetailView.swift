@@ -28,6 +28,7 @@ struct ExperienceDetailView: View {
                 Spacer()
                 Button { } label: {
                     Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
                         .font(.system(size: 18))
                         .foregroundColor(.black)
                         .frame(width: 44, height: 44)
