@@ -8,17 +8,32 @@
 import SwiftUI
 
 struct CoverLetterListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = CoverLetterListViewModel()
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // 상단 헤더
-                HStack {
-                    Text("자기소개서")
-                        .typo(.semibold_17)
-                        .foregroundStyle(.black)
-                    Spacer()
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("자기소개서 목록")
+                            .typo(.bold_20)
+                            .foregroundStyle(.black)
+                        Spacer()
+                        Button {
+                            appState.startAddFlow()
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    
+                    Text("총 \(viewModel.projects.count)개")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.gray200)
+                        .padding(.top, 20)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)

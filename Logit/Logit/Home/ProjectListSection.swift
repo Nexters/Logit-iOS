@@ -132,18 +132,18 @@ struct ProjectCardCell: View {
             // 세로 막대기
             RoundedRectangle(cornerRadius: 2.adjustedLayout)
                 .fill(.primary70)
-                .frame(width: 3.adjustedWidth, height: 40.adjustedHeight)
+                .frame(width: 3.adjustedWidth, height: 60.adjustedHeight)
 
             // 왼쪽 정보 (D-day + 날짜 / 회사명)
-            VStack(alignment: .leading, spacing: 4.adjustedLayout) {
-                HStack(spacing: 6.adjustedLayout) {
+            VStack(alignment: .leading, spacing: 12.adjustedLayout) {
+                HStack(spacing: 10.adjustedLayout) {
                     Text(dDayText)
-                        .typo(.semibold_12)
-                        .foregroundStyle(dDayText == "마감" ? .gray200 : .primary500)
-                        .padding(.horizontal, 6.adjustedLayout)
-                        .padding(.vertical, 2.adjustedLayout)
+                        .typo(.semibold_16)
+                        .foregroundStyle(dDayText == "마감" ? .gray200 : .primary200)
+                        .padding(.horizontal, 11.5.adjustedLayout)
+                        .padding(.vertical, 3.adjustedLayout)
                         .background(
-                            RoundedRectangle(cornerRadius: 4.adjustedLayout)
+                            RoundedRectangle(cornerRadius: 8.adjustedLayout)
                                 .fill(dDayText == "마감" ? Color.gray70 : Color.primary50)
                         )
 
@@ -162,10 +162,11 @@ struct ProjectCardCell: View {
 
             // 오른쪽: 완료 상태 아이콘 + 세로 말줄임 버튼
             HStack(spacing: 8.adjustedLayout) {
-                Image(isCompleted ? "checkmark_selected" : "checkmark_unselected")
+                Image(isCompleted ? "writeDone" : "writeComplete")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
+                    .padding(.trailing, 8.adjustedLayout)
 
                 Button {
                     // TODO: 메뉴 액션
@@ -176,6 +177,7 @@ struct ProjectCardCell: View {
                         .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
                 }
             }
+            .padding(.trailing, 8.adjustedLayout)
         }
         .padding(.horizontal, 20.adjustedLayout)
         .padding(.vertical, 14.adjustedLayout)

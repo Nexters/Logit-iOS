@@ -211,17 +211,37 @@ struct ExperienceListCell: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 상단: 제목
-            Text(experience.title)
-                .typo(.medium_15)
-                .foregroundColor(.primary500)
-                .lineLimit(1)
-            
-            // 하단: 태그들 (가변 레이아웃)
-            AdaptiveTagsView(
-                competencyTag: displayCategory,
-                tags: parsedTags
-            )
+            // 상단: 제목 + 메뉴 버튼
+            HStack(alignment: .top) {
+                Text(experience.title)
+                    .typo(.medium_15)
+                    .foregroundColor(.primary500)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Button {
+                    // TODO: 메뉴 액션
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
+                        .foregroundStyle(.gray300)
+                        .frame(width: 20, height: 20)
+                }
+            }
+
+            // 하단: 태그들 (competency 1개 + 일반 태그 1개)
+            HStack(spacing: 8) {
+                ExperienceTag(
+                    text: displayCategory,
+                    icon: displayCategory,
+                    isCompetency: true
+                )
+                if let firstTag = parsedTags.first {
+                    ExperienceTag(text: firstTag)
+                }
+                Spacer()
+            }
         }
         .padding(16)
         .background(Color.white)

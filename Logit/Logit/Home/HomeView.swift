@@ -17,7 +17,7 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    ExperienceTypeSection(userName: viewModel.userName)
+                    ExperienceTypeSection()
                         .padding(.top, 22.adjustedLayout)
 
                     ProjectListSection(
@@ -38,6 +38,13 @@ struct HomeView: View {
                 async let projects: () = viewModel.fetchProjects()
                 async let user: () = viewModel.fetchCurrentUser()
                 _ = await (projects, user)
+            }
+        }
+        .onChange(of: appState.selectedProjectId) { _, newValue in
+            if newValue == nil {
+                Task {
+                    await viewModel.fetchProjects()
+                }
             }
         }
     }

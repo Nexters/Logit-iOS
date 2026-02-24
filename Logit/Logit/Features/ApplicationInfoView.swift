@@ -80,6 +80,7 @@ struct ApplicationInfoView: View {
                             isRequired: true,
                             maxLength: 3000,
                             largeHeight: 90,
+                            isDynamic: true,
                             text: $viewModel.recruitNotice
                         )
 
@@ -95,6 +96,8 @@ struct ApplicationInfoView: View {
                             placeholder: "기업의 인재상이나 핵심가치를 입력하세요",
                             isRequired: false,
                             maxLength: 1000,
+                            largeHeight: 74,
+                            isDynamic: true,
                             text: $viewModel.companyTalent
                         )
                     }
