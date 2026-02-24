@@ -27,7 +27,8 @@ class AddFlowViewModel: ObservableObject {
     @Published var jobPosition: String = ""  // 직무명
     @Published var recruitNotice: String = ""  // 채용 공고
     @Published var companyTalent: String = ""  // 기업 인재상
-    @Published var dueDate: String?
+    @Published var dueDateValue: Date?        // 마감 날짜
+    @Published var isAlwaysOpen: Bool = false // 상시 여부
     @Published var isExampleLoaded: Bool = false
     
     
@@ -50,6 +51,7 @@ class AddFlowViewModel: ObservableObject {
         companyName = "카카오"
         jobPosition = "iOS 개발자"
         recruitNotice = "• 주요 업무: iOS 앱 신규 기능 개발 및 유지보수, 코드 리뷰 및 기술 개선\n• 자격요건: Swift 및 SwiftUI 개발 경험 2년 이상, iOS 앱 배포 경험\n• 우대사항: 대규모 트래픽 서비스 개발 경험, 오픈소스 기여 경험"
+        dueDateValue = Date()
         companyTalent = "도전과 창의를 즐기며, 함께 성장하는 인재를 추구합니다."
         isExampleLoaded = true
     }
@@ -73,7 +75,7 @@ class AddFlowViewModel: ObservableObject {
         let request = CreateProjectRequest(
             company: companyName,
             companyTalent: companyTalent,
-            dueDate: nil,
+            dueDate: isAlwaysOpen ? nil : dueDateValue?.toString(),
             jobPosition: jobPosition,
             questions: questions.map { question in
                 QuestionRequest(

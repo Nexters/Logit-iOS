@@ -16,7 +16,7 @@ struct ProjectListItemResponse: Decodable, Identifiable {
     
     let completedQuestions: Int
     let totalQuestions: Int
-    let dueDate: String
+    let dueDate: String?
 
     enum CodingKeys: String, CodingKey {
         case id

@@ -30,7 +30,7 @@ struct ApplicationInfoView: View {
                         .padding(.top, 16)
                     
                     HStack(alignment: .center, spacing: 0) {
-                        Text("지원기업 정보 입력")
+                        Text("자기소개서 작성")
                             .typo(.bold_18)
 
                         Spacer()
@@ -38,26 +38,17 @@ struct ApplicationInfoView: View {
                         Button {
                             viewModel.loadExampleData()
                         } label: {
-                            if viewModel.isExampleLoaded {
-                                Text("작성된 예시로 등록해보세요")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary100)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                            } else {
-                                Text("예시 불러오기")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary400)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(.gray70, lineWidth: 1)
-                                            .background(.gray20)
-                                    )
-                            }
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
                         }
-                        .disabled(viewModel.isExampleLoaded)
                     }
                     .padding(.top, 13.25)
 
@@ -91,7 +82,14 @@ struct ApplicationInfoView: View {
                             largeHeight: 90,
                             text: $viewModel.recruitNotice
                         )
-                        
+
+                        DueDateInputView(
+                            title: "마감 날짜",
+                            isRequired: false,
+                            date: $viewModel.dueDateValue,
+                            isAlwaysOpen: $viewModel.isAlwaysOpen
+                        )
+
                         InputFieldView(
                             title: "기업 인재상",
                             placeholder: "기업의 인재상이나 핵심가치를 입력하세요",
@@ -158,6 +156,164 @@ struct PageIndicator: View {
         )
     }
 }
+
+struct DueDateInputView: View {
+    let title: String
+    let isRequired: Bool
+    @Binding var date: Date?
+    @Binding var isAlwaysOpen: Bool
+
+    @State private var dateText: String = ""
+    @State private var isDateValid: Bool = true
+    @FocusState private var isFocused: Bool
+
+    init(
+        title: String,
+        isRequired: Bool = false,
+        date: Binding<Date?>,
+        isAlwaysOpen: Binding<Bool>
+    ) {
+        self.title = title
+        self.isRequired = isRequired
+        self._date = date
+        self._isAlwaysOpen = isAlwaysOpen
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // 타이틀
+            HStack(spacing: 2) {
+                Text(title)
+                    .typo(.medium_16)
+                    .foregroundColor(.black)
+
+                if isRequired {
+                    Text("*")
+                        .typo(.medium_16)
+                        .foregroundColor(.alert)
+                }
+                Spacer()
+            }
+
+            // 날짜 입력 필드
+            VStack(alignment: .leading, spacing: 4) {
+                TextField("yyyy.mm.dd", text: $dateText)
+                    .typo(.regular_15)
+                    .foregroundColor(isAlwaysOpen ? .gray200 : .black)
+                    .keyboardType(.numberPad)
+                    .padding(.horizontal, 18)
+                    .frame(height: 44)
+                    .background(isAlwaysOpen ? Color.gray50 : Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(
+                                isAlwaysOpen ? Color.gray70 :
+                                !isDateValid ? Color.alert :
+                                isFocused ? Color.primary100 : Color.gray100,
+                                lineWidth: 1
+                            )
+                    )
+                    .cornerRadius(8)
+                    .focused($isFocused)
+                    .disabled(isAlwaysOpen)
+                    .onChange(of: dateText) { oldValue, newValue in
+                        handleDateInput(oldValue: oldValue, newValue: newValue)
+                    }
+                    .onChange(of: date) { _, newValue in
+                        if let d = newValue {
+                            dateText = formatDateToString(d)
+                            isDateValid = true
+                        }
+                    }
+                    .onAppear {
+                        if let d = date {
+                            dateText = formatDateToString(d)
+                        }
+                    }
+
+                if !isDateValid {
+                    Text("올바른 날짜를 입력해주세요")
+                        .typo(.regular_12)
+                        .foregroundColor(.alert)
+                }
+            }
+
+            // 상시 토글
+            Button {
+                isAlwaysOpen.toggle()
+                if isAlwaysOpen {
+                    date = nil
+                    dateText = ""
+                    isDateValid = true
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(isAlwaysOpen ? "activated" : "deactivated")
+                        .frame(size: 28)
+
+                    Text("상시")
+                        .typo(.regular_14_160)
+                        .foregroundColor(.black)
+                }
+            }
+        }
+    }
+
+    private func handleDateInput(oldValue: String, newValue: String) {
+        let digits = newValue.filter { $0.isNumber }
+
+        if digits.count > 8 {
+            dateText = oldValue
+            return
+        }
+
+        dateText = formatWithDots(digits)
+
+        if digits.count == 8 {
+            if let parsed = parseDate(from: digits) {
+                date = parsed
+                isDateValid = true
+            } else {
+                date = nil
+                isDateValid = false
+            }
+        } else {
+            isDateValid = true
+            date = nil
+        }
+    }
+
+    private func formatWithDots(_ digits: String) -> String {
+        var result = ""
+        let chars = Array(digits)
+        for i in 0..<chars.count {
+            result.append(chars[i])
+            if (i == 3 || i == 5) && i != chars.count - 1 {
+                result.append(".")
+            }
+        }
+        return result
+    }
+
+    private func parseDate(from digits: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.isLenient = false
+        return formatter.date(from: digits)
+    }
+
+    private func formatDateToString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd"
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return formatter.string(from: date)
+    }
+}
+
 
 struct InputFieldView: View {
     let title: String
