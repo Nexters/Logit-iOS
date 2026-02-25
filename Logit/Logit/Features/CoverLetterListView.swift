@@ -131,7 +131,7 @@ private struct CoverLetterProjectCell: View {
                 .frame(width: 3, height: 24)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(project.company) · \(project.jobPosition)")
+                Text("\(project.company) \(project.jobPosition)")
                     .typo(.medium_15)
                     .foregroundStyle(.black)
                     .lineLimit(1)

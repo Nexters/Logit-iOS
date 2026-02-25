@@ -25,6 +25,8 @@ struct CoverLetterWorkspaceView: View {
     @State private var editingAnswer: String = ""
     @State private var originalAnswer: String = ""
     @State private var showToast: Bool = false
+    @State private var showCompleteToast: Bool = false
+    @State private var completeToastMessage: String = ""
     @State private var showEditQuestions: Bool = false
     @State private var showQuestionDetail: Bool = false
     @State private var editingQuestionText: String = ""
@@ -120,8 +122,9 @@ struct CoverLetterWorkspaceView: View {
                             .resizable()
                             .frame(width: 12, height: 8)
                             .foregroundColor(.gray400)
+                            .frame(width: 44, height: overlayEditorHeight)
+                            .contentShape(Rectangle())
                     }
-                    .padding(.top, 4)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
@@ -261,6 +264,7 @@ struct CoverLetterWorkspaceView: View {
                                 .frame(width: 12, height: 8)
                                 .foregroundColor(.gray400)
                         }
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal, 20)
@@ -342,6 +346,14 @@ struct CoverLetterWorkspaceView: View {
                                         await viewModel.saveAnswer(questionId: question.id, answer: editingAnswer)
                                         await viewModel.markQuestionComplete(questionId: question.id)
                                     }
+                                },
+                                onCompleteToast: { message in
+                                    completeToastMessage = message
+                                    withAnimation(.spring()) { showCompleteToast = true }
+                                    Task {
+                                        try? await Task.sleep(for: .seconds(2))
+                                        withAnimation { showCompleteToast = false }
+                                    }
                                 }
                             )
                             .id(question.id)
@@ -401,6 +413,16 @@ struct CoverLetterWorkspaceView: View {
             // 질문 상세/편집 오버레이
             if showQuestionDetail {
                 questionDetailOverlay
+            }
+
+            // 작성완료 토스트 오버레이
+            if showCompleteToast {
+                VStack {
+                    Spacer()
+                    ToastView(message: completeToastMessage)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.bottom, 74)
+                }
             }
 
             //  토스트 오버레이
@@ -1015,6 +1037,7 @@ struct CoverLetterContentView: View {
     let maxLength: Int?
     let isCompleted: Bool
     let onComplete: () -> Void
+    var onCompleteToast: ((String) -> Void)? = nil
 
     @State private var showLimitToast = false
 
@@ -1033,7 +1056,11 @@ struct CoverLetterContentView: View {
 
                 Spacer()
 
-                Button(action: onComplete) {
+                Button {
+                    let message = isCompleted ? "작성 완료가 취소되었습니다." : "작성이 완료되었습니다."
+                    onComplete()
+                    onCompleteToast?(message)
+                } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
                             .frame(size: 10)

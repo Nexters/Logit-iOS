@@ -190,7 +190,7 @@ struct ProjectCardCell: View {
                             .foregroundStyle(.gray100)
                     }
 
-                    Text(project.company)
+                    Text("\(project.company) \(project.jobPosition)")
                         .typo(.medium_15)
                         .foregroundStyle(.black)
                         .lineLimit(1)
