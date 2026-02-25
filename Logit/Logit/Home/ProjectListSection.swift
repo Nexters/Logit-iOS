@@ -203,7 +203,7 @@ struct ProjectCardCell: View {
                     Image(isCompleted ? "writeDone" : "writeComplete")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
+                        .frame(size: 34.adjustedLayout)
                         .padding(.trailing, 8.adjustedLayout)
 
                     Button {
@@ -215,7 +215,7 @@ struct ProjectCardCell: View {
                             .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
                     }
                 }
-                .padding(.trailing, 8.adjustedLayout)
+                .padding(.trailing, 16.adjustedLayout)
             }
             .padding(.horizontal, 20.adjustedLayout)
             .padding(.vertical, 14.adjustedLayout)

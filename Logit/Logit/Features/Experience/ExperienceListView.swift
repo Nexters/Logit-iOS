@@ -80,7 +80,7 @@ struct ExperienceListView: View {
                 }
             }
         }
-        .background(.white)
+        .background(.gray20)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
