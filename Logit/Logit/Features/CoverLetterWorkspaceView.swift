@@ -339,6 +339,7 @@ struct CoverLetterWorkspaceView: View {
                                 isCompleted: viewModel.currentQuestionDetail?.isCompleted ?? false,
                                 onComplete: {
                                     Task {
+                                        await viewModel.saveAnswer(questionId: question.id, answer: editingAnswer)
                                         await viewModel.markQuestionComplete(questionId: question.id)
                                     }
                                 }
