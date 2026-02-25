@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CoverLetterDetailView: View {
     @StateObject private var viewModel: CoverLetterDetailViewModel
+    @Environment(\.dismiss) var dismiss
     @State private var selectedQuestionIndex: Int = 0
 
     init(project: ProjectListItemResponse) {
@@ -17,6 +18,12 @@ struct CoverLetterDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            CustomNavigationBar(
+                title: viewModel.project.company,
+                showBackButton: true,
+                onBackTapped: { dismiss() }
+            )
+
             // 문항 탭 바
             if !viewModel.questionList.isEmpty {
                 QuestionTabBar(
@@ -76,8 +83,7 @@ struct CoverLetterDetailView: View {
             }
         }
         .background(.white)
-        .navigationTitle(viewModel.project.company)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .task {
             await viewModel.fetchQuestionList()
         }

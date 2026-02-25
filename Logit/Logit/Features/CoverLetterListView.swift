@@ -73,6 +73,7 @@ struct CoverLetterListView: View {
                 }
             }
             .background(.white)
+            .navigationBarHidden(true)
             .task {
                 await viewModel.fetchProjects()
             }
