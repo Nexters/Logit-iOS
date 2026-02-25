@@ -32,5 +32,8 @@ struct AddFlowCoordinator: View {
         .environmentObject(viewModel)
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
+        .onChange(of: viewModel.shouldDismissFlow) { _, shouldDismiss in
+            if shouldDismiss { dismiss() }
+        }
     }
 }

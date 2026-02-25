@@ -10,21 +10,24 @@ import SwiftUI
 struct CoverLetterQuestionsView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
-    
+
+    @State private var showCancelAlert = false
+
     private let maxQuestionsCount = 5 // 최대 문항 개수
-    
+
     private var isFormValid: Bool {
         viewModel.questions.allSatisfy { question in
             !question.title.isEmpty && !question.characterLimit.isEmpty
         }
     }
-    
+
     var body: some View {
+        ZStack {
         VStack(spacing: 0) {
             CustomNavigationBar(
                 title: "프로젝트 생성",
                 showBackButton: true,
-                onBackTapped: { dismiss() }
+                onBackTapped: { showCancelAlert = true }
             )
             
             ScrollView {
@@ -142,6 +145,17 @@ struct CoverLetterQuestionsView: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
+        }
+
+        if showCancelAlert {
+            LogitAlertView(
+                message: "프로젝트 생성을 취소하시겠어요?",
+                cancelTitle: "계속하기",
+                confirmTitle: "그만하기",
+                onCancel: { showCancelAlert = false },
+                onConfirm: { viewModel.shouldDismissFlow = true }
+            )
+        }
     }
 }
 

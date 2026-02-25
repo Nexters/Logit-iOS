@@ -15,6 +15,7 @@ extension Notification.Name {
 class AddFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
     @Published var rootScreen: RootScreen = .applicationInfo
+    @Published var shouldDismissFlow = false
     
     enum RootScreen {
         case applicationInfo
