@@ -22,7 +22,7 @@ struct HomeHeaderView: View {
             Image("app_user")
                 .resizable()
                 .scaledToFit()
-                .frame(size: 35.2.adjustedLayout)
+                .frame(size: 44.adjustedLayout)
                 .onTapGesture {
                     appState.startSettings()
                 }

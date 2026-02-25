@@ -20,7 +20,7 @@ struct ApplicationInfoView: View {
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "프로젝트 생성",
+                title: "",
                 showBackButton: true,
                 onBackTapped: { showCancelAlert = true }
             )
@@ -87,7 +87,7 @@ struct ApplicationInfoView: View {
 
                         DueDateInputView(
                             title: "마감 날짜",
-                            isRequired: false,
+                            isRequired: true,
                             date: $viewModel.dueDateValue,
                             isAlwaysOpen: $viewModel.isAlwaysOpen
                         )
@@ -218,11 +218,10 @@ struct DueDateInputView: View {
                     .keyboardType(.numberPad)
                     .padding(.horizontal, 18)
                     .frame(height: 44)
-                    .background(isAlwaysOpen ? Color.gray50 : Color.clear)
+                    .background(Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(
-                                isAlwaysOpen ? Color.gray70 :
                                 !isDateValid ? Color.alert :
                                 isFocused ? Color.primary100 : Color.gray100,
                                 lineWidth: 1
@@ -258,8 +257,10 @@ struct DueDateInputView: View {
                 isAlwaysOpen.toggle()
                 if isAlwaysOpen {
                     date = nil
-                    dateText = ""
+                    dateText = "상시채용"
                     isDateValid = true
+                } else {
+                    dateText = ""
                 }
             } label: {
                 HStack(spacing: 8) {
@@ -275,6 +276,7 @@ struct DueDateInputView: View {
     }
 
     private func handleDateInput(oldValue: String, newValue: String) {
+        guard !isAlwaysOpen else { return }
         let digits = newValue.filter { $0.isNumber }
 
         if digits.count > 8 {

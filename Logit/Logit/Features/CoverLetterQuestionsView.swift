@@ -11,9 +11,7 @@ struct CoverLetterQuestionsView: View {
     @EnvironmentObject var viewModel: AddFlowViewModel
     @Environment(\.dismiss) var dismiss
 
-    @State private var showCancelAlert = false
-
-    private let maxQuestionsCount = 5 // 최대 문항 개수
+    private let maxQuestionsCount = 10 // 최대 문항 개수
 
     private var isFormValid: Bool {
         viewModel.questions.allSatisfy { question in
@@ -24,9 +22,9 @@ struct CoverLetterQuestionsView: View {
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "프로젝트 생성",
+                title: "",
                 showBackButton: true,
-                onBackTapped: { showCancelAlert = true }
+                onBackTapped: { viewModel.navigateBack() }
             )
             
             ScrollView {
@@ -118,43 +116,31 @@ struct CoverLetterQuestionsView: View {
                     }
                     .padding(.top, 24)
                     
-                    Spacer()
-                        .frame(minHeight: 46.75)
-                    
-                    Button {
-                        // TODO: 완료 액션
-                        Task {
-                            await viewModel.createProject()
-                        }
-                    } label: {
-                        Text("프로젝트 생성")
-                            .typo(.bold_18)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(isFormValid ? Color.primary100 : Color.gray100)
-                            .cornerRadius(12)
-                    }
-                    .disabled(!isFormValid)
-                    .padding(.bottom, 10)
                 }
                 .padding(.horizontal, 20)
+                .padding(.bottom, 80)
             }
             .scrollToMinDistance(minDisntance: 32)
+
+            Button {
+                Task {
+                    await viewModel.createProject()
+                }
+            } label: {
+                Text("프로젝트 생성")
+                    .typo(.bold_18)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(isFormValid ? Color.primary100 : Color.gray100)
+                    .cornerRadius(12)
+            }
+            .disabled(!isFormValid)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 10)
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
-        .overlay {
-            if showCancelAlert {
-                LogitAlertView(
-                    message: "프로젝트 생성을 취소하시겠어요?",
-                    cancelTitle: "계속하기",
-                    confirmTitle: "그만하기",
-                    onCancel: { showCancelAlert = false },
-                    onConfirm: { viewModel.shouldDismissFlow = true }
-                )
-            }
-        }
     }
 }
 

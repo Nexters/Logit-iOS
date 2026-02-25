@@ -18,34 +18,40 @@ struct ExperienceTypeSection: View {
                 .foregroundStyle(.black)
 
             ZStack(alignment: .bottomLeading) {
-                TabView(selection: $currentIndex) {
-                    ForEach(0..<totalCount, id: \.self) { index in
-                        let imageIndex = index + 1
-                        if let asset = NSDataAsset(name: "homeBanner_\(imageIndex)"),
-                           let uiImage = UIImage(data: asset.data) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                                .clipped()
-                                .tag(index)
-                        }
-                    }
+                if let asset = NSDataAsset(name: "homeBanner_\(currentIndex + 1)"),
+                   let uiImage = UIImage(data: asset.data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .id(currentIndex)
+                        .transition(.identity)
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
 
                 Text("\(currentIndex + 1)/\(totalCount)")
                     .typo(.semibold_14)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10.adjustedLayout)
-                    .padding(.vertical, 4.adjustedLayout)
-                    .background(Color.black.opacity(0.4))
+                    .padding(.horizontal, 16.adjustedLayout)
+                    .padding(.vertical, 2.5.adjustedLayout)
+                    .background(Color.black.opacity(0.2))
                     .cornerRadius(12)
                     .padding(.leading, 12.adjustedLayout)
                     .padding(.bottom, 12.adjustedLayout)
             }
             .frame(height: 155.adjustedHeight)
             .background(.white)
+            .animation(.none, value: currentIndex)
+            .gesture(
+                DragGesture(minimumDistance: 30)
+                    .onEnded { value in
+                        if value.translation.width < 0 {
+                            currentIndex = min(currentIndex + 1, totalCount - 1)
+                        } else {
+                            currentIndex = max(currentIndex - 1, 0)
+                        }
+                    }
+            )
         }
         .padding(.horizontal, 20.adjustedLayout)
         .background(.white)
