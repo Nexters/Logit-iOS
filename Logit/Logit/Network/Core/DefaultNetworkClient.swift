@@ -50,12 +50,14 @@ class DefaultNetworkClient: NetworkClient {
         // 1. URLRequest 생성
         var request = try createURLRequest(endpoint: endpoint, body: body)
         
-        // 2. 토큰 추가 (없으면 즉시 인증 실패 처리)
-        guard let accessToken = tokenManager.accessToken else {
-            NotificationCenter.default.post(name: .authenticationRequired, object: nil)
-            throw APIError.unauthorized(message: "로그인이 필요합니다.")
+        // 2. 토큰 추가 (인증이 필요한 엔드포인트만)
+        if endpoint.requiresAuth {
+            guard let accessToken = tokenManager.accessToken else {
+                NotificationCenter.default.post(name: .authenticationRequired, object: nil)
+                throw APIError.unauthorized(message: "로그인이 필요합니다.")
+            }
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
         NetworkLogger.logRequest(request, body: body)
         
@@ -176,11 +178,17 @@ class DefaultNetworkClient: NetworkClient {
             )
             request.setValue("Bearer \(refreshToken)", forHTTPHeaderField: "Authorization")
 
+            NetworkLogger.logRequest(request)
             let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
+            guard let httpResponse = response as? HTTPURLResponse else {
                 throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다.")
+            }
+
+            NetworkLogger.logResponse(httpResponse, data: data)
+
+            guard httpResponse.statusCode == 200 else {
+                throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다. (\(httpResponse.statusCode))")
             }
 
             // 서버가 새 access token + refresh token 모두 body로 반환
@@ -190,6 +198,7 @@ class DefaultNetworkClient: NetworkClient {
             } else {
                 tokenManager.updateAccessToken(tokenResponse.accessToken)
             }
+            print("🔄 [TokenRefresh] Access token 갱신 완료 → 원래 요청 재시도")
         }
 
         tokenManager.sharedRefreshTask = task
