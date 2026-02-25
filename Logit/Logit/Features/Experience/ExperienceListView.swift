@@ -27,7 +27,7 @@ struct ExperienceListView: View {
                 }
             )
 
-            if !viewModel.experiences.isEmpty {
+            if !viewModel.isLoading {
                 ExperienceCountLabel(count: viewModel.experiences.count)
             }
 
