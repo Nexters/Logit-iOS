@@ -375,6 +375,7 @@ struct CoverLetterWorkspaceView: View {
                 } else {
                     // 자기소개서 탭 저장하기 버튼
                     let isChanged = editingAnswer != originalAnswer
+                    let isOverLimit = currentQuestion.flatMap { $0.maxLength }.map { editingAnswer.count > $0 } ?? false
                     Button {
                         guard let question = currentQuestion else { return }
                         Task {
@@ -386,10 +387,10 @@ struct CoverLetterWorkspaceView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(isChanged ? Color.primary100 : Color.gray100)
+                            .background(isChanged && !isOverLimit ? Color.primary100 : Color.gray100)
                             .cornerRadius(12)
                     }
-                    .disabled(!isChanged)
+                    .disabled(!isChanged || isOverLimit)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
                     .background(Color.white)
@@ -1014,6 +1015,8 @@ struct CoverLetterContentView: View {
     let isCompleted: Bool
     let onComplete: () -> Void
 
+    @State private var showLimitToast = false
+
     private var isOverLimit: Bool {
         guard let max = maxLength else { return false }
         return editingAnswer.count > max
@@ -1030,22 +1033,23 @@ struct CoverLetterContentView: View {
                 Spacer()
 
                 Button(action: onComplete) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(isCompleted ? .primary100 : .gray300)
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .frame(size: 10)
+                            .foregroundColor(isCompleted && !isOverLimit ? .primary100 : .gray200)
                         Text("작성완료")
-                            .typo(.medium_13)
-                            .foregroundColor(isCompleted ? .primary100 : .gray300)
+                            .typo(.bold_12)
+                            .foregroundColor(isCompleted && !isOverLimit ? .primary100 : .gray200)
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
+                    .padding(.vertical, 5)
                     .background(Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isCompleted ? Color.primary100 : Color.gray200, lineWidth: 1)
+                            .stroke(isCompleted && !isOverLimit ? Color.primary100 : Color.gray100, lineWidth: 1)
                     )
                 }
+                .disabled(isOverLimit)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -1065,7 +1069,7 @@ struct CoverLetterContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if editingAnswer.isEmpty {
-                    Text("채팅에서 초안을 생성하고 업데이트해보세요.")
+                    Text("아직 작성된 자기소개서가 없어요.\n경험을 선택하고 초안을 생성해보세요.")
                         .typo(.regular_14_160)
                         .foregroundColor(.gray200)
                         .padding(.horizontal, 20)
@@ -1077,14 +1081,31 @@ struct CoverLetterContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
+        .overlay(alignment: .bottom) {
+            if showLimitToast {
+                ToastView(message: "글자수 제한에 도달했어요")
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 20)
+            }
+        }
+        .onChange(of: editingAnswer) { _, newValue in
+            guard let max = maxLength else { return }
+            if newValue.count > max && !showLimitToast {
+                withAnimation(.spring()) { showLimitToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation { showLimitToast = false }
+                }
+            }
+        }
     }
 }
 
 struct ToastView: View {
     let message: String
-    let actionTitle: String
-    let onAction: () -> Void
-    
+    var actionTitle: String? = nil
+    var onAction: (() -> Void)? = nil
+
     var body: some View {
         HStack(spacing: 12) {
             // 체크 아이콘
@@ -1092,36 +1113,38 @@ struct ToastView: View {
                 Circle()
                     .fill(Color.primary100)
                     .frame(width: 24, height: 24)
-                
+
                 Image(systemName: "checkmark")
                     .resizable()
                     .frame(width: 12, height: 12)
                     .foregroundColor(.white)
                     .fontWeight(.semibold)
             }
-            
+
             // 메시지
             Text(message)
                 .typo(.regular_16_150)
                 .foregroundColor(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            
+
             Spacer(minLength: 8)
-            
-            // 바로가기 버튼
-            Button {
-                onAction()
-            } label: {
-                Text(actionTitle)
-                    .typo(.regular_14_160)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.primary500)
-                    .clipShape(Capsule())
+
+            // 바로가기 버튼 (optional)
+            if let actionTitle, let onAction {
+                Button {
+                    onAction()
+                } label: {
+                    Text(actionTitle)
+                        .typo(.regular_14_160)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.primary500)
+                        .clipShape(Capsule())
+                }
+                .fixedSize()
             }
-            .fixedSize()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
