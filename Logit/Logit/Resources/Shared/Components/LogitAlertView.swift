@@ -7,6 +7,7 @@ import SwiftUI
 
 struct LogitAlertView: View {
     let message: String
+    var subMessage: String? = nil
     let cancelTitle: String
     let confirmTitle: String
     let onCancel: () -> Void
@@ -41,6 +42,16 @@ struct LogitAlertView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 16)
                     .padding(.horizontal, 20)
+
+                // 서브 메시지
+                if let subMessage {
+                    Text(subMessage)
+                        .typo(.regular_13)
+                        .foregroundColor(.gray300)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 6)
+                        .padding(.horizontal, 20)
+                }
 
                 // 버튼
                 HStack(spacing: 10) {

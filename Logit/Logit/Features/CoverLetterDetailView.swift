@@ -10,6 +10,7 @@ struct CoverLetterDetailView: View {
     @Environment(\.dismiss) var dismiss
     @State private var selectedQuestionIndex: Int = 0
     @State private var showDeleteMenu = false
+    @State private var showDeleteAlert = false
 
     init(project: ProjectListItemResponse) {
         _viewModel = StateObject(wrappedValue: CoverLetterDetailViewModel(project: project))
@@ -18,10 +19,7 @@ struct CoverLetterDetailView: View {
     private var deleteMenuPopup: some View {
         Button {
             showDeleteMenu = false
-            Task {
-                try? await viewModel.deleteProject()
-                dismiss()
-            }
+            showDeleteAlert = true
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "trash")
@@ -133,6 +131,23 @@ struct CoverLetterDetailView: View {
                             .padding(.top, 44)
                             .padding(.trailing, 16)
                     }
+            }
+
+            if showDeleteAlert {
+                LogitAlertView(
+                    message: "프로젝트를 삭제하시겠어요?",
+                    subMessage: "삭제하면 복구 못해요",
+                    cancelTitle: "계속하기",
+                    confirmTitle: "그만하기",
+                    onCancel: { showDeleteAlert = false },
+                    onConfirm: {
+                        showDeleteAlert = false
+                        Task {
+                            try? await viewModel.deleteProject()
+                            dismiss()
+                        }
+                    }
+                )
             }
         }
     }
