@@ -27,6 +27,15 @@ class AppState: ObservableObject {
     ) {
         self.tokenManager = tokenManager
         self.authRepository = authRepository
+
+        // Refresh token 만료 시 자동으로 로그인 화면으로 이동
+        NotificationCenter.default.addObserver(
+            forName: .authenticationRequired,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.forceLogout()
+        }
     }
 
     enum AppPhase {
@@ -66,15 +75,22 @@ class AppState: ObservableObject {
         appPhase = .main
     }
 
-    // 로그아웃 (API 호출 후 토큰 삭제)
+    // 정상 로그아웃 (서버 API 호출 후 토큰 삭제)
     func logout() {
         Task {
             try? await authRepository.logout()
-            isShowingSettings = false
-            isShowingAddFlow = false
-            selectedProjectId = nil
-            appPhase = .login
+            forceLogout()
         }
+    }
+
+    // 강제 로그아웃 (refresh 실패 등 인증 완전 만료 시 API 없이 즉시 이동)
+    func forceLogout() {
+        tokenManager.clearTokens()
+        isShowingSettings = false
+        isShowingAddFlow = false
+        selectedProjectId = nil
+        isShowingDeleteAlert = false
+        appPhase = .login
     }
 
     func startAddFlow() {

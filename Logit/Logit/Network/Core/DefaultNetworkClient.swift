@@ -10,8 +10,7 @@ import Foundation
 class DefaultNetworkClient: NetworkClient {
     private let baseURL: String
     private let tokenManager: TokenManager
-    private var refreshTask: Task<Void, Error>?
-    
+
     init(
         baseURL: String = Config.baseURL,
         tokenManager: TokenManager = .shared
@@ -158,43 +157,45 @@ class DefaultNetworkClient: NetworkClient {
     
     
     private func refreshAccessToken() async throws {
-        // 이미 갱신 중이면 기다림
-        if let task = refreshTask {
+        // 이미 갱신 중인 task가 있으면 결과를 공유 (중복 요청 방지)
+        if let task = tokenManager.sharedRefreshTask {
             return try await task.value
         }
-        
-        // 갱신 작업 생성
-        let task = Task {
+
+        let task = Task<Void, Error> {
             guard let refreshToken = tokenManager.refreshToken else {
                 throw APIError.unauthorized(message: "Refresh token이 없습니다.")
             }
-            
-            // Refresh Token으로 새 Access Token 받기
+
             let request = try createURLRequest(
                 endpoint: AuthEndpoint.refreshToken,
                 body: RefreshTokenRequest(refreshToken: refreshToken)
             )
-            
+
             let (data, response) = try await URLSession.shared.data(for: request)
-            
+
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
                 throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다.")
             }
-            
+
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
             tokenManager.updateAccessToken(tokenResponse.accessToken)
+            if let newRefresh = tokenResponse.refreshToken {
+                tokenManager.saveTokens(access: tokenResponse.accessToken, refresh: newRefresh)
+            }
         }
-        
-        refreshTask = task
-        
+
+        tokenManager.sharedRefreshTask = task
+
         do {
             try await task.value
-            refreshTask = nil
+            tokenManager.sharedRefreshTask = nil
         } catch {
-            refreshTask = nil
-            // 갱신 실패 시 토큰 클리어
+            tokenManager.sharedRefreshTask = nil
             tokenManager.clearTokens()
+            // refresh 완전 실패 → 로그인 화면으로 이동
+            NotificationCenter.default.post(name: .authenticationRequired, object: nil)
             throw error
         }
     }

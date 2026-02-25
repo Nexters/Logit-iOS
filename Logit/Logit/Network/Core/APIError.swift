@@ -96,11 +96,17 @@ struct ValidationError {
     let field: String
     let message: String
     let type: String
-    
+
     init(from detail: ValidationErrorDetail) {
         // loc에서 필드명 추출 (예: ["body", "email"] -> "email")
         self.field = detail.loc.last ?? "unknown"
         self.message = detail.msg
         self.type = detail.type
     }
+}
+
+// MARK: - Auth Notification
+extension Notification.Name {
+    /// Refresh token 만료 등 인증이 완전히 실패했을 때 발생
+    static let authenticationRequired = Notification.Name("authenticationRequired")
 }
