@@ -22,6 +22,10 @@ class ExperienceDetailViewModel: ObservableObject {
         self.experienceRepository = experienceRepository
     }
 
+    func deleteExperience() async throws {
+        try await experienceRepository.deleteExperience(experienceId: experienceId)
+    }
+
     func fetchDetail() async {
         isLoading = true
         errorMessage = nil

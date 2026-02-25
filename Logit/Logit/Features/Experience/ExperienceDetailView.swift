@@ -10,11 +10,15 @@ struct ExperienceDetailView: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var showMenu = false
+    @State private var showDeleteAlert = false
 
-    init(experienceId: String) {
+    var onDeleted: (() -> Void)? = nil
+
+    init(experienceId: String, onDeleted: (() -> Void)? = nil) {
         _viewModel = StateObject(
             wrappedValue: ExperienceDetailViewModel(experienceId: experienceId)
         )
+        self.onDeleted = onDeleted
     }
 
     private var ellipsisMenuPopup: some View {
@@ -39,7 +43,7 @@ struct ExperienceDetailView: View {
 
             Button {
                 showMenu = false
-                print("삭제하기")
+                showDeleteAlert = true
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "trash")
@@ -196,6 +200,25 @@ struct ExperienceDetailView: View {
                 .padding(.top, 52)
                 .padding(.horizontal, 20)
                 .zIndex(1)
+            }
+
+            // 삭제 확인 alert
+            if showDeleteAlert {
+                LogitAlertView(
+                    message: "경험을 삭제하시겠어요?",
+                    subMessage: "삭제하면 복구 못해요",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "삭제하기",
+                    onCancel: { showDeleteAlert = false },
+                    onConfirm: {
+                        showDeleteAlert = false
+                        Task {
+                            try? await viewModel.deleteExperience()
+                            onDeleted?()
+                            dismiss()
+                        }
+                    }
+                )
             }
         }
     }

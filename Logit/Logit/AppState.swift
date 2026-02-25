@@ -15,6 +15,8 @@ class AppState: ObservableObject {
     @Published var selectedProjectId: String?
     @Published var isShowingDeleteAlert: Bool = false
     var onDeleteConfirm: (() -> Void)?
+    var deleteAlertMessage: String = "삭제하시겠어요?"
+    var deleteAlertSubMessage: String? = "삭제하면 복구 못해요"
 
     private let tokenManager: TokenManager
     private let authRepository: AuthRepository
@@ -34,7 +36,13 @@ class AppState: ObservableObject {
         case main
     }
 
-    func requestDeleteConfirmation(onConfirm: @escaping () -> Void) {
+    func requestDeleteConfirmation(
+        message: String = "삭제하시겠어요?",
+        subMessage: String? = "삭제하면 복구 못해요",
+        onConfirm: @escaping () -> Void
+    ) {
+        deleteAlertMessage = message
+        deleteAlertSubMessage = subMessage
         onDeleteConfirm = onConfirm
         isShowingDeleteAlert = true
     }

@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct ExperienceListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: ExperienceListViewModel
     @State private var showExperienceAddFlow = false
     @State private var selectedExperienceId: String? = nil
-    
+
     init() {
         let networkClient = DefaultNetworkClient()
         let repository = DefaultExperienceRepository(networkClient: networkClient)
         _viewModel = StateObject(wrappedValue: ExperienceListViewModel(experienceRepository: repository))
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             ExperienceListHeader(
@@ -25,11 +26,11 @@ struct ExperienceListView: View {
                     showExperienceAddFlow = true
                 }
             )
-            
+
             if !viewModel.experiences.isEmpty {
                 ExperienceCountLabel(count: viewModel.experiences.count)
             }
-            
+
             if viewModel.isLoading {
                 Spacer()
                 ProgressView()
@@ -42,29 +43,32 @@ struct ExperienceListView: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.experiences, id: \.id) { experience in
-                            ExperienceListCell(experience: experience, onTap: {
-                                selectedExperienceId = experience.id
-                            })
-                            .onAppear {
-                                    // 마지막에서 3개 전에 미리 로드
-                                    if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
-                                       lastIndex >= viewModel.experiences.count - 3 {
-                                        Task {
-                                            await viewModel.loadMore()
-                                        }
+                            ExperienceListCell(
+                                experience: experience,
+                                onTap: { selectedExperienceId = experience.id },
+                                onDelete: {
+                                    appState.requestDeleteConfirmation(
+                                        message: "경험을 삭제하시겠어요?",
+                                        subMessage: "삭제하면 복구 못해요"
+                                    ) {
+                                        Task { await viewModel.deleteExperience(experienceId: experience.id) }
                                     }
                                 }
+                            )
+                            .onAppear {
+                                if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
+                                   lastIndex >= viewModel.experiences.count - 3 {
+                                    Task { await viewModel.loadMore() }
+                                }
+                            }
                         }
-                        
-                        // 로딩 인디케이터
+
                         if viewModel.isLoadingMore {
                             ProgressView()
                                 .padding(.vertical, 20)
                         } else if viewModel.showError && !viewModel.experiences.isEmpty {
                             Button("재시도") {
-                                Task {
-                                    await viewModel.loadMore()
-                                }
+                                Task { await viewModel.loadMore() }
                             }
                             .padding(.vertical, 20)
                         }
@@ -74,7 +78,6 @@ struct ExperienceListView: View {
                     .padding(.bottom, 49 + 20)
                 }
                 .refreshable {
-                    // Pull to Refresh
                     await viewModel.fetchExperiences()
                 }
             }
@@ -83,16 +86,16 @@ struct ExperienceListView: View {
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
-                Task {
-                    await viewModel.fetchExperiences()
-                }
+                Task { await viewModel.fetchExperiences() }
             }
         }
         .fullScreenCover(item: Binding(
             get: { selectedExperienceId.map { SelectedExperienceID(id: $0) } },
             set: { selectedExperienceId = $0?.id }
         )) { target in
-            ExperienceDetailView(experienceId: target.id)
+            ExperienceDetailView(experienceId: target.id) {
+                Task { await viewModel.fetchExperiences() }
+            }
         }
         .alert("오류", isPresented: $viewModel.showError) {
             Button("확인", role: .cancel) { }
@@ -100,7 +103,6 @@ struct ExperienceListView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .task {
-            // 첫 로드
             await viewModel.fetchExperiences()
         }
     }
@@ -177,7 +179,7 @@ struct EmptyExperienceView: View {
                 Text("경험 등록하기")
                     .typo(.medium_15)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 39.adjustedLayout)
+                    .padding(.horizontal, 24.adjustedLayout)
                     .padding(.vertical, 7.5.adjustedLayout)
                     .background(.primary100)
                     .cornerRadius(8.adjustedLayout)
@@ -196,6 +198,7 @@ struct EmptyExperienceView: View {
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
     var onTap: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
 
     @State private var showMenu = false
 
@@ -234,7 +237,7 @@ struct ExperienceListCell: View {
 
             Button {
                 showMenu = false
-                print("삭제하기")
+                onDelete?()
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "trash")

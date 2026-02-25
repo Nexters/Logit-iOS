@@ -49,8 +49,8 @@ struct MainTabView: View {
         .overlay {
             if appState.isShowingDeleteAlert {
                 LogitAlertView(
-                    message: "프로젝트를 삭제하시겠어요?",
-                    subMessage: "삭제하면 복구 못해요",
+                    message: appState.deleteAlertMessage,
+                    subMessage: appState.deleteAlertSubMessage,
                     cancelTitle: "취소하기",
                     confirmTitle: "삭제하기",
                     onCancel: { appState.dismissDeleteAlert() },

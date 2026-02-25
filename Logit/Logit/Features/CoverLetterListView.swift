@@ -141,12 +141,12 @@ private struct CoverLetterProjectCell: View {
 
             Text(dDayText)
                 .typo(.semibold_12)
-                .foregroundStyle(isExpired ? .gray200 : .primary500)
+                .foregroundStyle(isExpired ? .gray200 : .primary200)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(isExpired ? Color.gray70 : Color.primary50)
+                        .fill(isExpired ? Color.gray20 : Color.primary20)
                 )
         }
         .padding(.horizontal, 20)
