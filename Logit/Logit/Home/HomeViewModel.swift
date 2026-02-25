@@ -77,6 +77,17 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    func deleteProject(projectId: String) async {
+        do {
+            try await projectRepository.deleteProject(projectId: projectId)
+            await fetchProjects()
+            print("프로젝트 삭제 성공: \(projectId)")
+        } catch {
+            print("프로젝트 삭제 실패: \(error)")
+            errorMessage = "프로젝트를 삭제할 수 없습니다."
+        }
+    }
+
     var hasProjects: Bool {
         !projects.isEmpty
     }

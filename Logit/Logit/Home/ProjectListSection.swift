@@ -12,6 +12,7 @@ struct ProjectListSection: View {
     let hasProjects: Bool
     let projects: [ProjectListItemResponse]
     let isLoading: Bool
+    var onDelete: ((String) -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8.adjustedLayout) {
@@ -32,7 +33,7 @@ struct ProjectListSection: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, 60.adjustedLayout)
             } else if hasProjects {
-                ProjectListView(projects: projects)
+                ProjectListView(projects: projects, onDelete: onDelete)
                     .padding(.top, 8.adjustedLayout)
             } else {
                 ProjectEmptyView()
@@ -81,15 +82,14 @@ struct ProjectEmptyView: View {
 
 struct ProjectListView: View {
     let projects: [ProjectListItemResponse]
+    var onDelete: ((String) -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             ForEach(projects.indices, id: \.self) { index in
                 ProjectCardCell(
                     project: projects[index],
-                    onDelete: {
-                        // TODO: 삭제 로직
-                    }
+                    onDelete: { onDelete?(projects[index].id) }
                 )
 
                 if index < projects.count - 1 {

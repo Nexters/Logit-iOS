@@ -23,7 +23,10 @@ struct HomeView: View {
                     ProjectListSection(
                         hasProjects: viewModel.hasProjects,
                         projects: viewModel.projects,
-                        isLoading: viewModel.isLoading
+                        isLoading: viewModel.isLoading,
+                        onDelete: { projectId in
+                            Task { await viewModel.deleteProject(projectId: projectId) }
+                        }
                     )
                     .padding(.top, 43.adjustedLayout)
                 }
