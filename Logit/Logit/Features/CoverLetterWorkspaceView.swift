@@ -1027,7 +1027,7 @@ struct CoverLetterContentView: View {
         VStack(alignment: .leading, spacing: 0) {
             // 상단: 글자수 + 작성완료 버튼
             HStack(alignment: .center) {
-                Text("\(editingAnswer.count) / \(maxLength ?? 0)")
+                Text("\(String(editingAnswer.count)) / \(String(maxLength ?? 0))")
                     .typo(.regular_14_160)
                     .foregroundColor(isOverLimit ? .red : .gray300)
 
