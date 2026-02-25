@@ -137,8 +137,8 @@ struct CoverLetterDetailView: View {
                 LogitAlertView(
                     message: "프로젝트를 삭제하시겠어요?",
                     subMessage: "삭제하면 복구 못해요",
-                    cancelTitle: "계속하기",
-                    confirmTitle: "그만하기",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "삭제하기",
                     onCancel: { showDeleteAlert = false },
                     onConfirm: {
                         showDeleteAlert = false
