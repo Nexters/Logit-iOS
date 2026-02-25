@@ -20,6 +20,7 @@ class AppState: ObservableObject {
 
     private let tokenManager: TokenManager
     private let authRepository: AuthRepository
+    private var authObserver: NSObjectProtocol?  // 반드시 strong reference 유지
 
     init(
         tokenManager: TokenManager = .shared,
@@ -29,12 +30,21 @@ class AppState: ObservableObject {
         self.authRepository = authRepository
 
         // Refresh token 만료 시 자동으로 로그인 화면으로 이동
-        NotificationCenter.default.addObserver(
+        // addObserver(forName:queue:using:)는 반환 토큰을 저장해야 observer가 유지됨
+        authObserver = NotificationCenter.default.addObserver(
             forName: .authenticationRequired,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.forceLogout()
+            Task { @MainActor [weak self] in
+                self?.forceLogout()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = authObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 

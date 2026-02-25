@@ -50,10 +50,12 @@ class DefaultNetworkClient: NetworkClient {
         // 1. URLRequest 생성
         var request = try createURLRequest(endpoint: endpoint, body: body)
         
-        // 2. 토큰 추가
-        if let accessToken = tokenManager.accessToken {
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        // 2. 토큰 추가 (없으면 즉시 인증 실패 처리)
+        guard let accessToken = tokenManager.accessToken else {
+            NotificationCenter.default.post(name: .authenticationRequired, object: nil)
+            throw APIError.unauthorized(message: "로그인이 필요합니다.")
         }
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
         NetworkLogger.logRequest(request, body: body)
         
