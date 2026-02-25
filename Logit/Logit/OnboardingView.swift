@@ -30,16 +30,24 @@ struct OnboardingView: View {
                 .cornerRadius(8)
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 45)
+        .padding(.bottom, 10)
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // 상단 네비게이션
             HStack {
-                Text("\(currentStep)/\(totalSteps)")
-                    .typo(.regular_15)
+                (Text("\(currentStep)")
+                    .font(LogitFont.bold_14.font)
+                + Text("/\(totalSteps)")
+                    .font(LogitFont.regular_14_140.font))
                     .foregroundColor(.gray300)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.primary20)
+                    )
 
                 Spacer()
 
@@ -47,17 +55,17 @@ struct OnboardingView: View {
                     Button("건너뛰기") {
                         appState.completeOnboarding()
                     }
-                    .typo(.regular_15)
-                    .foregroundColor(.gray300)
+                    .typo(.regular_18)
+                    .foregroundColor(.gray200)
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.top, 16)
+            .padding(.top, 17)
 
             // step 콘텐츠
             stepContent
                 .transition(.opacity.combined(with: .move(edge: .trailing)))
-                .padding(.bottom, 52.adjustedHeight + 45)
+                .padding(.bottom, 52.adjustedHeight + 10)
         }
         .fillScreen()
         .background(.white)
@@ -122,7 +130,7 @@ struct OnboardingView: View {
 
             // 혼합 스타일 텍스트
             textContent()
-                .padding(.top, 12.adjustedHeight)
+                .padding(.top, 13)
                 .padding(.horizontal, 20)
 
             // 전체 이미지 (텍스트 아래~버튼 위 공간 채움)
@@ -130,7 +138,6 @@ struct OnboardingView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 20.adjustedHeight)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
