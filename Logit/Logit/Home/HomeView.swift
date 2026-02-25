@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = HomeViewModel()
-    
+
     var body: some View {
         VStack(spacing: 0) {
             HomeHeaderView()
@@ -25,7 +25,9 @@ struct HomeView: View {
                         projects: viewModel.projects,
                         isLoading: viewModel.isLoading,
                         onDelete: { projectId in
-                            Task { await viewModel.deleteProject(projectId: projectId) }
+                            appState.requestDeleteConfirmation {
+                                Task { await viewModel.deleteProject(projectId: projectId) }
+                            }
                         }
                     )
                     .padding(.top, 43.adjustedLayout)

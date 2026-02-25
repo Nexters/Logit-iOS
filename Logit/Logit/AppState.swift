@@ -13,6 +13,18 @@ class AppState: ObservableObject {
     @Published var isShowingAddFlow: Bool = false
     @Published var isShowingSettings = false
     @Published var selectedProjectId: String?
+    @Published var isShowingDeleteAlert: Bool = false
+    var onDeleteConfirm: (() -> Void)?
+
+    func requestDeleteConfirmation(onConfirm: @escaping () -> Void) {
+        onDeleteConfirm = onConfirm
+        isShowingDeleteAlert = true
+    }
+
+    func dismissDeleteAlert() {
+        isShowingDeleteAlert = false
+        onDeleteConfirm = nil
+    }
 
     enum AppPhase {
         case splash

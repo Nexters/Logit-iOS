@@ -151,6 +151,7 @@ struct CoverLetterWorkspaceView: View {
 
             // 하단 dimmed 영역 — 탭하면 저장 후 닫기
             Color.black.opacity(0.4)
+                .ignoresSafeArea(edges: .bottom)
                 .onTapGesture {
                     dismissQuestionDetail()
                 }
