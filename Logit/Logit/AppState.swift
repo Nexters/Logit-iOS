@@ -16,6 +16,24 @@ class AppState: ObservableObject {
     @Published var isShowingDeleteAlert: Bool = false
     var onDeleteConfirm: (() -> Void)?
 
+    private let tokenManager: TokenManager
+    private let authRepository: AuthRepository
+
+    init(
+        tokenManager: TokenManager = .shared,
+        authRepository: AuthRepository = DefaultAuthRepository()
+    ) {
+        self.tokenManager = tokenManager
+        self.authRepository = authRepository
+    }
+
+    enum AppPhase {
+        case splash
+        case login
+        case onboarding
+        case main
+    }
+
     func requestDeleteConfirmation(onConfirm: @escaping () -> Void) {
         onDeleteConfirm = onConfirm
         isShowingDeleteAlert = true
@@ -26,85 +44,29 @@ class AppState: ObservableObject {
         onDeleteConfirm = nil
     }
 
-    enum AppPhase {
-        case splash
-        case login
-        case onboarding
-        case main
-    }
-
-    // Mock용 상태
-    private var mockAccessToken: String?
-    private var mockIsRegistrationComplete: Bool = false
-
-    // 테스트용 초기화
-    init(mockScenario: MockScenario = .noToken) {
-        switch mockScenario {
-        case .noToken:
-            mockAccessToken = nil
-            mockIsRegistrationComplete = false
-
-        case .existingUser:
-            mockAccessToken = "mock_token_existing"
-            mockIsRegistrationComplete = true
-
-        case .newUser:
-            mockAccessToken = "mock_token_new"
-            mockIsRegistrationComplete = false
-        }
-    }
-
-    enum MockScenario {
-        case noToken  // 로그인 필요
-        case existingUser  // 바로 메인으로
-        case newUser  // 약관동의로
-    }
-
+    // Splash 후 Keychain 토큰 여부로 분기
     func checkAuthenticationStatus() {
-        // Splash 후 자동 로그인 체크
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let _ = self.mockAccessToken {
-                if self.mockIsRegistrationComplete {
-                    self.appPhase = .main
-                } else {
-                    // 신규 유저는 온보딩으로
-                    self.appPhase = .onboarding
-                }
-            } else {
-                // 토큰이 없으면 로그인 화면
-                self.appPhase = .login
-            }
+        if tokenManager.isLoggedIn {
+            appPhase = .main
+        } else {
+            appPhase = .login
         }
-    }
-
-    // Mock 로그인 (기존 유저)
-    func mockLoginExistingUser() {
-        mockAccessToken = "mock_token_existing"
-        mockIsRegistrationComplete = true
-        appPhase = .main
-    }
-    
-    // Mock 로그인 (신규 유저)
-    func mockLoginNewUser() {
-        mockAccessToken = "mock_token_new"
-        mockIsRegistrationComplete = false
-        appPhase = .onboarding
     }
 
     // 온보딩 완료
     func completeOnboarding() {
-        mockIsRegistrationComplete = true
         appPhase = .main
     }
 
-    // 로그아웃
+    // 로그아웃 (API 호출 후 토큰 삭제)
     func logout() {
-        mockAccessToken = nil
-        mockIsRegistrationComplete = false
-        isShowingSettings = false
-        isShowingAddFlow = false
-        selectedProjectId = nil
-        appPhase = .login
+        Task {
+            try? await authRepository.logout()
+            isShowingSettings = false
+            isShowingAddFlow = false
+            selectedProjectId = nil
+            appPhase = .login
+        }
     }
 
     func startAddFlow() {

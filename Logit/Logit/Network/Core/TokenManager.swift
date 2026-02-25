@@ -15,7 +15,7 @@ class TokenManager {
     private let refreshTokenKey = "refreshToken"
     
     // 메모리 캐시 (매번 Keychain 접근 방지)
-    private var _accessToken: String? = Config.testAccessToken
+    private var _accessToken: String?
     private var _refreshToken: String?
     
     var accessToken: String? {
