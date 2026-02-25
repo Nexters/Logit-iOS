@@ -184,7 +184,7 @@ struct ExperienceSelectionSheet: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
         }
-        .presentationDetents([.large])
+        .presentationDetents([.fraction(720 / 812)])
         .presentationDragIndicator(.hidden)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
