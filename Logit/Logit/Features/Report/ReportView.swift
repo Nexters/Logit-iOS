@@ -191,7 +191,7 @@ struct ReportView: View {
             .padding(.top, 16)
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 64)
+        .padding(.bottom, (49 + 40).adjustedLayout)
         .background(Color.gray20)
     }
 }
