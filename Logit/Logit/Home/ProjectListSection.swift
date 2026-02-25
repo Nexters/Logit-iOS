@@ -86,7 +86,10 @@ struct ProjectListView: View {
         VStack(spacing: 0) {
             ForEach(projects.indices, id: \.self) { index in
                 ProjectCardCell(
-                    project: projects[index]
+                    project: projects[index],
+                    onDelete: {
+                        // TODO: 삭제 로직
+                    }
                 )
 
                 if index < projects.count - 1 {
@@ -103,6 +106,9 @@ struct ProjectListView: View {
 struct ProjectCardCell: View {
     @EnvironmentObject var appState: AppState
     let project: ProjectListItemResponse
+    var onDelete: (() -> Void)? = nil
+
+    @State private var showDeleteMenu = false
 
     private var isCompleted: Bool {
         project.totalQuestions > 0 && project.completedQuestions == project.totalQuestions
@@ -127,64 +133,110 @@ struct ProjectCardCell: View {
         else { return "마감" }
     }
 
-    var body: some View {
-        HStack(alignment: .center, spacing: 12.adjustedLayout) {
-            // 세로 막대기
-            RoundedRectangle(cornerRadius: 2.adjustedLayout)
-                .fill(.primary70)
-                .frame(width: 3.adjustedWidth, height: 60.adjustedHeight)
-
-            // 왼쪽 정보 (D-day + 날짜 / 회사명)
-            VStack(alignment: .leading, spacing: 12.adjustedLayout) {
-                HStack(spacing: 10.adjustedLayout) {
-                    Text(dDayText)
-                        .typo(.semibold_16)
-                        .foregroundStyle(dDayText == "마감" ? .gray200 : .primary200)
-                        .padding(.horizontal, 11.5.adjustedLayout)
-                        .padding(.vertical, 3.adjustedLayout)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8.adjustedLayout)
-                                .fill(dDayText == "마감" ? Color.gray70 : Color.primary50)
-                        )
-
-                    Text(project.updatedAt.toDateString(format: "yyyy.MM.dd"))
-                        .typo(.regular_14_140)
-                        .foregroundStyle(.gray100)
-                }
-
-                Text(project.company)
-                    .typo(.medium_15)
+    private var deleteMenuPopup: some View {
+        Button {
+            showDeleteMenu = false
+            onDelete?()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "trash")
+                    .font(.system(size: 14))
                     .foregroundStyle(.black)
-                    .lineLimit(1)
+
+                Text("삭제")
+                    .typo(.regular_14_140)
+                    .foregroundStyle(.black)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            // 팝업 외부 탭 시 닫기
+            if showDeleteMenu {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { showDeleteMenu = false }
             }
 
-            Spacer()
+            HStack(alignment: .center, spacing: 12.adjustedLayout) {
+                // 세로 막대기
+                RoundedRectangle(cornerRadius: 2.adjustedLayout)
+                    .fill(.primary70)
+                    .frame(width: 3.adjustedWidth, height: 60.adjustedHeight)
 
-            // 오른쪽: 완료 상태 아이콘 + 세로 말줄임 버튼
-            HStack(spacing: 8.adjustedLayout) {
-                Image(isCompleted ? "writeDone" : "writeComplete")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
-                    .padding(.trailing, 8.adjustedLayout)
+                // 왼쪽 정보 (D-day + 날짜 / 회사명)
+                VStack(alignment: .leading, spacing: 12.adjustedLayout) {
+                    HStack(spacing: 10.adjustedLayout) {
+                        Text(dDayText)
+                            .typo(.semibold_16)
+                            .foregroundStyle(dDayText == "마감" ? .gray200 : .primary200)
+                            .padding(.horizontal, 11.5.adjustedLayout)
+                            .padding(.vertical, 3.adjustedLayout)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8.adjustedLayout)
+                                    .fill(dDayText == "마감" ? Color.gray70 : Color.primary50)
+                            )
 
-                Button {
-                    // TODO: 메뉴 액션
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .rotationEffect(.degrees(90))
-                        .foregroundStyle(.gray300)
+                        Text(project.updatedAt.toDateString(format: "yyyy.MM.dd"))
+                            .typo(.regular_14_140)
+                            .foregroundStyle(.gray100)
+                    }
+
+                    Text(project.company)
+                        .typo(.medium_15)
+                        .foregroundStyle(.black)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                // 오른쪽: 완료 상태 아이콘 + 세로 말줄임 버튼
+                HStack(spacing: 8.adjustedLayout) {
+                    Image(isCompleted ? "writeDone" : "writeComplete")
+                        .resizable()
+                        .scaledToFit()
                         .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
+                        .padding(.trailing, 8.adjustedLayout)
+
+                    Button {
+                        showDeleteMenu.toggle()
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .rotationEffect(.degrees(90))
+                            .foregroundStyle(.gray300)
+                            .frame(width: 20.adjustedLayout, height: 20.adjustedLayout)
+                    }
+                }
+                .padding(.trailing, 8.adjustedLayout)
+            }
+            .padding(.horizontal, 20.adjustedLayout)
+            .padding(.vertical, 14.adjustedLayout)
+            .background(Color.white)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if showDeleteMenu {
+                    showDeleteMenu = false
+                } else {
+                    appState.openWorkspace(projectId: project.id)
                 }
             }
-            .padding(.trailing, 8.adjustedLayout)
-        }
-        .padding(.horizontal, 20.adjustedLayout)
-        .padding(.vertical, 14.adjustedLayout)
-        .background(Color.white)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            appState.openWorkspace(projectId: project.id)
+
+            // 삭제 팝업
+            if showDeleteMenu {
+                deleteMenuPopup
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding(.top, 44)
+                    .padding(.trailing, 20)
+                    .zIndex(1)
+            }
         }
     }
 }
