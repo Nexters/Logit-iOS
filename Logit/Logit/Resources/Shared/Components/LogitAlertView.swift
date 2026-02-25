@@ -18,6 +18,7 @@ struct LogitAlertView: View {
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture { onCancel() }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // 카드
             VStack(spacing: 0) {
@@ -75,5 +76,7 @@ struct LogitAlertView: View {
             .cornerRadius(16)
             .padding(.horizontal, 40)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
     }
 }

@@ -22,7 +22,6 @@ struct CoverLetterQuestionsView: View {
     }
 
     var body: some View {
-        ZStack {
         VStack(spacing: 0) {
             CustomNavigationBar(
                 title: "프로젝트 생성",
@@ -145,16 +144,16 @@ struct CoverLetterQuestionsView: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
-        }
-
-        if showCancelAlert {
-            LogitAlertView(
-                message: "프로젝트 생성을 취소하시겠어요?",
-                cancelTitle: "계속하기",
-                confirmTitle: "그만하기",
-                onCancel: { showCancelAlert = false },
-                onConfirm: { viewModel.shouldDismissFlow = true }
-            )
+        .overlay {
+            if showCancelAlert {
+                LogitAlertView(
+                    message: "프로젝트 생성을 취소하시겠어요?",
+                    cancelTitle: "계속하기",
+                    confirmTitle: "그만하기",
+                    onCancel: { showCancelAlert = false },
+                    onConfirm: { viewModel.shouldDismissFlow = true }
+                )
+            }
         }
     }
 }
