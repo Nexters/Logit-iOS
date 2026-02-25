@@ -359,6 +359,41 @@ struct ReportDonutChartView: View {
         data[index].value
     }
 
+    private struct LabelInfo {
+        let point: CGPoint
+        let value: Int
+        let color: Color
+    }
+
+    private func computeLabelPositions(size: CGSize) -> [LabelInfo] {
+        let totalValue = adjustedData.reduce(0) { $0 + $1.value }
+        guard totalValue > 0 else { return [] }
+
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+        let outerRadius = min(size.width, size.height) / 2
+        let innerRadius = outerRadius * 0.68
+        let labelRadius = (outerRadius + innerRadius) / 2
+
+        var infos: [LabelInfo] = []
+        var startAngle = -Double.pi / 2  // 12시 방향부터 시작
+
+        for (index, item) in adjustedData.enumerated() {
+            let sweepAngle = (item.value / totalValue) * 2 * Double.pi
+            let midAngle = startAngle + sweepAngle / 2
+
+            let x = center.x + CGFloat(cos(midAngle)) * labelRadius
+            let y = center.y + CGFloat(sin(midAngle)) * labelRadius
+
+            infos.append(LabelInfo(
+                point: CGPoint(x: x, y: y),
+                value: Int(originalValue(at: index)),
+                color: data[index].textColor
+            ))
+            startAngle += sweepAngle
+        }
+        return infos
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
@@ -370,13 +405,18 @@ struct ReportDonutChartView: View {
                     )
                     .foregroundStyle(item.color)
                     .cornerRadius(8)
-                    .annotation(position: .overlay) {
-                        Text("\(Int(originalValue(at: index)))")
-                            .typo(.bold_14)
-                            .foregroundStyle(item.textColor)
-                    }
                 }
                 .frame(size: 185)
+                .overlay {
+                    GeometryReader { geo in
+                        ForEach(Array(computeLabelPositions(size: geo.size).enumerated()), id: \.offset) { _, info in
+                            Text("\(info.value)")
+                                .typo(.bold_14)
+                                .foregroundStyle(info.color)
+                                .position(x: info.point.x, y: info.point.y)
+                        }
+                    }
+                }
 
                 VStack(spacing: 4) {
                     Text("경험키워드")
@@ -444,7 +484,7 @@ struct ReportHorizontalBarChartView: View {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.gray100)
+                                    .fill(Color.gray20)
                                     .frame(maxWidth: .infinity)
 
                                 RoundedRectangle(cornerRadius: 6)
