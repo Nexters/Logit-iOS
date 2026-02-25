@@ -63,13 +63,16 @@ class CoverLetterDetailViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let questionRepository: QuestionRepository
+    private let projectRepository: ProjectRepository
 
     init(
         project: ProjectListItemResponse,
-        questionRepository: QuestionRepository = DefaultQuestionRepository()
+        questionRepository: QuestionRepository = DefaultQuestionRepository(),
+        projectRepository: ProjectRepository = DefaultProjectRepository()
     ) {
         self.project = project
         self.questionRepository = questionRepository
+        self.projectRepository = projectRepository
     }
 
     func fetchQuestionList() async {
@@ -94,6 +97,10 @@ class CoverLetterDetailViewModel: ObservableObject {
     func selectQuestion(at index: Int) async {
         guard index < questionList.count else { return }
         await fetchQuestionDetail(questionId: questionList[index].id)
+    }
+
+    func deleteProject() async throws {
+        try await projectRepository.deleteProject(projectId: project.id)
     }
 
     private func fetchQuestionDetail(questionId: String) async {

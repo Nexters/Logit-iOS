@@ -11,18 +11,56 @@ struct CoverLetterDetailView: View {
     @StateObject private var viewModel: CoverLetterDetailViewModel
     @Environment(\.dismiss) var dismiss
     @State private var selectedQuestionIndex: Int = 0
+    @State private var showDeleteMenu = false
 
     init(project: ProjectListItemResponse) {
         _viewModel = StateObject(wrappedValue: CoverLetterDetailViewModel(project: project))
     }
 
+    private var deleteMenuPopup: some View {
+        Button {
+            showDeleteMenu = false
+            Task {
+                try? await viewModel.deleteProject()
+                dismiss()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "trash")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.black)
+
+                Text("삭제")
+                    .typo(.regular_14_140)
+                    .foregroundStyle(.black)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+
     var body: some View {
+        ZStack(alignment: .topTrailing) {
         VStack(spacing: 0) {
             CustomNavigationBar(
                 title: viewModel.project.company,
                 showBackButton: true,
                 onBackTapped: { dismiss() }
-            )
+            ) {
+                Button {
+                    showDeleteMenu.toggle()
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
+                        .foregroundStyle(.gray300)
+                        .frame(width: 24, height: 24)
+                }
+            }
 
             // 문항 탭 바
             if !viewModel.questionList.isEmpty {
@@ -86,6 +124,20 @@ struct CoverLetterDetailView: View {
         .navigationBarHidden(true)
         .task {
             await viewModel.fetchQuestionList()
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if showDeleteMenu { showDeleteMenu = false }
+        }
+        }
+
+        // 삭제 팝업
+        if showDeleteMenu {
+            deleteMenuPopup
+                .padding(.top, 44)
+                .padding(.trailing, 16)
+                .zIndex(1)
+        }
         }
     }
 }
