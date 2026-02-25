@@ -10,7 +10,6 @@ import SwiftUI
 @MainActor
 class AppState: ObservableObject {
     @Published var appPhase: AppPhase = .splash
-    @Published var isShowingSignUpSheet: Bool = false
     @Published var isShowingAddFlow: Bool = false
     @Published var isShowingSettings = false
     @Published var selectedProjectId: String?
@@ -18,6 +17,7 @@ class AppState: ObservableObject {
     enum AppPhase {
         case splash
         case login
+        case onboarding
         case main
     }
 
@@ -51,14 +51,12 @@ class AppState: ObservableObject {
     func checkAuthenticationStatus() {
         // Splash 후 자동 로그인 체크
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let token = self.mockAccessToken {
-                // 토큰이 있으면 회원가입 완료 여부 확인
+            if let _ = self.mockAccessToken {
                 if self.mockIsRegistrationComplete {
                     self.appPhase = .main
                 } else {
-                    // 신규 유저는 로그인 화면에서 시트 표시
-                    self.appPhase = .login
-                    self.isShowingSignUpSheet = true
+                    // 신규 유저는 온보딩으로
+                    self.appPhase = .onboarding
                 }
             } else {
                 // 토큰이 없으면 로그인 화면
@@ -78,13 +76,12 @@ class AppState: ObservableObject {
     func mockLoginNewUser() {
         mockAccessToken = "mock_token_new"
         mockIsRegistrationComplete = false
-        isShowingSignUpSheet = false
+        appPhase = .onboarding
     }
 
-    // 회원가입 완료
-    func completeRegistration() {
+    // 온보딩 완료
+    func completeOnboarding() {
         mockIsRegistrationComplete = true
-        isShowingSignUpSheet = false
         appPhase = .main
     }
 

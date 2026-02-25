@@ -133,7 +133,7 @@ struct LoginView: View {
         .onChange(of: viewModel.loginResult) { _, result in
             guard let result else { return }
             if result.isNewUser {
-                appState.isShowingSignUpSheet = true
+                appState.appPhase = .onboarding
             } else {
                 appState.appPhase = .main
             }
