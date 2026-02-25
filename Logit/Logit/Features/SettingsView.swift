@@ -41,7 +41,7 @@ struct SettingsView: View {
 
             // 구분선
             Rectangle()
-                .fill(Color.gray100)
+                .fill(Color.gray50)
                 .frame(height: 2)
                 .padding(.top, 26)
 
@@ -65,6 +65,7 @@ struct SettingsView: View {
 
                 Toggle("", isOn: $isNotificationEnabled)
                     .labelsHidden()
+                    .tint(Color.gray100)
                     .scaleEffect(0.8)
             }
             .padding(.horizontal, 20)
@@ -72,7 +73,7 @@ struct SettingsView: View {
 
             // 구분선
             Rectangle()
-                .fill(Color.gray100)
+                .fill(Color.gray50)
                 .frame(height: 2)
                 .padding(.top, 34)
 
@@ -104,16 +105,22 @@ struct SettingsView: View {
 
             Spacer()
         }
+        .overlay {
+            if showLogoutAlert {
+                LogitAlertView(
+                    message: "로그아웃 하시겠어요?",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "로그아웃",
+                    onCancel: { showLogoutAlert = false },
+                    onConfirm: {
+                        showLogoutAlert = false
+                        Task { await viewModel.logout() }
+                    }
+                )
+            }
+        }
         .task {
             await viewModel.fetchCurrentUser()
-        }
-        .alert("로그아웃", isPresented: $showLogoutAlert) {
-            Button("취소", role: .cancel) { }
-            Button("로그아웃", role: .destructive) {
-                Task { await viewModel.logout() }
-            }
-        } message: {
-            Text("정말 로그아웃 하시겠어요?")
         }
         .alert("오류", isPresented: Binding(
             get: { viewModel.logoutError != nil },
