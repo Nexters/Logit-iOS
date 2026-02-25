@@ -13,7 +13,8 @@ struct ProjectListSection: View {
     let projects: [ProjectListItemResponse]
     let isLoading: Bool
     var onDelete: ((String) -> Void)? = nil
-    
+    @Binding var openMenuProjectId: String?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8.adjustedLayout) {
             // 헤더
@@ -21,11 +22,11 @@ struct ProjectListSection: View {
                 Text("프로젝트 목록")
                     .typo(.bold_18)
                     .foregroundStyle(.black)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 20.adjustedLayout)
-            
+
             // 컨텐츠
             if isLoading {
                 // 로딩 중
@@ -33,7 +34,7 @@ struct ProjectListSection: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.vertical, 60.adjustedLayout)
             } else if hasProjects {
-                ProjectListView(projects: projects, onDelete: onDelete)
+                ProjectListView(projects: projects, openMenuProjectId: $openMenuProjectId, onDelete: onDelete)
                     .padding(.top, 8.adjustedLayout)
             } else {
                 ProjectEmptyView()
@@ -82,6 +83,7 @@ struct ProjectEmptyView: View {
 
 struct ProjectListView: View {
     let projects: [ProjectListItemResponse]
+    @Binding var openMenuProjectId: String?
     var onDelete: ((String) -> Void)? = nil
 
     var body: some View {
@@ -89,6 +91,11 @@ struct ProjectListView: View {
             ForEach(projects.indices, id: \.self) { index in
                 ProjectCardCell(
                     project: projects[index],
+                    isMenuOpen: openMenuProjectId == projects[index].id,
+                    onMenuToggle: {
+                        openMenuProjectId = openMenuProjectId == projects[index].id ? nil : projects[index].id
+                    },
+                    onMenuClose: { openMenuProjectId = nil },
                     onDelete: { onDelete?(projects[index].id) }
                 )
 
@@ -106,9 +113,10 @@ struct ProjectListView: View {
 struct ProjectCardCell: View {
     @EnvironmentObject var appState: AppState
     let project: ProjectListItemResponse
+    var isMenuOpen: Bool = false
+    var onMenuToggle: (() -> Void)? = nil
+    var onMenuClose: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
-
-    @State private var showDeleteMenu = false
 
     private var isCompleted: Bool {
         project.totalQuestions > 0 && project.completedQuestions == project.totalQuestions
@@ -135,7 +143,7 @@ struct ProjectCardCell: View {
 
     private var deleteMenuPopup: some View {
         Button {
-            showDeleteMenu = false
+            onMenuClose?()
             onDelete?()
         } label: {
             HStack(spacing: 8) {
@@ -160,10 +168,10 @@ struct ProjectCardCell: View {
     var body: some View {
         ZStack {
             // 팝업 외부 탭 시 닫기
-            if showDeleteMenu {
+            if isMenuOpen {
                 Color.clear
                     .contentShape(Rectangle())
-                    .onTapGesture { showDeleteMenu = false }
+                    .onTapGesture { onMenuClose?() }
             }
 
             HStack(alignment: .center, spacing: 12.adjustedLayout) {
@@ -207,7 +215,7 @@ struct ProjectCardCell: View {
                         .padding(.trailing, 8.adjustedLayout)
 
                     Button {
-                        showDeleteMenu.toggle()
+                        onMenuToggle?()
                     } label: {
                         Image(systemName: "ellipsis")
                             .rotationEffect(.degrees(90))
@@ -222,15 +230,15 @@ struct ProjectCardCell: View {
             .background(Color.white)
             .contentShape(Rectangle())
             .onTapGesture {
-                if showDeleteMenu {
-                    showDeleteMenu = false
+                if isMenuOpen {
+                    onMenuClose?()
                 } else {
                     appState.openWorkspace(projectId: project.id)
                 }
             }
 
             // 삭제 팝업
-            if showDeleteMenu {
+            if isMenuOpen {
                 deleteMenuPopup
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     .padding(.top, 44)
