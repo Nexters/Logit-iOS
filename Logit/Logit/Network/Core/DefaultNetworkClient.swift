@@ -167,10 +167,12 @@ class DefaultNetworkClient: NetworkClient {
                 throw APIError.unauthorized(message: "Refresh token이 없습니다.")
             }
 
-            let request = try createURLRequest(
+            // API 스펙: Authorization: Bearer {refresh_token} 헤더로 요청
+            var request = try createURLRequest(
                 endpoint: AuthEndpoint.refreshToken,
-                body: RefreshTokenRequest(refreshToken: refreshToken)
+                body: nil
             )
+            request.setValue("Bearer \(refreshToken)", forHTTPHeaderField: "Authorization")
 
             let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -179,10 +181,12 @@ class DefaultNetworkClient: NetworkClient {
                 throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다.")
             }
 
+            // 서버가 새 access token + refresh token 모두 body로 반환
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-            tokenManager.updateAccessToken(tokenResponse.accessToken)
             if let newRefresh = tokenResponse.refreshToken {
                 tokenManager.saveTokens(access: tokenResponse.accessToken, refresh: newRefresh)
+            } else {
+                tokenManager.updateAccessToken(tokenResponse.accessToken)
             }
         }
 
@@ -201,10 +205,6 @@ class DefaultNetworkClient: NetworkClient {
     }
 }
 
-
-struct RefreshTokenRequest: Encodable {
-    let refreshToken: String
-}
 
 struct TokenResponse: Decodable {
     let accessToken: String
