@@ -42,11 +42,10 @@ struct ExperienceListView: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.experiences, id: \.id) { experience in
-                            ExperienceListCell(experience: experience)
-                                .onTapGesture {
-                                    selectedExperienceId = experience.id
-                                }
-                                .onAppear {
+                            ExperienceListCell(experience: experience, onTap: {
+                                selectedExperienceId = experience.id
+                            })
+                            .onAppear {
                                     // 마지막에서 3개 전에 미리 로드
                                     if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
                                        lastIndex >= viewModel.experiences.count - 3 {
@@ -187,7 +186,7 @@ struct EmptyExperienceView: View {
         .offset(y: -10.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 60.adjustedLayout)
-        .background(.white)
+        .background(.gray20)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
     }
@@ -195,7 +194,10 @@ struct EmptyExperienceView: View {
 
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
-    
+    var onTap: (() -> Void)? = nil
+
+    @State private var showMenu = false
+
     // 태그 파싱 (쉼표로 분리)
     private var parsedTags: [String] {
         experience.tags
@@ -203,12 +205,56 @@ struct ExperienceListCell: View {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
     }
-    
+
     // Category를 짧은 이름으로 변환
     private var displayCategory: String {
         CompetencyMapper.toDisplayTitle(experience.category)
     }
-    
+
+    private var cellMenuPopup: some View {
+        VStack(spacing: 0) {
+            Button {
+                showMenu = false
+                print("수정하기")
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("수정")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+
+            Divider()
+
+            Button {
+                showMenu = false
+                print("삭제하기")
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("삭제")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+        }
+        .fixedSize()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 상단: 제목 + 메뉴 버튼
@@ -221,7 +267,7 @@ struct ExperienceListCell: View {
                 Spacer()
 
                 Button {
-                    // TODO: 메뉴 액션
+                    showMenu.toggle()
                 } label: {
                     Image(systemName: "ellipsis")
                         .rotationEffect(.degrees(90))
@@ -250,6 +296,17 @@ struct ExperienceListCell: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray70, lineWidth: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if showMenu { showMenu = false } else { onTap?() }
+        }
+        .overlay(alignment: .topTrailing) {
+            if showMenu {
+                cellMenuPopup
+                    .alignmentGuide(.top) { d in d[.bottom] - 44 }
+                    .padding(.trailing, 16)
+            }
+        }
     }
 }
 
