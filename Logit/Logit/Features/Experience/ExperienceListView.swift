@@ -35,7 +35,7 @@ struct ExperienceListView: View {
                 ProgressView()
                 Spacer()
             } else if viewModel.experiences.isEmpty {
-                EmptyExperienceView {
+                EmptyExperienceView(backgroundColor: .gray20) {
                     showExperienceAddFlow = true
                 }
             } else {
@@ -157,19 +157,20 @@ struct ExperienceCountLabel: View {
 
 struct EmptyExperienceView: View {
     let onSelectExperience: () -> Void
-    
+    var backgroundColor: Color = .white
+
     var body: some View {
         VStack(spacing: 0) {
             Image("app_status_empty2")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
-            
+
             Text("등록된 경험이 없어요")
                 .typo(.medium_15)
                 .foregroundStyle(.gray100)
                 .padding(.top, 16.adjustedLayout)
-            
+
             Button {
                 onSelectExperience()
             } label: {
@@ -183,10 +184,10 @@ struct EmptyExperienceView: View {
             }
             .padding(.top, 17.adjustedLayout)
         }
-        .offset(y: -10.adjustedLayout)
+        .offset(y: -50.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 60.adjustedLayout)
-        .background(.gray20)
+        .background(backgroundColor)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
     }

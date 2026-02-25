@@ -43,14 +43,31 @@ struct CoverLetterListView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.projects.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.secondary)
-                        Text("등록된 자기소개서가 없습니다")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.secondary)
+                    VStack(spacing: 0) {
+                        Image("app_status_empty2")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
+
+                        Text("자기소개서를 생성해보세요")
+                            .typo(.medium_15)
+                            .foregroundStyle(.gray100)
+                            .padding(.top, 16.adjustedLayout)
+
+                        Button {
+                            appState.startAddFlow()
+                        } label: {
+                            Text("자기소개서 작성")
+                                .typo(.medium_15)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 24.adjustedLayout)
+                                .padding(.vertical, 7.5.adjustedLayout)
+                                .background(.primary100)
+                                .cornerRadius(8.adjustedLayout)
+                        }
+                        .padding(.top, 17.adjustedLayout)
                     }
+                    .offset(y: -50.adjustedLayout)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
