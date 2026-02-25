@@ -12,12 +12,13 @@ struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var isNotificationEnabled: Bool = false
     @State private var showLogoutAlert: Bool = false
+    @State private var showFeatureToast: Bool = false
     @StateObject private var viewModel = SettingsViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
-                title: "설정",
+                title: "",
                 showBackButton: true,
                 onBackTapped: { dismiss() }
             )
@@ -67,6 +68,15 @@ struct SettingsView: View {
                     .labelsHidden()
                     .tint(Color.gray100)
                     .scaleEffect(0.8)
+                    .onChange(of: isNotificationEnabled) { _, newValue in
+                        if newValue {
+                            isNotificationEnabled = false
+                            withAnimation(.spring()) { showFeatureToast = true }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation { showFeatureToast = false }
+                            }
+                        }
+                    }
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)
@@ -104,6 +114,14 @@ struct SettingsView: View {
             .padding(.top, 14)
 
             Spacer()
+        }
+        .overlay(alignment: .bottom) {
+            if showFeatureToast {
+                ToastView(message: "준비중인 기능입니다")
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .overlay {
             if showLogoutAlert {
