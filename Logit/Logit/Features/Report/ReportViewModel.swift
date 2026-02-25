@@ -239,6 +239,25 @@ class ReportViewModel: ObservableObject {
         summary?.typeCounts.sorted { $0.count < $1.count }.first?.type ?? ""
     }
 
+    private static let typeDescriptions: [String: String] = [
+        "아르바이트": "서비스 현장에서 고객과 직접 소통하며 쌓은 실전 감각이 돋보입니다.",
+        "정규직": "풍부한 실무 경험을 바탕으로 조직의 성과를 이끌어온 준비된 전문가입니다.",
+        "인턴": "실무 현장을 직접 경험하며 조직의 시스템과 업무 흐름을 빠르게 익혔습니다.",
+        "계약직": "주어진 기간 내에 목표를 완수하며 실무 역량과 책임감을 입증해왔습니다.",
+        "봉사활동": "사회적 가치를 실현하고 타인을 배려하며 쌓은 선한 영향력이 느껴집니다.",
+        "동아리활동": "동료들과 공동의 목표를 향해 협력하며 팀워크의 가치를 경험했습니다.",
+        "연구활동": "특정 분야를 깊이 있게 탐구하고 분석하여 학술적 전문성을 쌓아왔습니다.",
+        "수상경력": "치열한 경쟁 속에서 남다른 성과를 내며 객관적인 역량의 우수성을 증명했습니다.",
+        "군복무관련": "엄격한 환경 속에서도 맡은 임무를 성실히 수행하며 강한 책임감을 길렀습니다.",
+        "개인활동": "스스로 목표를 설정하고 끝까지 완수해낸 자기주도적 실행력이 훌륭합니다."
+    ]
+
+    /// 가로 바 차트 하단 설명 멘트 - 최다 경험 유형에 맞는 문구
+    var horizontalBarChartDescription: String {
+        guard !topType.isEmpty else { return "" }
+        return Self.typeDescriptions[topType] ?? "다양한 경험을 통해 폭넓은 역량을 쌓아온 인재입니다."
+    }
+
     /// 가장 적은 역량 카테고리 (표시용)
     var weakestCategoryDisplay: String {
         let weakest = summary?.categoryCounts.sorted { $0.count < $1.count }.first?.category ?? ""
@@ -248,6 +267,46 @@ class ReportViewModel: ObservableObject {
     /// 가장 많은 해시태그
     var topTag: String {
         summary?.tagCounts.sorted { $0.count > $1.count }.first?.tag ?? ""
+    }
+
+    // MARK: - Tag Group
+
+    private static let tagGroups: [(group: String, keywords: [String])] = [
+        ("IT/기술", ["개발", "프로그래밍", "코딩", "swift", "python", "java", "javascript", "react", "ios", "android", "백엔드", "프론트엔드", "데이터", "ai", "ml", "서버", "앱", "웹", "sql", "알고리즘", "기술", "엔지니어링", "devops", "클라우드", "인프라"]),
+        ("디자인/예술", ["디자인", "ui", "ux", "figma", "포토샵", "일러스트", "그래픽", "영상", "사진", "드로잉", "시각", "예술", "창작", "편집"]),
+        ("기획/비즈니스", ["기획", "pm", "프로젝트", "비즈니스", "전략", "제안", "시장조사", "사업", "서비스기획"]),
+        ("마케팅/영업", ["마케팅", "영업", "sns", "광고", "콘텐츠", "브랜딩", "홍보", "세일즈", "pr", "퍼포먼스"]),
+        ("운영/지원", ["운영", "cs", "고객", "관리", "지원", "총무", "인사", "재무", "회계", "행정", "cs관리"])
+    ]
+
+    private static func tagGroup(for tag: String) -> String {
+        let lowercased = tag.lowercased()
+        for (group, keywords) in tagGroups {
+            if keywords.contains(where: { lowercased.contains($0) }) {
+                return group
+            }
+        }
+        return "공통태그"
+    }
+
+    /// 도넛 차트 하단 설명 멘트 - 최다 태그의 그룹에 맞는 문구
+    var donutChartDescription: String {
+        guard !topTag.isEmpty else { return "자주 사용하는 키워드를 확인해보세요" }
+        let group = Self.tagGroup(for: topTag)
+        switch group {
+        case "IT/기술":
+            return "\(topTag) 기술을 바탕으로 복잡한 문제를 해결하는 기술 전문가입니다."
+        case "디자인/예술":
+            return "\(topTag)를 통해 사용자 중심의 가치를 시각적으로 구현하는 디자이너입니다."
+        case "기획/비즈니스":
+            return "\(topTag) 역량을 발휘하여 비즈니스 모델과 서비스의 방향을 결정하는 기획자입니다."
+        case "마케팅/영업":
+            return "\(topTag) 지표를 기반으로 고객의 마음을 사로잡고 성과를 만들어내는 마케터입니다."
+        case "운영/지원":
+            return "\(topTag) 활동을 통해 서비스 안정성을 높이고 조직의 성장을 돕는 조율자입니다."
+        default:
+            return "업무의 기초가 되는 \(topTag) 역량이 탄탄하게 갖춰져 있습니다."
+        }
     }
 
     /// 프로필 카드 태그 목록: 상위 카테고리 제외한 나머지 최대 5개 (competencyTag 포함 총 6개)
@@ -260,16 +319,22 @@ class ReportViewModel: ObservableObject {
             .map { CompetencyMapper.toDisplayTitle($0.category) }
     }
 
-    /// 역량 설명 멘트
-    /// - 충족된 카테고리(count > 0)가 3개 이하: 경험 다양화 유도 멘트
-    /// - 4개 이상: 최다 카테고리 맞춤 설명
+    /// 역량 설명 멘트 - 가장 많이 집계된 카테고리에 맞는 문구
     var categoryDescription: String {
+        guard summary != nil else { return "" }
+        return Self.categoryDescriptions[topCategory] ?? "다양한 역량을 균형있게 보유한 인재예요."
+    }
+
+    /// 바 차트 하단 보완 멘트
+    /// - 집계된 카테고리가 3개 이하: 경험 다양화 유도 멘트
+    /// - 4개 이상: 최소 카테고리 보완 멘트
+    var barChartSubDescription: String {
         guard let summary else { return "" }
         let filledCount = summary.categoryCounts.filter { $0.count > 0 }.count
         if filledCount <= 3 {
-            return "현재 \(topCategoryDisplay) 관련 경험이 많은 편이에요. 경험 유형을 다양화하면 더 입체적인 자소서가 될 거예요!"
+            return "현재 \(weakestCategoryDisplay) 관련 경험이 적은 편이에요. 이 부분을 보완하면 더 입체적인 자소서가 될 거예요!"
         }
-        return Self.categoryDescriptions[topCategory] ?? "다양한 역량을 균형있게 보유한 인재예요."
+        return "\(weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!"
     }
 
     private static let categoryDescriptions: [String: String] = [

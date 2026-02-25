@@ -136,7 +136,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("\(viewModel.weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                Text(viewModel.barChartSubDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -155,7 +155,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("자주 사용하는 키워드를 확인해보세요")
+                Text(viewModel.donutChartDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -177,7 +177,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("\(viewModel.weakestType)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                Text(viewModel.horizontalBarChartDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
