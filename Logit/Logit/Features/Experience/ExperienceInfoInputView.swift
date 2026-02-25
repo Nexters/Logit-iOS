@@ -359,7 +359,7 @@ struct DateRangeInputView: View {
                 .typo(.regular_15)
                 .foregroundColor(.black)
                 .keyboardType(.numberPad)
-                .multilineTextAlignment(isOngoing ? .leading : .center)
+                .multilineTextAlignment(.leading)
                 .padding(.horizontal, 18)
                 .frame(height: 44)
                 .background(Color.clear)
