@@ -32,10 +32,29 @@ struct CoverLetterQuestionsView: View {
                     PageIndicator(currentPage: 2, totalPages: 2)
                         .padding(.top, 16)
                     
-                    Text("자기소개서 문항 입력")
-                        .typo(.bold_18)
-                        .padding(.top, 13.25)
-                    
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("자기소개서 문항 입력")
+                            .typo(.bold_18)
+
+                        Spacer()
+
+                        Button {
+                            viewModel.loadExampleQuestions()
+                        } label: {
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
+                        }
+                    }
+                    .padding(.top, 13.25)
+
                     Text("작성할 자기소개서 문항을 알려주세요")
                         .typo(.regular_15)
                         .foregroundColor(.gray300)
@@ -207,8 +226,13 @@ struct QuestionInputRow: View {
     }
 }
 
-struct QuestionItem: Identifiable,Hashable {
+struct QuestionItem: Identifiable, Hashable {
     let id = UUID()
     var title: String = ""
     var characterLimit: String = ""
+
+    init(title: String = "", characterLimit: String = "") {
+        self.title = title
+        self.characterLimit = characterLimit
+    }
 }

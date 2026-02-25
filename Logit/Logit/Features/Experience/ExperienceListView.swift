@@ -80,7 +80,7 @@ struct ExperienceListView: View {
                 }
             }
         }
-        .background(.gray20)
+        .background(.white)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
@@ -187,7 +187,7 @@ struct EmptyExperienceView: View {
         .offset(y: -10.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 60.adjustedLayout)
-        .background(.gray20)
+        .background(.white)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
     }

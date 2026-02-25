@@ -32,9 +32,20 @@ struct ReportView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.isEmpty {
-                EmptyExperienceView {
-                    showExperienceAddFlow = true
+                VStack(spacing: 0) {
+                    Text("\(viewModel.userName)님의 프로파일")
+                        .typo(.bold_20)
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 10)
+                        .padding(.leading, 20)
+
+                    EmptyExperienceView {
+                        showExperienceAddFlow = true
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.white)
             } else {
                 contentView
             }

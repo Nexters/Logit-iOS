@@ -47,5 +47,12 @@ struct HomeView: View {
                 }
             }
         }
+        .onChange(of: appState.isShowingAddFlow) { _, newValue in
+            if !newValue {
+                Task {
+                    await viewModel.fetchProjects()
+                }
+            }
+        }
     }
 }

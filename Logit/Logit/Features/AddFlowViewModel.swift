@@ -47,6 +47,23 @@ class AddFlowViewModel: ObservableObject {
        
     
     
+    func loadExampleQuestions() {
+        questions = [
+            QuestionItem(
+                title: "본인의 성장 과정과 해당 직무에 지원하게 된 동기를 기술하세요.",
+                characterLimit: "1000"
+            ),
+            QuestionItem(
+                title: "직무와 관련된 경험 또는 프로젝트를 통해 발휘한 역량을 설명하세요.",
+                characterLimit: "1000"
+            ),
+            QuestionItem(
+                title: "입사 후 이루고 싶은 목표와 포부를 작성하세요.",
+                characterLimit: "500"
+            )
+        ]
+    }
+
     func loadExampleData() {
         companyName = "카카오"
         jobPosition = "iOS 개발자"
