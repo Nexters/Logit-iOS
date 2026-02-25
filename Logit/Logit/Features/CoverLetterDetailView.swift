@@ -2,8 +2,6 @@
 //  CoverLetterDetailView.swift
 //  Logit
 //
-//  Created by 임재현 on 2/7/26.
-//
 
 import SwiftUI
 
@@ -45,7 +43,6 @@ struct CoverLetterDetailView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
         VStack(spacing: 0) {
             CustomNavigationBar(
                 title: viewModel.project.company,
@@ -125,19 +122,18 @@ struct CoverLetterDetailView: View {
         .task {
             await viewModel.fetchQuestionList()
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if showDeleteMenu { showDeleteMenu = false }
-        }
-        }
-
-        // 삭제 팝업
-        if showDeleteMenu {
-            deleteMenuPopup
-                .padding(.top, 44)
-                .padding(.trailing, 16)
-                .zIndex(1)
-        }
+        .overlay {
+            if showDeleteMenu {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .ignoresSafeArea()
+                    .onTapGesture { showDeleteMenu = false }
+                    .overlay(alignment: .topTrailing) {
+                        deleteMenuPopup
+                            .padding(.top, 44)
+                            .padding(.trailing, 16)
+                    }
+            }
         }
     }
 }
