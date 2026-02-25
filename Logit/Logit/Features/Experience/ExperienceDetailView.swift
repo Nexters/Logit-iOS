@@ -9,14 +9,69 @@ struct ExperienceDetailView: View {
     @StateObject private var viewModel: ExperienceDetailViewModel
     @Environment(\.dismiss) var dismiss
 
+    @State private var showMenu = false
+
     init(experienceId: String) {
         _viewModel = StateObject(
             wrappedValue: ExperienceDetailViewModel(experienceId: experienceId)
         )
     }
 
-    var body: some View {
+    private var ellipsisMenuPopup: some View {
         VStack(spacing: 0) {
+            Button {
+                showMenu = false
+                print("수정하기")
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("수정")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+
+            Divider()
+
+            Button {
+                showMenu = false
+                print("삭제하기")
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("삭제")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+        }
+        .fixedSize()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            // 팝업 외부 탭 시 닫기
+            if showMenu {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .ignoresSafeArea()
+                    .onTapGesture { showMenu = false }
+            }
+
+            VStack(spacing: 0) {
             // Navigation Bar
             HStack {
                 Button { dismiss() } label: {
@@ -26,7 +81,7 @@ struct ExperienceDetailView: View {
                         .frame(width: 44, height: 44)
                 }
                 Spacer()
-                Button { } label: {
+                Button { showMenu.toggle() } label: {
                     Image(systemName: "ellipsis")
                         .rotationEffect(.degrees(90))
                         .font(.system(size: 18))
@@ -122,11 +177,26 @@ struct ExperienceDetailView: View {
                     .foregroundColor(.gray300)
                 Spacer()
             }
-        }
-        .background(Color.white)
-        .navigationBarHidden(true)
-        .onAppear {
-            Task { await viewModel.fetchDetail() }
+            }
+            .background(Color.white)
+            .navigationBarHidden(true)
+            .onAppear {
+                Task { await viewModel.fetchDetail() }
+            }
+
+            // 수정/삭제 팝업
+            if showMenu {
+                VStack {
+                    HStack {
+                        Spacer()
+                        ellipsisMenuPopup
+                    }
+                    Spacer()
+                }
+                .padding(.top, 52)
+                .padding(.horizontal, 20)
+                .zIndex(1)
+            }
         }
     }
 
@@ -190,6 +260,49 @@ private struct ExperienceSTARSection: View {
     }
 }
 
+// MARK: - Flow Layout
+
+private struct TagFlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth, currentX > 0 {
+                currentY += rowHeight + spacing
+                currentX = 0
+                rowHeight = 0
+            }
+            currentX += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: maxWidth, height: currentY + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX = bounds.minX
+        var currentY = bounds.minY
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > bounds.maxX, currentX > bounds.minX {
+                currentY += rowHeight + spacing
+                currentX = bounds.minX
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
+            currentX += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
 // MARK: - 태그 Flow 레이아웃
 
 private struct ExperienceFlowTagsView: View {
@@ -201,43 +314,15 @@ private struct ExperienceFlowTagsView: View {
     }
 
     var body: some View {
-        let rows = makeRows()
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(rows.indices, id: \.self) { i in
-                HStack(spacing: 8) {
-                    ForEach(rows[i].indices, id: \.self) { j in
-                        let item = rows[i][j]
-                        ExperienceTag(
-                            text: item.text,
-                            icon: item.isCompetency ? item.text : nil,
-                            isCompetency: item.isCompetency
-                        )
-                    }
-                    Spacer()
-                }
+        TagFlowLayout(spacing: 8) {
+            ForEach(allTags.indices, id: \.self) { i in
+                let item = allTags[i]
+                ExperienceTag(
+                    text: item.text,
+                    icon: item.isCompetency ? item.text : nil,
+                    isCompetency: item.isCompetency
+                )
             }
         }
-    }
-
-    private func makeRows() -> [[(text: String, isCompetency: Bool)]] {
-        let maxWidth = UIScreen.main.bounds.width - 40
-        var rows: [[(text: String, isCompetency: Bool)]] = [[]]
-        var currentWidth: CGFloat = 0
-
-        for tag in allTags {
-            let charWidth: CGFloat = tag.text.unicodeScalars.first.map {
-                $0.value > 127 ? 14 : 8
-            } ?? 8
-            let tagWidth = CGFloat(tag.text.count) * charWidth + 28 + (tag.isCompetency ? 24 : 0)
-
-            if currentWidth + tagWidth + 8 > maxWidth, !rows.last!.isEmpty {
-                rows.append([tag])
-                currentWidth = tagWidth
-            } else {
-                rows[rows.count - 1].append(tag)
-                currentWidth += tagWidth + 8
-            }
-        }
-        return rows.filter { !$0.isEmpty }
     }
 }
