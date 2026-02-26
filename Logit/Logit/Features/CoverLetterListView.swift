@@ -30,7 +30,7 @@ struct CoverLetterListView: View {
                         }
                     }
                     
-                    Text("총 \(viewModel.projects.count)개")
+                    Text("\(viewModel.projects.count)개")
                         .typo(.regular_14_140)
                         .foregroundStyle(.gray200)
                         .padding(.top, 20)
@@ -140,10 +140,10 @@ private struct CoverLetterProjectCell: View {
             Spacer()
 
             Text(dDayText)
-                .typo(.semibold_12)
+                .typo(.semibold_16)
                 .foregroundStyle(isExpired ? .gray200 : .primary200)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, 21)
+                .padding(.vertical, 3)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
                         .fill(isExpired ? Color.gray20 : Color.primary20)

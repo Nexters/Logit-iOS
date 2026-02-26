@@ -186,16 +186,18 @@ struct ProjectCardCell: View {
                         Text(dDayText)
                             .typo(.semibold_16)
                             .foregroundStyle(dDayText == "마감" ? .gray200 : .primary200)
-                            .padding(.horizontal, 11.5.adjustedLayout)
+                            .padding(.horizontal, 21.adjustedLayout)
                             .padding(.vertical, 3.adjustedLayout)
                             .background(
                                 RoundedRectangle(cornerRadius: 8.adjustedLayout)
-                                    .fill(dDayText == "마감" ? Color.gray70 : Color.primary50)
+                                    .fill(dDayText == "마감" ? Color.gray20 : Color.primary20)
                             )
 
-                        Text(project.updatedAt.toDateString(format: "yyyy.MM.dd"))
-                            .typo(.regular_14_140)
-                            .foregroundStyle(.gray100)
+                        if let dueDateStr = project.dueDate {
+                            Text(dueDateStr.toDateString(format: "yyyy.MM.dd"))
+                                .typo(.regular_14_140)
+                                .foregroundStyle(.gray100)
+                        }
                     }
 
                     Text("\(project.company) \(project.jobPosition)")

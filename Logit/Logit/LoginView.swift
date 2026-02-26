@@ -118,7 +118,7 @@ struct LoginView: View {
                     .padding(.top, 26)
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 8)
+            .padding(.bottom, 20)
             .frame(maxHeight: .infinity, alignment: .bottom)
 
             // 로딩 오버레이

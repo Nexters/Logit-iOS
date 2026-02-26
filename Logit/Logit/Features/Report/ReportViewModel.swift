@@ -263,6 +263,12 @@ class ReportViewModel: ObservableObject {
         let weakest = summary?.categoryCounts.sorted { $0.count < $1.count }.first?.category ?? ""
         return CompetencyMapper.toDisplayTitle(weakest)
     }
+    
+    /// 가장 많은 역량 카테고리 (표시용)
+    var strongCategoryDisplay: String {
+        topCategoryDisplay
+    }
+
 
     /// 가장 많은 해시태그
     var topTag: String {
@@ -332,7 +338,7 @@ class ReportViewModel: ObservableObject {
         guard let summary else { return "" }
         let filledCount = summary.categoryCounts.filter { $0.count > 0 }.count
         if filledCount <= 3 {
-            return "현재 \(weakestCategoryDisplay) 관련 경험이 적은 편이에요. 이 부분을 보완하면 더 입체적인 자소서가 될 거예요!"
+            return "현재 경험 유형이 \(strongCategoryDisplay) 중심으로 구성되어 있어요. 경험 유형을 다양화하면 더 입체적인 자소서가 될 거에요!"
         }
         return "\(weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!"
     }
