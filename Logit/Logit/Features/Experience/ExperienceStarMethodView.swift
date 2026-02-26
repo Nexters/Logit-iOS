@@ -79,10 +79,7 @@ struct ExperienceStarMethodView: View {
                             .contentShape(Rectangle())
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(
-                                        isMethodDropdownOpen ? Color.primary100 : Color.gray100,
-                                        lineWidth: 1
-                                    )
+                                    .stroke(Color.gray100, lineWidth: 1)
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -100,26 +97,14 @@ struct ExperienceStarMethodView: View {
                                         HStack {
                                             Text(method.displayName)
                                                 .typo(.regular_15)
-                                                .foregroundColor(
-                                                    viewModel.selectedMethod == method ? .primary100 : .black
-                                                )
+                                                .foregroundColor(.black)
                                             Spacer()
-                                            if viewModel.selectedMethod == method {
-                                                Image(systemName: "checkmark")
-                                                    .font(.system(size: 13))
-                                                    .foregroundColor(.primary100)
-                                            }
                                         }
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 13)
                                         .contentShape(Rectangle())
                                     }
                                     .buttonStyle(PlainButtonStyle())
-
-                                    if method != ExperienceMethod.allCases.last {
-                                        Divider()
-                                            .padding(.horizontal, 16)
-                                    }
                                 }
                             }
                             .background(Color.white)
@@ -217,33 +202,37 @@ struct ExperienceStarMethodView: View {
                     
                     Spacer()
                         .frame(minHeight: 46.75)
-                    
-                    Button {
-                        Task {
-                            await viewModel.saveExperience()
-                        }
-                    } label: {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .tint(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                        } else {
-                            Text("경험등록")
-                                .typo(.bold_18)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                        }
-                    }
-                    .background(isFormValid && !viewModel.isLoading ? Color.primary100 : Color.gray100)
-                    .cornerRadius(12)
-                    .disabled(!isFormValid || viewModel.isLoading)
-                    .padding(.bottom, 10)
                 }
                 .padding(.horizontal, 20)
             }
             .scrollToMinDistance(minDisntance: 32)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    Task {
+                        await viewModel.saveExperience()
+                    }
+                } label: {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    } else {
+                        Text("경험등록")
+                            .typo(.bold_18)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                }
+                .background(isFormValid && !viewModel.isLoading ? Color.primary100 : Color.gray100)
+                .cornerRadius(12)
+                .disabled(!isFormValid || viewModel.isLoading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
+                .padding(.top, 8)
+                .background(Color.white)
+            }
         }
         .alert("오류", isPresented: $viewModel.showError) {
             Button("확인", role: .cancel) { }
