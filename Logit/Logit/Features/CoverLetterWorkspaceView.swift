@@ -487,7 +487,7 @@ struct CoverLetterWorkspaceView: View {
         .dismissKeyboardOnTap()
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showEditQuestions) {
-            EditQuestionsView(viewModel: viewModel)
+            AddQuestionSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $showExperienceSelection) {
             if let question = currentQuestion {

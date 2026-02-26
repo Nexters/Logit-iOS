@@ -143,7 +143,7 @@ struct OnboardingView: View {
     }
 }
 
-#Preview {
-    OnboardingView()
-        .environmentObject(AppState(mockScenario: .newUser))
-}
+    //#Preview {
+    //    OnboardingView()
+    //        .environmentObject(AppState(mockScenario: .newUser))
+    //}
