@@ -12,6 +12,7 @@ struct ExperienceListView: View {
     @StateObject private var viewModel: ExperienceListViewModel
     @State private var showExperienceAddFlow = false
     @State private var selectedExperienceId: String? = nil
+    @State private var experienceToEdit: ExperienceResponse? = nil
 
     init() {
         let networkClient = DefaultNetworkClient()
@@ -46,6 +47,7 @@ struct ExperienceListView: View {
                             ExperienceListCell(
                                 experience: experience,
                                 onTap: { selectedExperienceId = experience.id },
+                                onEdit: { experienceToEdit = experience },
                                 onDelete: {
                                     appState.requestDeleteConfirmation(
                                         message: "경험을 삭제하시겠어요?",
@@ -89,6 +91,11 @@ struct ExperienceListView: View {
                 Task { await viewModel.fetchExperiences() }
             }
         }
+        .fullScreenCover(item: $experienceToEdit) { experience in
+            ExperienceFlowCoordinator(experience: experience) {
+                Task { await viewModel.fetchExperiences() }
+            }
+        }
         .fullScreenCover(item: Binding(
             get: { selectedExperienceId.map { SelectedExperienceID(id: $0) } },
             set: { selectedExperienceId = $0?.id }
@@ -111,6 +118,8 @@ struct ExperienceListView: View {
 private struct SelectedExperienceID: Identifiable {
     let id: String
 }
+
+extension ExperienceResponse: Identifiable {}
 
 struct ExperienceListHeader: View {
     let onAddTapped: () -> Void
@@ -198,6 +207,7 @@ struct EmptyExperienceView: View {
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
     var onTap: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
 
     @State private var showMenu = false
@@ -219,7 +229,7 @@ struct ExperienceListCell: View {
         VStack(spacing: 0) {
             Button {
                 showMenu = false
-                print("수정하기")
+                onEdit?()
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")

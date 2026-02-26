@@ -53,16 +53,62 @@ class ExperienceFlowViewModel: ObservableObject {
     @Published var isOngoing: Bool = false
     
     var onComplete: (() -> Void)?
-    
+
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
     @Published var isExampleLoaded: Bool = false
-    
+
+    // 수정 모드
+    @Published var isEditMode: Bool = false
+    private var editingExperienceId: String? = nil
+
     private let experienceRepository: ExperienceRepository
-    
-    init(experienceRepository: ExperienceRepository) {
+
+    init(experienceRepository: ExperienceRepository, existingExperience: ExperienceResponse? = nil) {
         self.experienceRepository = experienceRepository
+        guard let experience = existingExperience else { return }
+
+        isEditMode = true
+        editingExperienceId = experience.id
+        experienceTitle = experience.title
+        experienceType = experience.experienceType
+        selectedMethod = ExperienceMethod(rawValue: experience.formatType ?? "STAR") ?? .star
+        selectedCompetency = experience.tags.isEmpty ? nil : experience.tags
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        for format in ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: experience.startDate) {
+                startDate = date
+                break
+            }
+        }
+        if let endDateStr = experience.endDate, !endDateStr.isEmpty {
+            for format in ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
+                formatter.dateFormat = format
+                if let date = formatter.date(from: endDateStr) {
+                    endDate = date
+                    break
+                }
+            }
+            isOngoing = false
+        } else {
+            isOngoing = true
+        }
+
+        situation = experience.situation ?? ""
+        task = experience.task ?? ""
+        action = experience.action ?? ""
+        result = experience.result ?? ""
+        problem = experience.problem ?? ""
+        solution = experience.solution ?? ""
+        insight = experience.insight ?? ""
+        content = experience.content ?? ""
+
+        path.append(ExperienceFlowRoute.starMethod)
     }
     
     // Navigation 함수들
@@ -77,86 +123,93 @@ class ExperienceFlowViewModel: ObservableObject {
     }
     
     func saveExperience() async {
-         isLoading = true
-         errorMessage = nil
-         
-         do {
-             // Request 생성
-             let request: CreateExperienceRequest
-             let commonEndDate = isOngoing ? nil : (endDate?.toString() ?? "")
-             let commonStartDate = startDate?.toString() ?? ""
+        isLoading = true
+        errorMessage = nil
 
-             switch selectedMethod {
-             case .star:
-                 request = CreateExperienceRequest(
-                     endDate: commonEndDate,
-                     experienceType: experienceType ?? "",
-                     formatType: "STAR",
-                     startDate: commonStartDate,
-                     tags: selectedCompetency ?? "",
-                     title: experienceTitle,
-                     situation: situation,
-                     task: task,
-                     action: action,
-                     result: result,
-                     problem: nil,
-                     solution: nil,
-                     insight: nil,
-                     content: nil
-                 )
-             case .psi:
-                 request = CreateExperienceRequest(
-                     endDate: commonEndDate,
-                     experienceType: experienceType ?? "",
-                     formatType: "PSI",
-                     startDate: commonStartDate,
-                     tags: selectedCompetency ?? "",
-                     title: experienceTitle,
-                     situation: nil,
-                     task: nil,
-                     action: nil,
-                     result: nil,
-                     problem: problem,
-                     solution: solution,
-                     insight: insight,
-                     content: nil
-                 )
-             case .free:
-                 request = CreateExperienceRequest(
-                     endDate: commonEndDate,
-                     experienceType: experienceType ?? "",
-                     formatType: "FREE",
-                     startDate: commonStartDate,
-                     tags: selectedCompetency ?? "",
-                     title: experienceTitle,
-                     situation: nil,
-                     task: nil,
-                     action: nil,
-                     result: nil,
-                     problem: nil,
-                     solution: nil,
-                     insight: nil,
-                     content: content
-                 )
-             }
-             
-             // API 호출
-             let response: ExperienceResponse = try await experienceRepository.createExperience(request)
-             
-             print("경험 등록 성공: \(response)")
-             
-             // 성공하면 그냥 dismiss
-             onComplete?()
-             
-         } catch let error as APIError {
-             handleAPIError(error)
-         } catch {
-             errorMessage = "알 수 없는 오류가 발생했습니다."
-             showError = true
-         }
-         
-         isLoading = false
-     }
+        let commonEndDate = isOngoing ? nil : (endDate?.toString() ?? "")
+        let commonStartDate = startDate?.toString() ?? ""
+
+        do {
+            if isEditMode {
+                try await performUpdate(startDate: commonStartDate, endDate: commonEndDate)
+            } else {
+                try await performCreate(startDate: commonStartDate, endDate: commonEndDate)
+            }
+            onComplete?()
+        } catch let error as APIError {
+            handleAPIError(error)
+        } catch {
+            errorMessage = "알 수 없는 오류가 발생했습니다."
+            showError = true
+        }
+
+        isLoading = false
+    }
+
+    private func performCreate(startDate: String, endDate: String?) async throws {
+        let request: CreateExperienceRequest
+        switch selectedMethod {
+        case .star:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "STAR", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: situation, task: task, action: action, result: result,
+                problem: nil, solution: nil, insight: nil, content: nil
+            )
+        case .psi:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "PSI", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: problem, solution: solution, insight: insight, content: nil
+            )
+        case .free:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "FREE", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: nil, solution: nil, insight: nil, content: content
+            )
+        }
+        let response = try await experienceRepository.createExperience(request)
+        print("경험 등록 성공: \(response)")
+    }
+
+    private func performUpdate(startDate: String, endDate: String?) async throws {
+        guard let experienceId = editingExperienceId else { return }
+        let request: UpdateExperienceRequest
+        switch selectedMethod {
+        case .star:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "STAR", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: situation, task: task, action: action, result: result,
+                problem: nil, solution: nil, insight: nil, content: nil
+            )
+        case .psi:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "PSI", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: problem, solution: solution, insight: insight, content: nil
+            )
+        case .free:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "FREE", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: nil, solution: nil, insight: nil, content: content
+            )
+        }
+        let response = try await experienceRepository.updateExperience(experienceId: experienceId, request: request)
+        print("경험 수정 성공: \(response)")
+    }
     
     private func handleAPIError(_ error: APIError) {
         switch error {

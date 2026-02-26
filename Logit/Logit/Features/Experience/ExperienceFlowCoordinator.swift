@@ -14,11 +14,19 @@ struct ExperienceFlowCoordinator: View {
     
     init(onComplete: (() -> Void)? = nil) {
         self.onComplete = onComplete
-        
-        // Repository 생성 및 주입
         let networkClient = DefaultNetworkClient()
         let repository = DefaultExperienceRepository(networkClient: networkClient)
         _viewModel = StateObject(wrappedValue: ExperienceFlowViewModel(experienceRepository: repository))
+    }
+
+    init(experience: ExperienceResponse, onComplete: (() -> Void)? = nil) {
+        self.onComplete = onComplete
+        let networkClient = DefaultNetworkClient()
+        let repository = DefaultExperienceRepository(networkClient: networkClient)
+        _viewModel = StateObject(wrappedValue: ExperienceFlowViewModel(
+            experienceRepository: repository,
+            existingExperience: experience
+        ))
     }
     
     var body: some View {

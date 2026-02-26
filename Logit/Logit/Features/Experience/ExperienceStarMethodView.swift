@@ -218,7 +218,7 @@ struct ExperienceStarMethodView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                     } else {
-                        Text("경험등록")
+                        Text(viewModel.isEditMode ? "수정완료" : "경험등록")
                             .typo(.bold_18)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
