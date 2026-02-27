@@ -219,9 +219,28 @@ class ReportViewModel: ObservableObject {
     /// (하위 호환) 기존 이름 유지
     var totalCategoryCount: Int { totalTagCount }
 
-    /// 가장 많은 역량 카테고리 (API 값)
+    /// 공동 1등 발생 시 우선순위 결정 순서
+    private static let categoryPriorityOrder: [String] = [
+        "고객 가치 지향",
+        "기술적 전문성",
+        "협력적 소통",
+        "주도적 실행력",
+        "논리적 분석력",
+        "창의적 문제해결",
+        "유연한 적응력",
+        "끈기있는 책임감"
+    ]
+
+    /// 가장 많은 역량 카테고리 (API 값) — 공동 1등 시 우선순위로 결정
     var topCategory: String {
-        summary?.categoryCounts.sorted { $0.count > $1.count }.first?.category ?? "기술적 전문성"
+        guard let summary, !summary.categoryCounts.isEmpty else { return "기술적 전문성" }
+        let maxCount = summary.categoryCounts.map { $0.count }.max() ?? 0
+        let topCandidates = summary.categoryCounts
+            .filter { $0.count == maxCount }
+            .map { $0.category }
+        return Self.categoryPriorityOrder.first { topCandidates.contains($0) }
+            ?? topCandidates.first
+            ?? "기술적 전문성"
     }
 
     /// 가장 많은 역량 카테고리 (표시용)
@@ -258,10 +277,18 @@ class ReportViewModel: ObservableObject {
         return Self.typeDescriptions[topType] ?? "다양한 경험을 통해 폭넓은 역량을 쌓아온 인재입니다."
     }
 
+    /// 가장 적은 역량 카테고리 (API 값) — 누락 카테고리는 0으로 간주, 동점 시 우선순위로 결정
+    var weakestCategory: String {
+        guard let summary else { return Self.categoryPriorityOrder.first ?? "" }
+        let countMap = Dictionary(uniqueKeysWithValues: summary.categoryCounts.map { ($0.category, $0.count) })
+        let minCount = Self.categoryPriorityOrder.map { countMap[$0] ?? 0 }.min() ?? 0
+        let minCandidates = Self.categoryPriorityOrder.filter { (countMap[$0] ?? 0) == minCount }
+        return Self.categoryPriorityOrder.first { minCandidates.contains($0) } ?? minCandidates.first ?? ""
+    }
+
     /// 가장 적은 역량 카테고리 (표시용)
     var weakestCategoryDisplay: String {
-        let weakest = summary?.categoryCounts.sorted { $0.count < $1.count }.first?.category ?? ""
-        return CompetencyMapper.toDisplayTitle(weakest)
+        CompetencyMapper.toDisplayTitle(weakestCategory)
     }
     
     /// 가장 많은 역량 카테고리 (표시용)
@@ -332,15 +359,15 @@ class ReportViewModel: ObservableObject {
     }
 
     /// 바 차트 하단 보완 멘트
-    /// - 집계된 카테고리가 3개 이하: 경험 다양화 유도 멘트
-    /// - 4개 이상: 최소 카테고리 보완 멘트
+    /// - 집계된 카테고리 종류가 3개 이하: 경험 다양화 유도 멘트
+    /// - 4개 이상: 최소 카테고리 보완 멘트 (누락 카테고리는 0으로 간주, 동점 시 우선순위 적용)
     var barChartSubDescription: String {
         guard let summary else { return "" }
-        let filledCount = summary.categoryCounts.filter { $0.count > 0 }.count
-        if filledCount <= 3 {
-            return "현재 경험 유형이 \(strongCategoryDisplay) 중심으로 구성되어 있어요. 경험 유형을 다양화하면 더 입체적인 자소서가 될 거에요!"
+        let categoryCount = summary.categoryCounts.filter { $0.count > 0 }.count
+        if categoryCount <= 3 {
+            return "현재 경험 유형이 \(topCategoryDisplay) 중심으로 구성되어 있어요. 경험 유형을 다양화하면 더 입체적인 자소서가 될 거예요!"
         }
-        return "\(weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!"
+        return "현재 \(weakestCategoryDisplay) 관련 경험이 적은 편이에요. 이 부분을 보완하면 더 입체적인 자소서가 될 거예요!"
     }
 
     private static let categoryDescriptions: [String: String] = [

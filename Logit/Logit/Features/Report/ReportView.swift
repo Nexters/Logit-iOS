@@ -348,16 +348,22 @@ struct ReportDonutChartView: View {
     let data: [DonutChartData]
     let total: Int
 
+    // 0 제외한 항목만 (차트 렌더링용)
+    private var nonZeroData: [DonutChartData] {
+        data.filter { $0.value > 0 }
+    }
+
     private var adjustedData: [DonutChartData] {
-        let sum = data.reduce(0) { $0 + $1.value }
-        // 모든 값이 0이면 균등 분할로 도넛 형태 유지
-        if sum == 0 {
+        let real = nonZeroData
+        // 데이터가 없으면 균등 분할로 도넛 형태 유지
+        if real.isEmpty {
             return data.map { item in
                 DonutChartData(label: item.label, value: 1, color: item.color, textColor: item.textColor)
             }
         }
+        let sum = real.reduce(0) { $0 + $1.value }
         let minValue = sum * 0.07
-        return data.map { item in
+        return real.map { item in
             DonutChartData(
                 label: item.label,
                 value: max(item.value, minValue),
@@ -368,7 +374,7 @@ struct ReportDonutChartView: View {
     }
 
     private func originalValue(at index: Int) -> Double {
-        data[index].value
+        nonZeroData[index].value
     }
 
     private struct LabelInfo {
