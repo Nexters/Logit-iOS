@@ -56,10 +56,9 @@ class CoverLetterDetailViewModel: ObservableObject {
     let project: ProjectListItemResponse
 
     @Published var questionList: [QuestionResponse] = []
-    @Published var currentQuestionDetail: QuestionDetailResponse?
+    @Published var questionDetails: [String: QuestionDetailResponse] = [:]
 
     @Published var isLoadingQuestions: Bool = false
-    @Published var isLoadingQuestionDetail: Bool = false
     @Published var errorMessage: String?
 
     private let questionRepository: QuestionRepository
@@ -83,9 +82,7 @@ class CoverLetterDetailViewModel: ObservableObject {
             questionList = questions
             print("문항 목록 조회 성공: \(questions.count)개")
 
-            if !questions.isEmpty {
-                await selectQuestion(at: 0)
-            }
+            await fetchAllQuestionDetails(questions: questions)
         } catch {
             print("문항 목록 조회 실패: \(error)")
             errorMessage = "문항 목록을 불러올 수 없습니다."
@@ -94,30 +91,32 @@ class CoverLetterDetailViewModel: ObservableObject {
         isLoadingQuestions = false
     }
 
-    func selectQuestion(at index: Int) async {
-        guard index < questionList.count else { return }
-        await fetchQuestionDetail(questionId: questionList[index].id)
-    }
-
     func deleteProject() async throws {
         try await projectRepository.deleteProject(projectId: project.id)
     }
 
-    private func fetchQuestionDetail(questionId: String) async {
-        isLoadingQuestionDetail = true
+    private func fetchAllQuestionDetails(questions: [QuestionResponse]) async {
+        await withTaskGroup(of: (String, QuestionDetailResponse?).self) { group in
+            for question in questions {
+                group.addTask {
+                    do {
+                        let detail = try await self.questionRepository.getQuestionDetail(
+                            projectId: self.project.id,
+                            questionId: question.id
+                        )
+                        return (question.id, detail)
+                    } catch {
+                        print("문항 상세 조회 실패 (\(question.id)): \(error)")
+                        return (question.id, nil)
+                    }
+                }
+            }
 
-        do {
-            let detail = try await questionRepository.getQuestionDetail(
-                projectId: project.id,
-                questionId: questionId
-            )
-            currentQuestionDetail = detail
-            print("문항 상세 조회 성공: \(detail.question)")
-        } catch {
-            print("문항 상세 조회 실패: \(error)")
-            errorMessage = "문항 상세를 불러올 수 없습니다."
+            for await (questionId, detail) in group {
+                if let detail {
+                    questionDetails[questionId] = detail
+                }
+            }
         }
-
-        isLoadingQuestionDetail = false
     }
 }

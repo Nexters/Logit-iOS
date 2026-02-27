@@ -263,8 +263,14 @@ struct BarChartData: Identifiable {
 struct ReportBarChartView: View {
     let data: [BarChartData]
 
+    private let chartHeight: CGFloat = 160
+    private let domainPadding: Double = 1.2  // annotation 숫자 잘림 방지용 상단 여유
     private var maxValue: Double { data.map { $0.value }.max() ?? 0 }
-    private var minRenderValue: Double { max(maxValue * 0.08, 0.3) }
+    private var domainMax: Double { maxValue * domainPadding }
+    private var minRenderValue: Double {
+        guard maxValue > 0 else { return 0.3 }
+        return domainMax * (12.0 / chartHeight)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -291,7 +297,8 @@ struct ReportBarChartView: View {
             }
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
-            .frame(width: 210, height: 160)
+            .chartYScale(domain: 0...domainMax)
+            .frame(width: 210, height: chartHeight)
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 40)

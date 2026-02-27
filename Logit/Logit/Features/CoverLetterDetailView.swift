@@ -65,52 +65,10 @@ struct CoverLetterDetailView: View {
                 }
             }
 
-            // 문항 탭 바
-            if !viewModel.questionList.isEmpty {
-                QuestionTabBar(
-                    questionCount: viewModel.questionList.count,
-                    selectedIndex: $selectedQuestionIndex,
-                    showAddButton: false
-                )
-                .onChange(of: selectedQuestionIndex) { _, newIndex in
-                    Task {
-                        await viewModel.selectQuestion(at: newIndex)
-                    }
-                }
-            } else if viewModel.isLoadingQuestions {
-                ProgressView()
-                    .padding(.vertical, 12)
-            }
-
-            // 문항 내용
-            if viewModel.isLoadingQuestionDetail {
+            if viewModel.isLoadingQuestions {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let question = viewModel.currentQuestionDetail {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(question.question)
-                            .typo(.bold_16)
-                            .foregroundStyle(.gray400)
-
-                        if let answer = question.answer, !answer.isEmpty {
-                            Text(answer)
-                                .typo(.regular_14_160)
-                                .foregroundStyle(.black)
-                        } else {
-                            Text("아직 작성된 답변이 없습니다.")
-                                .typo(.regular_14_160)
-                                .foregroundStyle(.gray300)
-                        }
-
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 69)
-                }
-            } else if !viewModel.isLoadingQuestions {
+            } else if viewModel.questionList.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "doc.text")
                         .font(.system(size: 60))
@@ -121,6 +79,32 @@ struct CoverLetterDetailView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // 목차 탭 바
+                QuestionTabBar(
+                    questionCount: viewModel.questionList.count,
+                    selectedIndex: $selectedQuestionIndex,
+                    showAddButton: false
+                )
+
+                // 전체 문항 스크롤 뷰
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(viewModel.questionList.enumerated()), id: \.element.id) { index, question in
+                                questionSection(index: index, question: question)
+                                    .id(question.id)
+                            }
+                        }
+                        .padding(.bottom, 40)
+                    }
+                    .onChange(of: selectedQuestionIndex) { _, newIndex in
+                        guard newIndex < viewModel.questionList.count else { return }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(viewModel.questionList[newIndex].id, anchor: .top)
+                        }
+                    }
+                }
             }
         }
         .background(.white)
@@ -141,5 +125,50 @@ struct CoverLetterDetailView: View {
                     }
             }
         }
+    }
+
+    @ViewBuilder
+    private func questionSection(index: Int, question: QuestionResponse) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // 문항 번호 + 질문
+            HStack(alignment: .top, spacing: 10) {
+                Text("Q\(index + 1)")
+                    .typo(.bold_16)
+                    .foregroundStyle(.primary100)
+
+                if let detail = viewModel.questionDetails[question.id] {
+                    Text(detail.question)
+                        .typo(.bold_16)
+                        .foregroundStyle(.gray400)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(question.question)
+                        .typo(.bold_16)
+                        .foregroundStyle(.gray400)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            // 답변
+            if let detail = viewModel.questionDetails[question.id] {
+                if let answer = detail.answer, !answer.isEmpty {
+                    Text(answer)
+                        .typo(.regular_14_160)
+                        .foregroundStyle(.black)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("아직 작성된 답변이 없습니다.")
+                        .typo(.regular_14_160)
+                        .foregroundStyle(.gray300)
+                }
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+
     }
 }
