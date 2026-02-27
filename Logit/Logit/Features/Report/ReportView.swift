@@ -274,7 +274,7 @@ struct ReportBarChartView: View {
     private var domainMax: Double { maxValue * domainPadding }
     private var minRenderValue: Double {
         guard maxValue > 0 else { return 0.3 }
-        return domainMax * (12.0 / chartHeight)
+        return domainMax * (14.0 / chartHeight)
     }
 
     var body: some View {
@@ -283,7 +283,7 @@ struct ReportBarChartView: View {
                 BarMark(
                     x: .value("label", item.id.uuidString),
                     y: .value("value", max(item.value, minRenderValue)),
-                    width: .fixed(20)
+                    width: .fixed(18)
                 )
                 .foregroundStyle(item.color)
                 .clipShape(UnevenRoundedRectangle(
@@ -293,11 +293,9 @@ struct ReportBarChartView: View {
                     topTrailingRadius: 8
                 ))
                 .annotation(position: .top) {
-                    if item.value > 0 {
-                        Text("\(Int(item.value))")
-                            .typo(.bold_14)
-                            .foregroundStyle(item.color)
-                    }
+                    Text("\(Int(item.value))")
+                        .typo(.bold_14)
+                        .foregroundStyle(item.color)
                 }
             }
             .chartXAxis(.hidden)
