@@ -151,5 +151,6 @@ private struct CoverLetterProjectCell: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+        .contentShape(Rectangle())
     }
 }
