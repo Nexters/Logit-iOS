@@ -11,6 +11,7 @@ struct ExperienceDetailView: View {
 
     @State private var showMenu = false
     @State private var showDeleteAlert = false
+    @State private var showEditFlow = false
 
     var onDeleted: (() -> Void)? = nil
 
@@ -25,7 +26,7 @@ struct ExperienceDetailView: View {
         VStack(spacing: 0) {
             Button {
                 showMenu = false
-                print("수정하기")
+                showEditFlow = true
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")
@@ -186,6 +187,13 @@ struct ExperienceDetailView: View {
             .navigationBarHidden(true)
             .onAppear {
                 Task { await viewModel.fetchDetail() }
+            }
+            .fullScreenCover(isPresented: $showEditFlow) {
+                if let experience = viewModel.experience {
+                    ExperienceFlowCoordinator(experience: experience) {
+                        Task { await viewModel.fetchDetail() }
+                    }
+                }
             }
 
             // 수정/삭제 팝업

@@ -88,13 +88,9 @@ struct ExperienceListView: View {
                 .refreshable {
                     await viewModel.fetchExperiences()
                 }
-                .overlay {
-                    if openMenuExperienceId != nil {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture { openMenuExperienceId = nil }
-                    }
-                }
+                .simultaneousGesture(
+                    TapGesture().onEnded { openMenuExperienceId = nil }
+                )
             }
         }
         .background(.gray20)
@@ -112,7 +108,9 @@ struct ExperienceListView: View {
         .fullScreenCover(item: Binding(
             get: { selectedExperienceId.map { SelectedExperienceID(id: $0) } },
             set: { selectedExperienceId = $0?.id }
-        )) { target in
+        ), onDismiss: {
+            Task { await viewModel.fetchExperiences() }
+        }) { target in
             ExperienceDetailView(experienceId: target.id) {
                 Task { await viewModel.fetchExperiences() }
             }

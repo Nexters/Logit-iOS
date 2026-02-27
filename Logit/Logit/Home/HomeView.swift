@@ -13,40 +13,34 @@ struct HomeView: View {
     @State private var openMenuProjectId: String? = nil
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                HomeHeaderView()
+        VStack(spacing: 0) {
+            HomeHeaderView()
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ExperienceTypeSection()
-                            .padding(.top, 22.adjustedLayout)
+            ScrollView {
+                VStack(spacing: 0) {
+                    ExperienceTypeSection()
+                        .padding(.top, 22.adjustedLayout)
 
-                        ProjectListSection(
-                            hasProjects: viewModel.hasProjects,
-                            projects: viewModel.projects,
-                            isLoading: viewModel.isLoading,
-                            onDelete: { projectId in
-                                appState.requestDeleteConfirmation {
-                                    Task { await viewModel.deleteProject(projectId: projectId) }
-                                }
-                            },
-                            openMenuProjectId: $openMenuProjectId
-                        )
-                        .padding(.top, 43.adjustedLayout)
-                    }
-                }
-                .refreshable {
-                    await viewModel.fetchProjects()
+                    ProjectListSection(
+                        hasProjects: viewModel.hasProjects,
+                        projects: viewModel.projects,
+                        isLoading: viewModel.isLoading,
+                        onDelete: { projectId in
+                            appState.requestDeleteConfirmation {
+                                Task { await viewModel.deleteProject(projectId: projectId) }
+                            }
+                        },
+                        openMenuProjectId: $openMenuProjectId
+                    )
+                    .padding(.top, 43.adjustedLayout)
                 }
             }
-
-            if openMenuProjectId != nil {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .ignoresSafeArea()
-                    .onTapGesture { openMenuProjectId = nil }
+            .refreshable {
+                await viewModel.fetchProjects()
             }
+            .simultaneousGesture(
+                TapGesture().onEnded { openMenuProjectId = nil }
+            )
         }
         .background(.white)
         .onAppear {

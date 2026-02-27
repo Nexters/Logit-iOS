@@ -64,28 +64,33 @@ struct ReportView: View {
     // MARK: - Main Content
 
     private var contentView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // 프로필 카드 영역
-                profileSection
-
-                // 그래프 카드 영역
-                graphSection
-            }
-        }
-        .scrollIndicators(.hidden)
-    }
-
-    // MARK: - Profile Section
-
-    private var profileSection: some View {
-        VStack {
+        VStack(spacing: 0) {
+            // 고정 타이틀
             Text("\(viewModel.userName)님의 프로파일")
                 .typo(.bold_20)
                 .foregroundStyle(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 10)
                 .padding(.leading, 20)
+                .background(.white)
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 프로필 카드 영역
+                    profileSection
+
+                    // 그래프 카드 영역
+                    graphSection
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    // MARK: - Profile Section
+
+    private var profileSection: some View {
+        VStack {
 
             if let asset = NSDataAsset(name: viewModel.topCategoryImageName),
                let uiImage = UIImage(data: asset.data) {
