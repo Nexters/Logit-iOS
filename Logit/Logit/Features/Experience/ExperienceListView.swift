@@ -13,6 +13,7 @@ struct ExperienceListView: View {
     @State private var showExperienceAddFlow = false
     @State private var selectedExperienceId: String? = nil
     @State private var experienceToEdit: ExperienceResponse? = nil
+    @State private var openMenuExperienceId: String? = nil
 
     init() {
         let networkClient = DefaultNetworkClient()
@@ -46,6 +47,11 @@ struct ExperienceListView: View {
                         ForEach(viewModel.experiences, id: \.id) { experience in
                             ExperienceListCell(
                                 experience: experience,
+                                isMenuOpen: openMenuExperienceId == experience.id,
+                                onMenuToggle: {
+                                    openMenuExperienceId = openMenuExperienceId == experience.id ? nil : experience.id
+                                },
+                                onMenuClose: { openMenuExperienceId = nil },
                                 onTap: { selectedExperienceId = experience.id },
                                 onEdit: { experienceToEdit = experience },
                                 onDelete: {
@@ -81,6 +87,13 @@ struct ExperienceListView: View {
                 }
                 .refreshable {
                     await viewModel.fetchExperiences()
+                }
+                .overlay {
+                    if openMenuExperienceId != nil {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { openMenuExperienceId = nil }
+                    }
                 }
             }
         }
@@ -206,11 +219,12 @@ struct EmptyExperienceView: View {
 
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
+    var isMenuOpen: Bool = false
+    var onMenuToggle: (() -> Void)? = nil
+    var onMenuClose: (() -> Void)? = nil
     var onTap: (() -> Void)? = nil
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
-
-    @State private var showMenu = false
 
     // 태그 파싱 (쉼표로 분리)
     private var parsedTags: [String] {
@@ -228,7 +242,7 @@ struct ExperienceListCell: View {
     private var cellMenuPopup: some View {
         VStack(spacing: 0) {
             Button {
-                showMenu = false
+                onMenuClose?()
                 onEdit?()
             } label: {
                 HStack(spacing: 8) {
@@ -246,7 +260,7 @@ struct ExperienceListCell: View {
             Divider()
 
             Button {
-                showMenu = false
+                onMenuClose?()
                 onDelete?()
             } label: {
                 HStack(spacing: 8) {
@@ -281,7 +295,7 @@ struct ExperienceListCell: View {
                 Spacer()
 
                 Button {
-                    showMenu.toggle()
+                    onMenuToggle?()
                 } label: {
                     Image(systemName: "ellipsis")
                         .rotationEffect(.degrees(90))
@@ -312,10 +326,10 @@ struct ExperienceListCell: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if showMenu { showMenu = false } else { onTap?() }
+            if isMenuOpen { onMenuClose?() } else { onTap?() }
         }
         .overlay(alignment: .topTrailing) {
-            if showMenu {
+            if isMenuOpen {
                 cellMenuPopup
                     .alignmentGuide(.top) { d in d[.bottom] - 44 }
                     .padding(.trailing, 16)
