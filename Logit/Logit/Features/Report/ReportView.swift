@@ -43,6 +43,8 @@ struct ReportView: View {
                     EmptyExperienceView {
                         showExperienceAddFlow = true
                     }
+                    .padding(.top, 36)
+                    .padding(.bottom, 80)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.white)

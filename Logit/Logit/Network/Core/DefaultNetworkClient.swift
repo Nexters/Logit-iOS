@@ -49,43 +49,47 @@ class DefaultNetworkClient: NetworkClient {
     ) async throws -> Data {
         // 1. URLRequest 생성
         var request = try createURLRequest(endpoint: endpoint, body: body)
-        
+
         // 2. 토큰 추가 (인증이 필요한 엔드포인트만)
         if endpoint.requiresAuth {
             guard let accessToken = tokenManager.accessToken else {
+                print("🔐 [Auth] accessToken 없음 → 로그인 화면으로 이동")
                 NotificationCenter.default.post(name: .authenticationRequired, object: nil)
                 throw APIError.unauthorized(message: "로그인이 필요합니다.")
             }
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            print("🔐 [Auth] \(isRetry ? "[재시도]" : "") \(endpoint.path) → accessToken 마지막 10자: ...\(String(accessToken.suffix(10)))")
         }
-        
+
         NetworkLogger.logRequest(request, body: body)
-        
+
         // 3. 요청 실행
         let (data, response) = try await URLSession.shared.data(for: request)
-        
+
         // 4. 응답 검증
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
-        
+
         NetworkLogger.logResponse(httpResponse, data: data)
-        
+
         // 5. 상태 코드 처리
         switch httpResponse.statusCode {
         case 200...299:
             return data
-            
+
         case 400:
             let error = try parseErrorResponse(from: data)
             throw APIError.badRequest(message: error)
-            
+
         case 401:
-            // 토큰 만료 - 재시도 1회만
             if !isRetry {
+                print("🔐 [Auth] 401 수신 (\(endpoint.path)) → 토큰 갱신 시도")
                 try await refreshAccessToken()
+                print("🔐 [Auth] 토큰 갱신 완료 → \(endpoint.path) 재시도")
                 return try await performRequest(endpoint: endpoint, body: body, isRetry: true)
             } else {
+                print("🔐 [Auth] 재시도에서도 401 (\(endpoint.path)) → 인증 실패")
                 let error = try parseErrorResponse(from: data)
                 throw APIError.unauthorized(message: error)
             }
@@ -163,42 +167,62 @@ class DefaultNetworkClient: NetworkClient {
     private func refreshAccessToken() async throws {
         // 이미 갱신 중인 task가 있으면 결과를 공유 (중복 요청 방지)
         if let task = tokenManager.sharedRefreshTask {
+            print("🔐 [TokenRefresh] 이미 갱신 중인 task 있음 → 기다림")
             return try await task.value
         }
 
         let task = Task<Void, Error> {
             guard let refreshToken = tokenManager.refreshToken else {
+                print("🔐 [TokenRefresh] ❌ refreshToken 없음 → 로그인 필요")
                 throw APIError.unauthorized(message: "Refresh token이 없습니다.")
             }
 
-            // API 스펙: Authorization: Bearer {refresh_token} 헤더로 요청
+            print("🔐 [TokenRefresh] refreshToken 마지막 10자: ...\(String(refreshToken.suffix(10)))")
+            print("🔐 [TokenRefresh] POST \(AuthEndpoint.refreshToken.path) 요청 시작")
+
             var request = try createURLRequest(
                 endpoint: AuthEndpoint.refreshToken,
                 body: nil
             )
             request.setValue("Bearer \(refreshToken)", forHTTPHeaderField: "Authorization")
+            print("🔐 [TokenRefresh] Authorization 헤더: Bearer ...\(String(refreshToken.suffix(10)))")
 
             NetworkLogger.logRequest(request)
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
+                print("🔐 [TokenRefresh] ❌ 응답이 HTTPURLResponse가 아님")
                 throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다.")
             }
 
             NetworkLogger.logResponse(httpResponse, data: data)
+            print("🔐 [TokenRefresh] 응답 status: \(httpResponse.statusCode)")
+
+            let rawBody = String(data: data, encoding: .utf8) ?? "(디코딩 불가)"
+            print("🔐 [TokenRefresh] 응답 body: \(rawBody)")
 
             guard httpResponse.statusCode == 200 else {
+                print("🔐 [TokenRefresh] ❌ 갱신 실패 (status: \(httpResponse.statusCode))")
                 throw APIError.unauthorized(message: "토큰 갱신에 실패했습니다. (\(httpResponse.statusCode))")
             }
 
-            // 서버가 새 access token + refresh token 모두 body로 반환
-            let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-            if let newRefresh = tokenResponse.refreshToken {
-                tokenManager.saveTokens(access: tokenResponse.accessToken, refresh: newRefresh)
-            } else {
-                tokenManager.updateAccessToken(tokenResponse.accessToken)
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            do {
+                let tokenResponse = try decoder.decode(TokenResponse.self, from: data)
+                if let newRefresh = tokenResponse.refreshToken {
+                    tokenManager.saveTokens(access: tokenResponse.accessToken, refresh: newRefresh)
+                    print("🔐 [TokenRefresh] ✅ accessToken + refreshToken 모두 갱신 완료")
+                } else {
+                    tokenManager.updateAccessToken(tokenResponse.accessToken)
+                    print("🔐 [TokenRefresh] ✅ accessToken만 갱신 완료 (refreshToken 없음)")
+                }
+                print("🔐 [TokenRefresh] 새 accessToken 마지막 10자: ...\(String(tokenResponse.accessToken.suffix(10)))")
+            } catch {
+                print("🔐 [TokenRefresh] ❌ TokenResponse 디코딩 실패: \(error)")
+                print("🔐 [TokenRefresh] 원본 body: \(rawBody)")
+                throw APIError.decodingError(error)
             }
-            print("🔄 [TokenRefresh] Access token 갱신 완료 → 원래 요청 재시도")
         }
 
         tokenManager.sharedRefreshTask = task
@@ -209,7 +233,7 @@ class DefaultNetworkClient: NetworkClient {
         } catch {
             tokenManager.sharedRefreshTask = nil
             tokenManager.clearTokens()
-            // refresh 완전 실패 → 로그인 화면으로 이동
+            print("🔐 [TokenRefresh] ❌ 갱신 완전 실패 → 토큰 삭제 + 로그인 화면 이동")
             NotificationCenter.default.post(name: .authenticationRequired, object: nil)
             throw error
         }

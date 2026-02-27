@@ -20,7 +20,7 @@ struct CoverLetterDetailView: View {
         VStack(spacing: 0) {
             Button {
                 showMenu = false
-                // TODO: 프로젝트 수정 플로우 연결
+                appState.openWorkspace(projectId: viewModel.project.id, onCoverLetterTab: true)
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")
@@ -132,6 +132,11 @@ struct CoverLetterDetailView: View {
         .task {
             await viewModel.fetchQuestionList()
         }
+        .onChange(of: appState.selectedProjectId) { _, newValue in
+            if newValue == nil {
+                Task { await viewModel.fetchQuestionList() }
+            }
+        }
         .overlay {
             if showMenu {
                 Color.clear
@@ -151,22 +156,16 @@ struct CoverLetterDetailView: View {
     private func questionSection(index: Int, question: QuestionResponse) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // 문항 번호 + 질문
-            HStack(alignment: .top, spacing: 10) {
-                Text("Q\(index + 1)")
+            if let detail = viewModel.questionDetails[question.id] {
+                Text(detail.question)
                     .typo(.bold_16)
-                    .foregroundStyle(.primary100)
-
-                if let detail = viewModel.questionDetails[question.id] {
-                    Text(detail.question)
-                        .typo(.bold_16)
-                        .foregroundStyle(.gray400)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(question.question)
-                        .typo(.bold_16)
-                        .foregroundStyle(.gray400)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                    .foregroundStyle(.gray400)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text(question.question)
+                    .typo(.bold_16)
+                    .foregroundStyle(.gray400)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             // 답변

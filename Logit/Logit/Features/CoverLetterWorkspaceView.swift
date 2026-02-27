@@ -166,10 +166,11 @@ struct CoverLetterWorkspaceView: View {
         case chat, coverLetter
     }
     
-    init(projectId: String, questions: [QuestionItem]) {
+    init(projectId: String, questions: [QuestionItem], initialTab: ContentType = .chat) {
         self.projectId = projectId
         self.questions = questions
         _viewModel = StateObject(wrappedValue: WorkspaceViewModel(projectId: projectId))
+        _selectedView = State(initialValue: initialTab)
     }
     
     var body: some View {
@@ -462,7 +463,11 @@ struct CoverLetterWorkspaceView: View {
                 
                 await projectDetail
                 await questionList
-                
+
+                if selectedView == .coverLetter, let question = currentQuestion {
+                    await viewModel.fetchQuestionDetail(questionId: question.id)
+                }
+
                 print("========== 데이터 할당 체크 ==========")
                 print("프로젝트 ID: \(projectId)")
                 print("문항 목록 개수: \(viewModel.questionList.count)")

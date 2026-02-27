@@ -66,7 +66,9 @@ struct MainTabView: View {
         }
         .fullScreenCover(item: $appState.selectedProjectId) { projectId in
             CoverLetterWorkspaceView(
-                projectId: projectId, questions: []
+                projectId: projectId,
+                questions: [],
+                initialTab: appState.openWorkspaceOnCoverLetterTab ? .coverLetter : .chat
             )
         }
         .fullScreenCover(isPresented: $appState.isShowingSettings) {

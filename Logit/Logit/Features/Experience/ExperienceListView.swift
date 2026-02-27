@@ -41,6 +41,7 @@ struct ExperienceListView: View {
                 EmptyExperienceView(backgroundColor: .gray20) {
                     showExperienceAddFlow = true
                 }
+                .padding(.bottom, 80)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 12) {
@@ -206,9 +207,7 @@ struct EmptyExperienceView: View {
             }
             .padding(.top, 17.adjustedLayout)
         }
-        .offset(y: -50.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 60.adjustedLayout)
         .background(backgroundColor)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)

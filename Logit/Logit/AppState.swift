@@ -111,7 +111,10 @@ class AppState: ObservableObject {
         isShowingSettings = true
     }
 
-    func openWorkspace(projectId: String) {
+    var openWorkspaceOnCoverLetterTab: Bool = false
+
+    func openWorkspace(projectId: String, onCoverLetterTab: Bool = false) {
+        openWorkspaceOnCoverLetterTab = onCoverLetterTab
         selectedProjectId = projectId
     }
 }
