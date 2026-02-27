@@ -395,7 +395,7 @@ struct InputFieldView: View {
                     GeometryReader { geo in
                         ZStack(alignment: .topLeading) {
                             TextEditor(text: $text)
-                                .font(.system(size: 15))
+                                .typo(.regular_15)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
                                 .frame(height: dynamicHeight)
@@ -412,7 +412,7 @@ struct InputFieldView: View {
 
                             if text.isEmpty {
                                 Text(placeholder)
-                                    .font(.system(size: 15))
+                                    .typo(.regular_15)
                                     .foregroundColor(.gray100)
                                     .padding(.leading, 19)
                                     .padding(.top, 16)
@@ -433,7 +433,7 @@ struct InputFieldView: View {
                 } else {
                     ZStack(alignment: .topLeading) {
                         TextEditor(text: $text)
-                            .font(.system(size: 15))
+                            .typo(.regular_15)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .frame(height: height)
@@ -448,7 +448,7 @@ struct InputFieldView: View {
 
                         if text.isEmpty {
                             Text(placeholder)
-                                .font(.system(size: 15))
+                                .typo(.regular_15)
                                 .foregroundColor(.gray100)
                                 .padding(.leading, 19)
                                 .padding(.top, 16)
@@ -465,7 +465,7 @@ struct InputFieldView: View {
                 }
             } else {
                 TextField(placeholder, text: $text)
-                    .font(.system(size: 15))
+                    .typo(.regular_15)
                     .padding(.horizontal, 18)
                     .frame(height: 44)
                     .background(Color.clear)
@@ -491,11 +491,13 @@ struct InputFieldView: View {
         guard width > 0 else { return 0 }
         // 14px custom padding + ~5px UITextView internal padding = 19px per side
         let textWidth = max(1, width - 38)
-        let font = UIFont.systemFont(ofSize: 15)
+        let font = LogitFont.regular_15.uiFont
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = LogitFont.regular_15.lineHeight - font.lineHeight
         let boundingRect = (text.isEmpty ? " " : text).boundingRect(
             with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: [.font: font],
+            attributes: [.font: font, .paragraphStyle: paragraphStyle],
             context: nil
         )
         // 8px custom top/bottom + ~8px UITextView top/bottom inset = 32px total vertical
