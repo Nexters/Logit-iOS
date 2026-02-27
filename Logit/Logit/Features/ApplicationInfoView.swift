@@ -103,28 +103,29 @@ struct ApplicationInfoView: View {
                         )
                     }
                     .padding(.top, 24)
-                    
-                    Spacer()
-                        .frame(minHeight: 46.75)
-                    
-                    Button {
-                        viewModel.navigateToCoverLetterQuestions()
-                    } label: {
-                        Text("다음으로")
-                            .typo(.bold_18)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(isFormValid ? Color.primary100 : Color.gray100)
-                            .cornerRadius(12)
-                    }
-                    .disabled(!isFormValid)
-                    
                     .padding(.bottom, 10)
                 }
                 .padding(.horizontal, 20)
             }
             .scrollToMinDistance(minDisntance: 32)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    viewModel.navigateToCoverLetterQuestions()
+                } label: {
+                    Text("다음으로")
+                        .typo(.bold_18)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(isFormValid ? Color.primary100 : Color.gray100)
+                        .cornerRadius(12)
+                }
+                .disabled(!isFormValid)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
+                .padding(.top, 8)
+                .background(Color.white)
+            }
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
