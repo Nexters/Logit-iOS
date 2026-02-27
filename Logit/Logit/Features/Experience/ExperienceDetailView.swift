@@ -67,16 +67,7 @@ struct ExperienceDetailView: View {
     }
 
     var body: some View {
-        ZStack {
-            // 팝업 외부 탭 시 닫기
-            if showMenu {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .ignoresSafeArea()
-                    .onTapGesture { showMenu = false }
-            }
-
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
             // Navigation Bar
             HStack {
                 Button { dismiss() } label: {
@@ -196,21 +187,20 @@ struct ExperienceDetailView: View {
                 }
             }
 
-            // 수정/삭제 팝업
+        .overlay {
             if showMenu {
-                VStack {
-                    HStack {
-                        Spacer()
+                Color.clear
+                    .contentShape(Rectangle())
+                    .ignoresSafeArea()
+                    .onTapGesture { showMenu = false }
+                    .overlay(alignment: .topTrailing) {
                         ellipsisMenuPopup
+                            .padding(.top, 52)
+                            .padding(.trailing, 20)
                     }
-                    Spacer()
-                }
-                .padding(.top, 52)
-                .padding(.horizontal, 20)
-                .zIndex(1)
             }
-
-            // 삭제 확인 alert
+        }
+        .overlay {
             if showDeleteAlert {
                 LogitAlertView(
                     message: "경험을 삭제하시겠어요?",
