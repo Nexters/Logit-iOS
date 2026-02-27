@@ -49,6 +49,7 @@ struct ExperienceListView: View {
                             ExperienceListCell(
                                 experience: experience,
                                 isMenuOpen: openMenuExperienceId == experience.id,
+                                isAnyMenuOpen: openMenuExperienceId != nil,
                                 onMenuToggle: {
                                     openMenuExperienceId = openMenuExperienceId == experience.id ? nil : experience.id
                                 },
@@ -217,6 +218,7 @@ struct EmptyExperienceView: View {
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
     var isMenuOpen: Bool = false
+    var isAnyMenuOpen: Bool = false
     var onMenuToggle: (() -> Void)? = nil
     var onMenuClose: (() -> Void)? = nil
     var onTap: (() -> Void)? = nil
@@ -301,15 +303,15 @@ struct ExperienceListCell: View {
                 }
             }
 
-            // 하단: 태그들 (competency 1개 + 일반 태그 1개)
+            // 하단: 태그들 (competency 1개 + 일반 태그 최대 2개)
             HStack(spacing: 8) {
                 ExperienceTag(
                     text: displayCategory,
                     icon: displayCategory,
                     isCompetency: true
                 )
-                if let firstTag = parsedTags.first {
-                    ExperienceTag(text: firstTag)
+                ForEach(parsedTags.prefix(2), id: \.self) { tag in
+                    ExperienceTag(text: tag)
                 }
                 Spacer()
             }
@@ -323,7 +325,7 @@ struct ExperienceListCell: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if isMenuOpen { onMenuClose?() } else { onTap?() }
+            if isAnyMenuOpen { onMenuClose?() } else { onTap?() }
         }
         .overlay(alignment: .topTrailing) {
             if isMenuOpen {

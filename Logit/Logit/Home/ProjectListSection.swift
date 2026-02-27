@@ -92,6 +92,7 @@ struct ProjectListView: View {
                 ProjectCardCell(
                     project: projects[index],
                     isMenuOpen: openMenuProjectId == projects[index].id,
+                    isAnyMenuOpen: openMenuProjectId != nil,
                     onMenuToggle: {
                         openMenuProjectId = openMenuProjectId == projects[index].id ? nil : projects[index].id
                     },
@@ -114,6 +115,7 @@ struct ProjectCardCell: View {
     @EnvironmentObject var appState: AppState
     let project: ProjectListItemResponse
     var isMenuOpen: Bool = false
+    var isAnyMenuOpen: Bool = false
     var onMenuToggle: (() -> Void)? = nil
     var onMenuClose: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
@@ -232,7 +234,7 @@ struct ProjectCardCell: View {
             .background(Color.white)
             .contentShape(Rectangle())
             .onTapGesture {
-                if isMenuOpen {
+                if isAnyMenuOpen {
                     onMenuClose?()
                 } else {
                     appState.openWorkspace(projectId: project.id)
