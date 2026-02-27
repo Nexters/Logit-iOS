@@ -10,42 +10,62 @@ struct CoverLetterDetailView: View {
     @StateObject private var viewModel: CoverLetterDetailViewModel
     @Environment(\.dismiss) var dismiss
     @State private var selectedQuestionIndex: Int = 0
-    @State private var showDeleteMenu = false
+    @State private var showMenu = false
 
     init(project: ProjectListItemResponse) {
         _viewModel = StateObject(wrappedValue: CoverLetterDetailViewModel(project: project))
     }
 
-    private var deleteMenuPopup: some View {
-        Button {
-            showDeleteMenu = false
-            appState.requestDeleteConfirmation(
-                message: "프로젝트를 삭제하시겠어요?",
-                subMessage: "삭제하면 복구 못해요"
-            ) {
-                Task {
-                    try? await viewModel.deleteProject()
-                    dismiss()
+    private var ellipsisMenuPopup: some View {
+        VStack(spacing: 0) {
+            Button {
+                showMenu = false
+                // TODO: 프로젝트 수정 플로우 연결
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("수정")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "trash")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.black)
 
-                Text("삭제")
-                    .typo(.regular_14_140)
-                    .foregroundStyle(.black)
+            Divider()
+
+            Button {
+                showMenu = false
+                appState.requestDeleteConfirmation(
+                    message: "프로젝트를 삭제하시겠어요?",
+                    subMessage: "삭제하면 복구 못해요"
+                ) {
+                    Task {
+                        try? await viewModel.deleteProject()
+                        dismiss()
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("삭제")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
-            )
         }
+        .fixedSize()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+        )
     }
 
     var body: some View {
@@ -56,7 +76,7 @@ struct CoverLetterDetailView: View {
                 onBackTapped: { dismiss() }
             ) {
                 Button {
-                    showDeleteMenu.toggle()
+                    showMenu.toggle()
                 } label: {
                     Image(systemName: "ellipsis")
                         .rotationEffect(.degrees(90))
@@ -113,13 +133,13 @@ struct CoverLetterDetailView: View {
             await viewModel.fetchQuestionList()
         }
         .overlay {
-            if showDeleteMenu {
+            if showMenu {
                 Color.clear
                     .contentShape(Rectangle())
                     .ignoresSafeArea()
-                    .onTapGesture { showDeleteMenu = false }
+                    .onTapGesture { showMenu = false }
                     .overlay(alignment: .topTrailing) {
-                        deleteMenuPopup
+                        ellipsisMenuPopup
                             .padding(.top, 44)
                             .padding(.trailing, 16)
                     }
