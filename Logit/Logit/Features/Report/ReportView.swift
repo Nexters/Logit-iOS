@@ -422,10 +422,12 @@ struct ReportDonutChartView: View {
                 .overlay {
                     GeometryReader { geo in
                         ForEach(Array(computeLabelPositions(size: geo.size).enumerated()), id: \.offset) { _, info in
-                            Text("\(info.value)")
-                                .typo(.bold_14)
-                                .foregroundStyle(info.color)
-                                .position(x: info.point.x, y: info.point.y)
+                            if info.value > 0 {
+                                Text("\(info.value)")
+                                    .typo(.bold_14)
+                                    .foregroundStyle(info.color)
+                                    .position(x: info.point.x, y: info.point.y)
+                            }
                         }
                     }
                 }

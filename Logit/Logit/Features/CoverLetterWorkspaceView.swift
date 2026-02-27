@@ -930,7 +930,6 @@ struct ChatBubble: View {
     let chatId: String?
     @State private var displayedText: String = ""
     @State private var isTypingComplete: Bool = false
-    @State private var rotationAngle: Double = 0
     let onUpdateCoverLetter: ((String) -> Void)?
     
     var body: some View {
@@ -948,27 +947,45 @@ struct ChatBubble: View {
                     .cornerRadius(16)
             } else {
                 VStack(alignment: .leading, spacing: 8) {
-                    Image("chatting_logo")
-                        .resizable()
-                        .frame(size: 24)
-                        .rotationEffect(.degrees(isAnimated && displayedText.isEmpty ? rotationAngle : 0))
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 로딩 상태 분기
-                        if isAnimated && displayedText.isEmpty {
-                            // 스트리밍 대기 중
+                    if isAnimated && displayedText.isEmpty {
+                        // 대기 중: 스피너 + 텍스트만 (이미지 없음)
+                        HStack(spacing: 8) {
+                            LogitLoadingView(size: 20, lineWidth: 3)
                             Text("응답 기다리는 중...")
                                 .typo(.regular_14_160)
                                 .foregroundColor(.gray200)
-                                .padding(.vertical, 10)
-                        } else {
-                            // 봇 메시지
-                            Text(displayedText)
-                                .typo(.regular_14_160)
-                                .foregroundColor(.black)
-                                .padding(.vertical, 10)
-                                .background(Color.clear)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.vertical, 10)
+                    } else {
+                        // 응답 도착: 이미지 표시
+                        Image("chatting_logo")
+                            .resizable()
+                            .frame(size: 24)
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        if !(isAnimated && displayedText.isEmpty) {
+                            // 봇 메시지: 스트리밍 중 → 그라데이션, 완료 → 블랙
+                            if isAnimated {
+                                Text(displayedText)
+                                    .typo(.regular_14_160)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [Color(hex: "6E7CD0"), Color(hex: "43B3C7")],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } else {
+                                Text(displayedText)
+                                    .typo(.regular_14_160)
+                                    .foregroundColor(.black)
+                                    .padding(.vertical, 10)
+                                    .background(Color.clear)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
                         }
                         
                         // 자기소개서 업데이트 버튼
@@ -1002,10 +1019,7 @@ struct ChatBubble: View {
         }
         .onAppear {
             if !isUser {
-                if isAnimated {
-                    //  실시간 스트리밍 → 회전 애니메이션 시작
-                    startRotation()
-                } else {
+                if !isAnimated {
                     // 히스토리는 바로 표시
                     displayedText = message
                     isTypingComplete = true
@@ -1028,12 +1042,6 @@ struct ChatBubble: View {
         }
     }
     
-    // 로고 회전 애니메이션
-    private func startRotation() {
-        withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
-            rotationAngle = 360
-        }
-    }
 }
 
 struct CoverLetterContentView: View {
