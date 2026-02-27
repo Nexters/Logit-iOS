@@ -46,9 +46,9 @@ struct ExperienceTypeSection: View {
                 DragGesture(minimumDistance: 30)
                     .onEnded { value in
                         if value.translation.width < 0 {
-                            currentIndex = min(currentIndex + 1, totalCount - 1)
+                            currentIndex = (currentIndex + 1) % totalCount
                         } else {
-                            currentIndex = max(currentIndex - 1, 0)
+                            currentIndex = (currentIndex - 1 + totalCount) % totalCount
                         }
                     }
             )
