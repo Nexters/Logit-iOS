@@ -18,7 +18,7 @@ struct ExperienceTypeSection: View {
                 .foregroundStyle(.black)
 
             ZStack(alignment: .bottomLeading) {
-                if let asset = NSDataAsset(name: "homeBanner_\(currentIndex + 1)"),
+                if let asset = NSDataAsset(name: "homebanner_\(currentIndex + 1)"),
                    let uiImage = UIImage(data: asset.data) {
                     Image(uiImage: uiImage)
                         .resizable()
