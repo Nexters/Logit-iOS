@@ -17,6 +17,23 @@ struct SettingsView: View {
     @State private var showInquiryPage: Bool = false
     @StateObject private var viewModel = SettingsViewModel()
 
+    private var tokenUsageRow: some View {
+        HStack {
+            Text("토큰 사용량")
+                .typo(.semibold_16)
+                .foregroundColor(.black)
+            Spacer()
+            HStack(spacing: 0) {
+                Text("\(viewModel.usedTokens)")
+                    .typo(.bold_14)
+                    .foregroundColor(.gray400)
+                Text(" / \(viewModel.totalTokens)")
+                    .typo(.medium_13)
+                    .foregroundColor(.gray400)
+            }
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
@@ -47,6 +64,11 @@ struct SettingsView: View {
                 .fill(Color.gray50)
                 .frame(height: 2)
                 .padding(.top, 26)
+
+            // 토큰 사용량
+            tokenUsageRow
+                .padding(.horizontal, 20)
+                .padding(.top, 30)
 
             // 알림 설정
             HStack {
