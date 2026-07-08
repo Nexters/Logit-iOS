@@ -14,6 +14,10 @@ class SettingsViewModel: ObservableObject {
     @Published var isLoggedOut: Bool = false
     @Published var logoutError: String?
 
+    @Published var isWithdrawing: Bool = false
+    @Published var isWithdrawn: Bool = false
+    @Published var withdrawError: String?
+
     private let userRepository: UserRepository
     private let authRepository: AuthRepository
 
@@ -57,5 +61,23 @@ class SettingsViewModel: ObservableObject {
             logoutError = "로그아웃에 실패했습니다. 다시 시도해주세요."
         }
         isLoggingOut = false
+    }
+
+    func withdraw() async {
+        isWithdrawing = true
+        withdrawError = nil
+        do {
+            try await userRepository.deleteCurrentUser()
+            TokenManager.shared.clearTokens()
+            isWithdrawn = true
+            print("회원탈퇴 성공")
+        } catch let error as APIError {
+            print("회원탈퇴 실패: \(error)")
+            withdrawError = "회원탈퇴에 실패했습니다. 다시 시도해주세요."
+        } catch {
+            print("회원탈퇴 실패: \(error)")
+            withdrawError = "회원탈퇴에 실패했습니다. 다시 시도해주세요."
+        }
+        isWithdrawing = false
     }
 }

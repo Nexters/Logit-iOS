@@ -129,6 +129,7 @@ struct ApplicationInfoView: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
+        .preferredColorScheme(.light)
         .overlay {
             if showCancelAlert {
                 LogitAlertView(

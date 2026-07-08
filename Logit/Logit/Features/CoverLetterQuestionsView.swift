@@ -141,6 +141,7 @@ struct CoverLetterQuestionsView: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
+        .preferredColorScheme(.light)
     }
 }
 
