@@ -8,133 +8,149 @@
 import SwiftUI
 
 struct CoverLetterListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = CoverLetterListViewModel()
-    @State private var selectedQuestionIndex: Int = 0
-    
+
     var body: some View {
-        VStack(spacing: 0) {
-            // 상단 헤더
-            HStack {
-                Text("자기소개서")
-                    .typo(.semibold_17)
-                    .foregroundStyle(.black)
-                
-                Spacer()
-                
-                Menu {
-                    // 프로젝트 목록
-                    ForEach(viewModel.projects) { project in
-                        Button {
-                            Task {
-                                await viewModel.selectProject(project)
-                                // 프로젝트 선택 시 첫 번째 문항으로 리셋
-                                selectedQuestionIndex = 0
-                            }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(project.jobPosition)
-                                        .font(.system(size: 15, weight: .medium))
-                                    Text(project.company)
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                if viewModel.selectedProject?.id == project.id {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                    
-                } label: {
-                    Image("app_btn_menubar")
-                        .frame(width: 20, height: 20)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            
-            // 문항 탭 바
-            if !viewModel.questionList.isEmpty {
-                QuestionTabBar(
-                    questionCount: viewModel.questionList.count,
-                    selectedIndex: $selectedQuestionIndex
-                )
-                .onChange(of: selectedQuestionIndex) { _, newIndex in
-                    Task {
-                        await viewModel.selectQuestion(at: newIndex)
-                    }
-                }
-            } else if viewModel.isLoadingQuestions {
-                ProgressView()
-                    .padding(.vertical, 12)
-            }
-            
-            // 선택된 문항 내용
-            if viewModel.isLoadingQuestionDetail {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let question = viewModel.currentQuestionDetail {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // 문항
-                        Text(question.question)
-                            .typo(.bold_16)
-                            .foregroundStyle(.gray400)
-                        
-                        // 답변
-                        if let answer = question.answer, !answer.isEmpty {
-                            Text(answer)
-                                .typo(.regular_14_160)
-                                .foregroundStyle(.black)
-                        } else {
-                            Text("아직 작성된 답변이 없습니다.")
-                                .typo(.regular_14_160)
-                                .foregroundStyle(.gray300)
-                        }
-                        
+        NavigationStack {
+            VStack(spacing: 0) {
+                // 상단 헤더
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("자기소개서 목록")
+                            .typo(.bold_20)
+                            .foregroundStyle(.black)
                         Spacer()
+                        Button {
+                            appState.startAddFlow()
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.black)
+                        }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 69)
-                }
-            } else if viewModel.selectedProject != nil {
-                // 프로젝트는 선택됐는데 문항이 없는 경우
-                VStack(spacing: 12) {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.secondary)
                     
-                    Text("문항이 없습니다")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    Text("\(viewModel.projects.count)개")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.gray200)
+                        .padding(.top, 20)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                // 프로젝트 미선택
-                VStack(spacing: 12) {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.secondary)
-                    
-                    Text("프로젝트를 선택해주세요")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.secondary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+
+                // 프로젝트 리스트
+                if viewModel.isLoadingProjects {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if viewModel.projects.isEmpty {
+                    VStack(spacing: 0) {
+                        Image("app_status_empty2")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
+
+                        Text("자기소개서를 생성해보세요")
+                            .typo(.medium_15)
+                            .foregroundStyle(.gray100)
+                            .padding(.top, 16.adjustedLayout)
+
+                        Button {
+                            appState.startAddFlow()
+                        } label: {
+                            Text("자기소개서 작성")
+                                .typo(.medium_15)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 24.adjustedLayout)
+                                .padding(.vertical, 7.5.adjustedLayout)
+                                .background(.primary100)
+                                .cornerRadius(8.adjustedLayout)
+                        }
+                        .padding(.top, 17.adjustedLayout)
+                    }
+                    .offset(y: -50.adjustedLayout)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(viewModel.projects) { project in
+                                NavigationLink(destination: CoverLetterDetailView(project: project)) {
+                                    CoverLetterProjectCell(project: project)
+                                }
+                                .buttonStyle(.plain)
+
+                                Divider()
+                                    .padding(.horizontal, 20)
+                            }
+                        }
+                        .padding(.bottom, 69)
+                    }
+                    .refreshable {
+                        await viewModel.fetchProjects()
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .background(.white)
+            .navigationBarHidden(true)
+            .task {
+                await viewModel.fetchProjects()
             }
         }
-        .background(.white)
-        .task {
-            await viewModel.fetchProjects()
+    }
+}
+
+// MARK: - 프로젝트 셀
+
+private struct CoverLetterProjectCell: View {
+    let project: ProjectListItemResponse
+
+    private var dDayText: String {
+        guard let dueDateStr = project.dueDate else { return "상시" }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let date = dateFormatter.date(from: dueDateStr) ?? dueDateStr.toDate()
+
+        guard let targetDate = date else { return "상시" }
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let target = calendar.startOfDay(for: targetDate)
+        let days = calendar.dateComponents([.day], from: today, to: target).day ?? 0
+
+        if days > 0 { return "D-\(days)" }
+        else if days == 0 { return "D-Day" }
+        else { return "마감" }
+    }
+
+    private var isExpired: Bool { dDayText == "마감" }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.primary70)
+                .frame(width: 3, height: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(project.company) \(project.jobPosition)")
+                    .typo(.medium_15)
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Text(dDayText)
+                .typo(.semibold_16)
+                .foregroundStyle(isExpired ? .gray200 : .primary200)
+                .padding(.horizontal, 21)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(isExpired ? Color.gray20 : Color.primary20)
+                )
         }
-        .refreshable {
-            await viewModel.fetchProjects()
-        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .contentShape(Rectangle())
     }
 }

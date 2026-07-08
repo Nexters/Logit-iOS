@@ -23,48 +23,37 @@ struct ExperienceInfoInputView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    PageIndicator(currentPage: 1, totalPages: 3)
+                    PageIndicator(currentPage: 1, totalPages: 2)
                         .padding(.top, 16)
-                    
+
                     HStack(alignment: .center, spacing: 0) {
                         Text("경험 정보 입력")
                             .typo(.bold_18)
-                        
+
                         Spacer()
-                        
+
                         Button {
                             viewModel.loadExampleData()
                         } label: {
-                            if viewModel.isExampleLoaded {
-                                //  로드 후: 텍스트만
-                                Text("작성된 예시로 등록해보세요")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary100)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                            } else {
-                                //  로드 전: 버튼 스타일
-                                Text("예시 불러오기")
-                                    .typo(.regular_12)
-                                    .foregroundColor(.primary400)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(.gray70, lineWidth: 1)
-                                            .background(.gray20)
-                                    )
-                            }
+                            Text("예시 불러오기")
+                                .typo(.regular_12)
+                                .foregroundColor(.primary400)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.gray70, lineWidth: 1)
+                                        .background(.gray20)
+                                )
                         }
-                        .disabled(viewModel.isExampleLoaded)
                     }
                     .padding(.top, 13.25)
-                    
+
                     Text("등록하는 경험의 정보를 알려주세요")
                         .typo(.regular_15)
                         .foregroundColor(.gray300)
                         .padding(.top, 3)
-                    
+
                     VStack(spacing: 36) {
                         InputFieldView(
                             title: "경험 제목",
@@ -73,7 +62,7 @@ struct ExperienceInfoInputView: View {
                             maxLength: 100,
                             text: $viewModel.experienceTitle
                         )
-                        
+
                         DateRangeInputView(
                             title: "경험 날짜",
                             isRequired: true,
@@ -81,8 +70,8 @@ struct ExperienceInfoInputView: View {
                             endDate: $viewModel.endDate,
                             isOngoing: $viewModel.isOngoing
                         )
-                        
-                        
+
+
                         SelectableChipGroup(
                             title: "경험 유형",
                             isRequired: true,
@@ -91,27 +80,31 @@ struct ExperienceInfoInputView: View {
                         )
                     }
                     .padding(.top, 24)
-                    
+
                     Spacer()
                         .frame(minHeight: 40)
-                    
-                    Button {
-                        viewModel.navigateToStarMethod()
-                    } label: {
-                        Text("다음으로")
-                            .typo(.bold_18)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(isFormValid ? Color.primary100 : Color.gray100)
-                            .cornerRadius(12)
-                    }
-                    .disabled(!isFormValid)
-                    .padding(.bottom, 34)
                 }
                 .padding(.horizontal, 20)
             }
             .scrollToMinDistance(minDisntance: 32)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    viewModel.navigateToStarMethod()
+                } label: {
+                    Text("다음으로")
+                        .typo(.bold_18)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(isFormValid ? Color.primary100 : Color.gray100)
+                        .cornerRadius(12)
+                }
+                .disabled(!isFormValid)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
+                .padding(.top, 8)
+                .background(Color.white)
+            }
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
@@ -370,7 +363,7 @@ struct DateRangeInputView: View {
                 .typo(.regular_15)
                 .foregroundColor(.black)
                 .keyboardType(.numberPad)
-                .multilineTextAlignment(isOngoing ? .leading : .center)
+                .multilineTextAlignment(.leading)
                 .padding(.horizontal, 18)
                 .frame(height: 44)
                 .background(Color.clear)

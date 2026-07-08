@@ -15,7 +15,7 @@ class TokenManager {
     private let refreshTokenKey = "refreshToken"
     
     // 메모리 캐시 (매번 Keychain 접근 방지)
-    private var _accessToken: String? = Config.testAccessToken
+    private var _accessToken: String?
     private var _refreshToken: String?
     
     var accessToken: String? {
@@ -72,4 +72,8 @@ class TokenManager {
     var isLoggedIn: Bool {
         return accessToken != nil
     }
+
+    // MARK: - Shared Refresh Task
+    // 여러 DefaultNetworkClient 인스턴스가 동시에 refresh를 시도하는 것을 방지
+    var sharedRefreshTask: Task<Void, Error>?
 }

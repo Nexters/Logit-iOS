@@ -8,25 +8,42 @@
 import Foundation
 
 struct UpdateExperienceRequest: Encodable {
-    let action: String?
-    let category: String?
+    // 공통
     let endDate: String?
     let experienceType: String?
-    let result: String?
-    let situation: String?
+    let formatType: String?
     let startDate: String?
-    let task: String?
+    let tags: String?
     let title: String?
-    
+
+    // STAR
+    let situation: String?
+    let task: String?
+    let action: String?
+    let result: String?
+
+    // PSI
+    let problem: String?
+    let solution: String?
+    let insight: String?
+
+    // FREE
+    let content: String?
+
     enum CodingKeys: String, CodingKey {
-        case action
-        case category
         case endDate = "end_date"
         case experienceType = "experience_type"
-        case result
-        case situation
+        case formatType = "format_type"
         case startDate = "start_date"
-        case task
+        case tags
         case title
+        case situation
+        case task
+        case action
+        case result
+        case problem
+        case solution
+        case insight
+        case content
     }
 }

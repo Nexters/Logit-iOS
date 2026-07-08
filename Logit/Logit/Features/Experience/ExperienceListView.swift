@@ -8,15 +8,19 @@
 import SwiftUI
 
 struct ExperienceListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: ExperienceListViewModel
     @State private var showExperienceAddFlow = false
-    
+    @State private var selectedExperienceId: String? = nil
+    @State private var experienceToEdit: ExperienceResponse? = nil
+    @State private var openMenuExperienceId: String? = nil
+
     init() {
         let networkClient = DefaultNetworkClient()
         let repository = DefaultExperienceRepository(networkClient: networkClient)
         _viewModel = StateObject(wrappedValue: ExperienceListViewModel(experienceRepository: repository))
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             ExperienceListHeader(
@@ -24,47 +28,57 @@ struct ExperienceListView: View {
                     showExperienceAddFlow = true
                 }
             )
-            
-            if !viewModel.experiences.isEmpty {
+
+            if !viewModel.isLoading {
                 ExperienceCountLabel(count: viewModel.experiences.count)
             }
-            
+
             if viewModel.isLoading {
                 Spacer()
                 ProgressView()
                 Spacer()
             } else if viewModel.experiences.isEmpty {
-                EmptyExperienceView {
+                EmptyExperienceView(backgroundColor: .gray20) {
                     showExperienceAddFlow = true
                 }
+                .padding(.bottom, 80)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.experiences, id: \.id) { experience in
-                            ExperienceListCell(experience: experience)
-                                .onTapGesture {
-                                    print("선택된 경험: \(experience.title)")
-                                }
-                                .onAppear {
-                                    // 마지막에서 3개 전에 미리 로드
-                                    if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
-                                       lastIndex >= viewModel.experiences.count - 3 {
-                                        Task {
-                                            await viewModel.loadMore()
-                                        }
+                            ExperienceListCell(
+                                experience: experience,
+                                isMenuOpen: openMenuExperienceId == experience.id,
+                                isAnyMenuOpen: openMenuExperienceId != nil,
+                                onMenuToggle: {
+                                    openMenuExperienceId = openMenuExperienceId == experience.id ? nil : experience.id
+                                },
+                                onMenuClose: { openMenuExperienceId = nil },
+                                onTap: { selectedExperienceId = experience.id },
+                                onEdit: { experienceToEdit = experience },
+                                onDelete: {
+                                    appState.requestDeleteConfirmation(
+                                        message: "경험을 삭제하시겠어요?",
+                                        subMessage: "삭제하면 복구 못해요"
+                                    ) {
+                                        Task { await viewModel.deleteExperience(experienceId: experience.id) }
                                     }
                                 }
+                            )
+                            .onAppear {
+                                if let lastIndex = viewModel.experiences.firstIndex(where: { $0.id == experience.id }),
+                                   lastIndex >= viewModel.experiences.count - 3 {
+                                    Task { await viewModel.loadMore() }
+                                }
+                            }
                         }
-                        
-                        // 로딩 인디케이터
+
                         if viewModel.isLoadingMore {
                             ProgressView()
                                 .padding(.vertical, 20)
                         } else if viewModel.showError && !viewModel.experiences.isEmpty {
                             Button("재시도") {
-                                Task {
-                                    await viewModel.loadMore()
-                                }
+                                Task { await viewModel.loadMore() }
                             }
                             .padding(.vertical, 20)
                         }
@@ -74,18 +88,33 @@ struct ExperienceListView: View {
                     .padding(.bottom, 49 + 20)
                 }
                 .refreshable {
-                    // Pull to Refresh
                     await viewModel.fetchExperiences()
                 }
+                .simultaneousGesture(
+                    TapGesture().onEnded { openMenuExperienceId = nil }
+                )
             }
         }
         .background(.gray20)
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
-                Task {
-                    await viewModel.fetchExperiences()
-                }
+                Task { await viewModel.fetchExperiences() }
+            }
+        }
+        .fullScreenCover(item: $experienceToEdit) { experience in
+            ExperienceFlowCoordinator(experience: experience) {
+                Task { await viewModel.fetchExperiences() }
+            }
+        }
+        .fullScreenCover(item: Binding(
+            get: { selectedExperienceId.map { SelectedExperienceID(id: $0) } },
+            set: { selectedExperienceId = $0?.id }
+        ), onDismiss: {
+            Task { await viewModel.fetchExperiences() }
+        }) { target in
+            ExperienceDetailView(experienceId: target.id) {
+                Task { await viewModel.fetchExperiences() }
             }
         }
         .alert("오류", isPresented: $viewModel.showError) {
@@ -94,11 +123,16 @@ struct ExperienceListView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .task {
-            // 첫 로드
             await viewModel.fetchExperiences()
         }
     }
 }
+
+private struct SelectedExperienceID: Identifiable {
+    let id: String
+}
+
+extension ExperienceResponse: Identifiable {}
 
 struct ExperienceListHeader: View {
     let onAddTapped: () -> Void
@@ -147,36 +181,35 @@ struct ExperienceCountLabel: View {
 
 struct EmptyExperienceView: View {
     let onSelectExperience: () -> Void
-    
+    var backgroundColor: Color = .white
+
     var body: some View {
         VStack(spacing: 0) {
             Image("app_status_empty2")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80.adjustedLayout, height: 80.adjustedLayout)
-            
+
             Text("등록된 경험이 없어요")
                 .typo(.medium_15)
                 .foregroundStyle(.gray100)
                 .padding(.top, 16.adjustedLayout)
-            
+
             Button {
                 onSelectExperience()
             } label: {
                 Text("경험 등록하기")
                     .typo(.medium_15)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 39.adjustedLayout)
+                    .padding(.horizontal, 24.adjustedLayout)
                     .padding(.vertical, 7.5.adjustedLayout)
                     .background(.primary100)
                     .cornerRadius(8.adjustedLayout)
             }
             .padding(.top, 17.adjustedLayout)
         }
-        .offset(y: -10.adjustedLayout)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 60.adjustedLayout)
-        .background(.gray20)
+        .background(backgroundColor)
         .cornerRadius(16.adjustedLayout)
         .padding(.horizontal, 20.adjustedLayout)
     }
@@ -184,7 +217,14 @@ struct EmptyExperienceView: View {
 
 struct ExperienceListCell: View {
     let experience: ExperienceResponse
-    
+    var isMenuOpen: Bool = false
+    var isAnyMenuOpen: Bool = false
+    var onMenuToggle: (() -> Void)? = nil
+    var onMenuClose: (() -> Void)? = nil
+    var onTap: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
+
     // 태그 파싱 (쉼표로 분리)
     private var parsedTags: [String] {
         experience.tags
@@ -192,25 +232,89 @@ struct ExperienceListCell: View {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
     }
-    
+
     // Category를 짧은 이름으로 변환
     private var displayCategory: String {
         CompetencyMapper.toDisplayTitle(experience.category)
     }
-    
+
+    private var cellMenuPopup: some View {
+        VStack(spacing: 0) {
+            Button {
+                onMenuClose?()
+                onEdit?()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("수정")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+
+            Divider()
+
+            Button {
+                onMenuClose?()
+                onDelete?()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black)
+                    Text("삭제")
+                        .typo(.regular_14_140)
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+        }
+        .fixedSize()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 상단: 제목
-            Text(experience.title)
-                .typo(.medium_15)
-                .foregroundColor(.primary500)
-                .lineLimit(1)
-            
-            // 하단: 태그들 (가변 레이아웃)
-            AdaptiveTagsView(
-                competencyTag: displayCategory,
-                tags: parsedTags
-            )
+            // 상단: 제목 + 메뉴 버튼
+            HStack(alignment: .top) {
+                Text(experience.title)
+                    .typo(.medium_15)
+                    .foregroundColor(.primary500)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Button {
+                    onMenuToggle?()
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
+                        .foregroundStyle(.gray300)
+                        .frame(width: 20, height: 20)
+                }
+            }
+
+            // 하단: 태그들 (competency 1개 + 일반 태그 최대 2개)
+            HStack(spacing: 8) {
+                ExperienceTag(
+                    text: displayCategory,
+                    icon: displayCategory,
+                    isCompetency: true
+                )
+                ForEach(parsedTags.prefix(2), id: \.self) { tag in
+                    ExperienceTag(text: tag)
+                }
+                Spacer()
+            }
         }
         .padding(16)
         .background(Color.white)
@@ -219,6 +323,17 @@ struct ExperienceListCell: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray70, lineWidth: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if isAnyMenuOpen { onMenuClose?() } else { onTap?() }
+        }
+        .overlay(alignment: .topTrailing) {
+            if isMenuOpen {
+                cellMenuPopup
+                    .alignmentGuide(.top) { d in d[.bottom] - 44 }
+                    .padding(.trailing, 16)
+            }
+        }
     }
 }
 

@@ -13,30 +13,36 @@ enum QuestionEndpoint: Endpoint {
     case getQuestionDetail(projectId: String, questionId: String)       // 문항 상세 조회
     case updateQuestion(projectId: String, questionId: String)          // 문항 수정
     case deleteQuestion(projectId: String, questionId: String)          // 문항 삭제
-    
+    case completeQuestion(projectId: String, questionId: String)        // 문항 작성완료 토글
+
     var path: String {
         switch self {
         case .createQuestion(let projectId):
             return "/api/v1/projects/\(projectId)/questions/"
-            
+
         case .getQuestionList(let projectId):
             return "/api/v1/projects/\(projectId)/questions/"
-            
+
         case .getQuestionDetail(let projectId, let questionId):
             return "/api/v1/projects/\(projectId)/questions/\(questionId)"
-            
+
         case .updateQuestion(let projectId, let questionId):
             return "/api/v1/projects/\(projectId)/questions/\(questionId)"
-            
+
         case .deleteQuestion(let projectId, let questionId):
             return "/api/v1/projects/\(projectId)/questions/\(questionId)"
+
+        case .completeQuestion(let projectId, let questionId):
+            return "/api/v1/projects/\(projectId)/questions/\(questionId)/complete"
         }
     }
-    
+
     var method: HTTPMethod {
         switch self {
         case .createQuestion:
             return .post
+        case .completeQuestion:
+            return .patch
         case .getQuestionList, .getQuestionDetail:
             return .get
         case .updateQuestion:

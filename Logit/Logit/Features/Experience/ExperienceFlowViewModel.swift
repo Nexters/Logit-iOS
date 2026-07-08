@@ -7,17 +7,45 @@
 
 import SwiftUI
 
+enum ExperienceMethod: String, CaseIterable {
+    case star = "STAR"
+    case psi  = "PSI"
+    case free = "FREE"
+
+    var displayName: String {
+        switch self {
+        case .star: return "STAR"
+        case .psi:  return "PSI"
+        case .free: return "자유형식"
+        }
+    }
+}
+
 @MainActor
 class ExperienceFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
-    
+
+    // 경험 정리 방법
+    @Published var selectedMethod: ExperienceMethod = .star
+
     // 데이터
     @Published var experienceTitle: String = ""
     @Published var experienceType: String?
+
+    // STAR
     @Published var situation: String = ""
     @Published var task: String = ""
     @Published var action: String = ""
     @Published var result: String = ""
+
+    // PSI
+    @Published var problem: String = ""
+    @Published var solution: String = ""
+    @Published var insight: String = ""
+
+    // FREE
+    @Published var content: String = ""
+
     @Published var selectedCompetency: String?
     
     @Published var startDate: Date?
@@ -25,26 +53,67 @@ class ExperienceFlowViewModel: ObservableObject {
     @Published var isOngoing: Bool = false
     
     var onComplete: (() -> Void)?
-    
+
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
     @Published var isExampleLoaded: Bool = false
-    @Published var isStarExampleLoaded: Bool = false
-    
+
+    // 수정 모드
+    @Published var isEditMode: Bool = false
+    private var editingExperienceId: String? = nil
+
     private let experienceRepository: ExperienceRepository
-    
-    init(experienceRepository: ExperienceRepository) {
+
+    init(experienceRepository: ExperienceRepository, existingExperience: ExperienceResponse? = nil) {
         self.experienceRepository = experienceRepository
+        guard let experience = existingExperience else { return }
+
+        isEditMode = true
+        editingExperienceId = experience.id
+        experienceTitle = experience.title
+        experienceType = experience.experienceType
+        selectedMethod = ExperienceMethod(rawValue: experience.formatType ?? "STAR") ?? .star
+        selectedCompetency = experience.tags.isEmpty ? nil : experience.tags
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        for format in ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: experience.startDate) {
+                startDate = date
+                break
+            }
+        }
+        if let endDateStr = experience.endDate, !endDateStr.isEmpty {
+            for format in ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
+                formatter.dateFormat = format
+                if let date = formatter.date(from: endDateStr) {
+                    endDate = date
+                    break
+                }
+            }
+            isOngoing = false
+        } else {
+            isOngoing = true
+        }
+
+        situation = experience.situation ?? ""
+        task = experience.task ?? ""
+        action = experience.action ?? ""
+        result = experience.result ?? ""
+        problem = experience.problem ?? ""
+        solution = experience.solution ?? ""
+        insight = experience.insight ?? ""
+        content = experience.content ?? ""
+
+        path.append(ExperienceFlowRoute.starMethod)
     }
     
     // Navigation 함수들
     func navigateToStarMethod() {
         path.append(ExperienceFlowRoute.starMethod)
-    }
-    
-    func navigateToExperienceType() {
-        path.append(ExperienceFlowRoute.experienceType)
     }
     
     func navigateBack() {
@@ -54,40 +123,93 @@ class ExperienceFlowViewModel: ObservableObject {
     }
     
     func saveExperience() async {
-         isLoading = true
-         errorMessage = nil
-         
-         do {
-             // Request 생성
-             let request = CreateExperienceRequest(
-                 action: action,
-                 category: selectedCompetency ?? "",
-                 endDate: isOngoing ? "" : (endDate?.toString() ?? ""),
-                 experienceType: experienceType ?? "",
-                 result: result,
-                 situation: situation,
-                 startDate: startDate?.toString() ?? "",
-                 task: task,
-                 title: experienceTitle
-             )
-             
-             // API 호출
-             let response: ExperienceResponse = try await experienceRepository.createExperience(request)
-             
-             print("경험 등록 성공: \(response)")
-             
-             // 성공하면 그냥 dismiss
-             onComplete?()
-             
-         } catch let error as APIError {
-             handleAPIError(error)
-         } catch {
-             errorMessage = "알 수 없는 오류가 발생했습니다."
-             showError = true
-         }
-         
-         isLoading = false
-     }
+        isLoading = true
+        errorMessage = nil
+
+        let commonEndDate = isOngoing ? nil : (endDate?.toString() ?? "")
+        let commonStartDate = startDate?.toString() ?? ""
+
+        do {
+            if isEditMode {
+                try await performUpdate(startDate: commonStartDate, endDate: commonEndDate)
+            } else {
+                try await performCreate(startDate: commonStartDate, endDate: commonEndDate)
+            }
+            onComplete?()
+        } catch let error as APIError {
+            handleAPIError(error)
+        } catch {
+            errorMessage = "알 수 없는 오류가 발생했습니다."
+            showError = true
+        }
+
+        isLoading = false
+    }
+
+    private func performCreate(startDate: String, endDate: String?) async throws {
+        let request: CreateExperienceRequest
+        switch selectedMethod {
+        case .star:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "STAR", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: situation, task: task, action: action, result: result,
+                problem: nil, solution: nil, insight: nil, content: nil
+            )
+        case .psi:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "PSI", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: problem, solution: solution, insight: insight, content: nil
+            )
+        case .free:
+            request = CreateExperienceRequest(
+                endDate: endDate, experienceType: experienceType ?? "",
+                formatType: "FREE", startDate: startDate,
+                tags: selectedCompetency ?? "", title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: nil, solution: nil, insight: nil, content: content
+            )
+        }
+        let response = try await experienceRepository.createExperience(request)
+        print("경험 등록 성공: \(response)")
+    }
+
+    private func performUpdate(startDate: String, endDate: String?) async throws {
+        guard let experienceId = editingExperienceId else { return }
+        let request: UpdateExperienceRequest
+        switch selectedMethod {
+        case .star:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "STAR", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: situation, task: task, action: action, result: result,
+                problem: nil, solution: nil, insight: nil, content: nil
+            )
+        case .psi:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "PSI", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: problem, solution: solution, insight: insight, content: nil
+            )
+        case .free:
+            request = UpdateExperienceRequest(
+                endDate: endDate, experienceType: experienceType,
+                formatType: "FREE", startDate: startDate,
+                tags: selectedCompetency, title: experienceTitle,
+                situation: nil, task: nil, action: nil, result: nil,
+                problem: nil, solution: nil, insight: nil, content: content
+            )
+        }
+        let response = try await experienceRepository.updateExperience(experienceId: experienceId, request: request)
+        print("경험 수정 성공: \(response)")
+    }
     
     private func handleAPIError(_ error: APIError) {
         switch error {
@@ -104,8 +226,6 @@ class ExperienceFlowViewModel: ObservableObject {
     }
     
     func loadExampleData() {
-        guard !isExampleLoaded else { return }
-        
         experienceTitle = "iOS 앱 개발 인턴"
         experienceType = "인턴"
         
@@ -117,19 +237,23 @@ class ExperienceFlowViewModel: ObservableObject {
         isExampleLoaded = true
     }
     
-    // STAR 기반 경험 정리 예시 데이터 불러오기
-        func loadStarExampleData() {
-            guard !isStarExampleLoaded else { return }
+    func loadExampleData(for method: ExperienceMethod) {
+        switch method {
+        case .star:
             situation = "앱 사용자 이탈률이 지속적으로 증가하여 월 평균 20%의 사용자가 앱을 삭제하는 문제가 발생했습니다. 데이터 분석 결과, 첫 로그인 후 3일 이내 이탈이 가장 높았습니다."
-            
             task = "사용자 이탈률을 분석하고, 3개월 내 이탈률을 10% 이하로 낮추는 것이 목표였습니다. 특히 신규 사용자의 온보딩 경험을 개선해야 했습니다."
-            
-            action = "Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석했습니다. 온보딩 프로세스를 3단계에서 5단계로 세분화하고, 각 단계마다 핵심 기능을 직접 체험할 수 있도록 인터랙티브 튜토리얼을 구현했습니다. SwiftUI를 활용해 부드러운 애니메이션과 직관적인 UI를 제공했습니다."
-            
-            result = "3개월 후 신규 사용자 이탈률이 20%에서 8%로 감소했습니다. 특히 온보딩 완료율이 45%에서 78%로 증가했고, 첫 3일 내 핵심 기능 사용률이 2배 향상되었습니다. 이 경험을 통해 데이터 기반 의사결정의 중요성과 사용자 경험 개선이 비즈니스 성과에 직접적인 영향을 미친다는 것을 배웠습니다."
-            
-            isStarExampleLoaded = true
+            action = "Firebase Analytics와 Mixpanel을 활용해 사용자 행동 패턴을 분석했습니다. 온보딩 프로세스를 3단계에서 5단계로 세분화하고, 각 단계마다 핵심 기능을 직접 체험할 수 있도록 인터랙티브 튜토리얼을 구현했습니다."
+            result = "3개월 후 신규 사용자 이탈률이 20%에서 8%로 감소했습니다. 온보딩 완료율이 45%에서 78%로 증가했고, 데이터 기반 의사결정의 중요성을 직접 체감했습니다."
+
+        case .psi:
+            problem = "신규 기능 출시 후 서버 응답 속도가 평균 3초를 초과하며 사용자 불만이 급증했습니다. 특히 피크 타임에 타임아웃 오류가 빈번하게 발생해 서비스 신뢰도가 하락하는 상황이었습니다."
+            solution = "프로파일링 도구로 병목 구간을 특정하고, 불필요한 API 중복 호출을 제거했습니다. 캐싱 레이어를 도입하고 데이터베이스 쿼리를 최적화해 응답 속도를 개선했습니다."
+            insight = "성능 문제는 코드 품질만의 문제가 아니라 아키텍처 설계 단계에서 결정된다는 것을 배웠습니다. 기능 개발 전 부하 테스트를 선행하는 것이 훨씬 효율적임을 깨달았습니다."
+
+        case .free:
+            content = "스타트업 인턴십 기간 동안 처음으로 실제 서비스에 기여하는 경험을 했습니다. 초반에는 낯선 코드베이스와 빠른 개발 속도에 적응하기 힘들었지만, 팀원들과 적극적으로 소통하며 온보딩 기간을 단축했습니다. 맡은 기능을 기한 내에 완성하면서 협업과 자기주도적 학습의 중요성을 실감했고, 이 경험이 이후 프로젝트에서 큰 자산이 됐습니다."
         }
+    }
     
     
     @ViewBuilder
@@ -137,8 +261,6 @@ class ExperienceFlowViewModel: ObservableObject {
         switch route {
         case .starMethod:
             ExperienceStarMethodView()
-        case .experienceType:
-            ExperienceTypeSelectionView()
         }
     }
 }

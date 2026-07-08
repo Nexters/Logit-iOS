@@ -10,88 +10,96 @@ import SwiftUI
 @MainActor
 class AppState: ObservableObject {
     @Published var appPhase: AppPhase = .splash
-    @Published var isShowingSignUpSheet: Bool = false
     @Published var isShowingAddFlow: Bool = false
     @Published var isShowingSettings = false
     @Published var selectedProjectId: String?
+    @Published var isShowingDeleteAlert: Bool = false
+    var onDeleteConfirm: (() -> Void)?
+    var deleteAlertMessage: String = "삭제하시겠어요?"
+    var deleteAlertSubMessage: String? = "삭제하면 복구 못해요"
 
-    enum AppPhase {
-        case splash
-        case login
-        case main
-    }
+    private let tokenManager: TokenManager
+    private let authRepository: AuthRepository
+    private var authObserver: NSObjectProtocol?  // 반드시 strong reference 유지
 
-    // Mock용 상태
-    private var mockAccessToken: String?
-    private var mockIsRegistrationComplete: Bool = false
+    init(
+        tokenManager: TokenManager = .shared,
+        authRepository: AuthRepository = DefaultAuthRepository()
+    ) {
+        self.tokenManager = tokenManager
+        self.authRepository = authRepository
 
-    // 테스트용 초기화
-    init(mockScenario: MockScenario = .noToken) {
-        switch mockScenario {
-        case .noToken:
-            mockAccessToken = nil
-            mockIsRegistrationComplete = false
-
-        case .existingUser:
-            mockAccessToken = "mock_token_existing"
-            mockIsRegistrationComplete = true
-
-        case .newUser:
-            mockAccessToken = "mock_token_new"
-            mockIsRegistrationComplete = false
-        }
-    }
-
-    enum MockScenario {
-        case noToken  // 로그인 필요
-        case existingUser  // 바로 메인으로
-        case newUser  // 약관동의로
-    }
-
-    func checkAuthenticationStatus() {
-        // Splash 후 자동 로그인 체크
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let token = self.mockAccessToken {
-                // 토큰이 있으면 회원가입 완료 여부 확인
-                if self.mockIsRegistrationComplete {
-                    self.appPhase = .main
-                } else {
-                    // 신규 유저는 로그인 화면에서 시트 표시
-                    self.appPhase = .login
-                    self.isShowingSignUpSheet = true
-                }
-            } else {
-                // 토큰이 없으면 로그인 화면
-                self.appPhase = .login
+        // Refresh token 만료 시 자동으로 로그인 화면으로 이동
+        // addObserver(forName:queue:using:)는 반환 토큰을 저장해야 observer가 유지됨
+        authObserver = NotificationCenter.default.addObserver(
+            forName: .authenticationRequired,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.forceLogout()
             }
         }
     }
 
-    // Mock 로그인 (기존 유저)
-    func mockLoginExistingUser() {
-        mockAccessToken = "mock_token_existing"
-        mockIsRegistrationComplete = true
-        appPhase = .main
-    }
-    
-    // Mock 로그인 (신규 유저)
-    func mockLoginNewUser() {
-        mockAccessToken = "mock_token_new"
-        mockIsRegistrationComplete = false
-        isShowingSignUpSheet = false
+    deinit {
+        if let observer = authObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
-    // 회원가입 완료
-    func completeRegistration() {
-        mockIsRegistrationComplete = true
-        isShowingSignUpSheet = false
+    enum AppPhase {
+        case splash
+        case login
+        case onboarding
+        case main
+    }
+
+    func requestDeleteConfirmation(
+        message: String = "삭제하시겠어요?",
+        subMessage: String? = "삭제하면 복구 못해요",
+        onConfirm: @escaping () -> Void
+    ) {
+        deleteAlertMessage = message
+        deleteAlertSubMessage = subMessage
+        onDeleteConfirm = onConfirm
+        isShowingDeleteAlert = true
+    }
+
+    func dismissDeleteAlert() {
+        isShowingDeleteAlert = false
+        onDeleteConfirm = nil
+    }
+
+    // Splash 후 Keychain 토큰 여부로 분기
+    func checkAuthenticationStatus() {
+        if tokenManager.isLoggedIn {
+            appPhase = .main
+        } else {
+            appPhase = .login
+        }
+    }
+
+    // 온보딩 완료
+    func completeOnboarding() {
         appPhase = .main
     }
 
-    // 로그아웃
+    // 정상 로그아웃 (서버 API 호출 후 토큰 삭제)
     func logout() {
-        mockAccessToken = nil
-        mockIsRegistrationComplete = false
+        Task {
+            try? await authRepository.logout()
+            forceLogout()
+        }
+    }
+
+    // 강제 로그아웃 (refresh 실패 등 인증 완전 만료 시 API 없이 즉시 이동)
+    func forceLogout() {
+        tokenManager.clearTokens()
+        isShowingSettings = false
+        isShowingAddFlow = false
+        selectedProjectId = nil
+        isShowingDeleteAlert = false
         appPhase = .login
     }
 
@@ -103,7 +111,10 @@ class AppState: ObservableObject {
         isShowingSettings = true
     }
 
-    func openWorkspace(projectId: String) {
+    var openWorkspaceOnCoverLetterTab: Bool = false
+
+    func openWorkspace(projectId: String, onCoverLetterTab: Bool = false) {
+        openWorkspaceOnCoverLetterTab = onCoverLetterTab
         selectedProjectId = projectId
     }
 }

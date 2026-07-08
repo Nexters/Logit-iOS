@@ -10,31 +10,59 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = HomeViewModel()
-    
+    @State private var openMenuProjectId: String? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             HomeHeaderView()
-            
-            ExperienceTypeSection()
-                .padding(.top, 22.adjustedLayout)
-            
-            ProjectListSection(
-                hasProjects: viewModel.hasProjects,
-                projects: viewModel.projects,
-                isLoading: viewModel.isLoading
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ExperienceTypeSection()
+                        .padding(.top, 22.adjustedLayout)
+
+                    ProjectListSection(
+                        hasProjects: viewModel.hasProjects,
+                        projects: viewModel.projects,
+                        isLoading: viewModel.isLoading,
+                        onDelete: { projectId in
+                            appState.requestDeleteConfirmation {
+                                Task { await viewModel.deleteProject(projectId: projectId) }
+                            }
+                        },
+                        openMenuProjectId: $openMenuProjectId
+                    )
+                    .padding(.top, 43.adjustedLayout)
+                }
+            }
+            .refreshable {
+                await viewModel.fetchProjects()
+            }
+            .simultaneousGesture(
+                TapGesture().onEnded { openMenuProjectId = nil }
             )
-            .padding(.top, 43.adjustedLayout)
-            
-            Spacer()
         }
         .background(.white)
-        .task {
-            // 화면이 나타날 때 프로젝트 목록 조회
-            await viewModel.fetchProjects()
+        .onAppear {
+            Task {
+                async let projects: () = viewModel.fetchProjects()
+                async let user: () = viewModel.fetchCurrentUser()
+                _ = await (projects, user)
+            }
         }
-        .refreshable {
-            // Pull to refresh
-            await viewModel.fetchProjects()
+        .onChange(of: appState.selectedProjectId) { _, newValue in
+            if newValue == nil {
+                Task {
+                    await viewModel.fetchProjects()
+                }
+            }
+        }
+        .onChange(of: appState.isShowingAddFlow) { _, newValue in
+            if !newValue {
+                Task {
+                    await viewModel.fetchProjects()
+                }
+            }
         }
     }
 }

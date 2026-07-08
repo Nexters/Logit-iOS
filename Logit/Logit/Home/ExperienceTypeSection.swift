@@ -8,90 +8,50 @@
 import SwiftUI
 
 struct ExperienceTypeSection: View {
+    @State private var currentIndex: Int = 0
+    private let totalCount = 8
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12.adjustedLayout) {
-            Text("로짓님의 경험 유형")
+            Text("경험 유형")
                 .typo(.bold_18)
                 .foregroundStyle(.black)
-            
-            TabView {
-                ExperienceCardView(
-                    title: "주도적 실행력",
-                    count: 7,
-                    imageName: "주도적 실행력",
-                    currentPage: 1,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.experienceCard)
-                )
-                
-                ExperienceCardView(
-                    title: "기술적 전문성",
-                    count: 5,
-                    imageName: "기술적 전문성",
-                    currentPage: 2,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.experienceCard)
-                )
-                
-                ExperienceCardView(
-                    title: "논리적 분석력",
-                    count: 3,
-                    imageName: "논리적 분석력",
-                    currentPage: 3,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.experienceCard)
-                )
-                
-                ExperienceCardView(
-                    title: "창의적 문제해결",
-                    count: 3,
-                    imageName: "창의적 문제해결",
-                    currentPage: 4,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.experienceCard)
-                )
-                
-                ExperienceCardView(
-                    title: "협력적 소통",
-                    count: 3,
-                    imageName: "협력적 소통",
-                    currentPage: 5,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.empty100)
-                )
-                
-                ExperienceCardView(
-                    title: "끈기 있는 책임감",
-                    count: 3,
-                    imageName: "끈기 있는 책임감",
-                    currentPage: 6,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.empty200)
-                )
-                
-                ExperienceCardView(
-                    title: "유연한 적응력",
-                    count: 3,
-                    imageName: "유연한 적응력",
-                    currentPage: 7,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.empty100)
-                )
-                
-                ExperienceCardView(
-                    title: "고객 가치 지향",
-                    count: 3,
-                    imageName: "고객 가치 지향",
-                    currentPage: 8,
-                    totalPages: 8,
-                    backgroundStyle: .gradient(.empty100)
-                )
-                
-                
+
+            ZStack(alignment: .bottomLeading) {
+                if let asset = NSDataAsset(name: "homeBanner_\(currentIndex + 1)"),
+                   let uiImage = UIImage(data: asset.data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .id(currentIndex)
+                        .transition(.identity)
+                }
+
+                Text("\(currentIndex + 1)/\(totalCount)")
+                    .typo(.semibold_14)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16.adjustedLayout)
+                    .padding(.vertical, 2.5.adjustedLayout)
+                    .background(Color.black.opacity(0.2))
+                    .cornerRadius(12)
+                    .padding(.leading, 12.adjustedLayout)
+                    .padding(.bottom, 12.adjustedLayout)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(height: 155.adjustedHeight)
             .background(.white)
+            .animation(.none, value: currentIndex)
+            .gesture(
+                DragGesture(minimumDistance: 30)
+                    .onEnded { value in
+                        if value.translation.width < 0 {
+                            currentIndex = (currentIndex + 1) % totalCount
+                        } else {
+                            currentIndex = (currentIndex - 1 + totalCount) % totalCount
+                        }
+                    }
+            )
         }
         .padding(.horizontal, 20.adjustedLayout)
         .background(.white)

@@ -11,9 +11,11 @@ struct ExperienceSelectionSheet: View {
     @Binding var isPresented: Bool
     @State private var showExperienceAddFlow = false
     @State private var experiences: [MatchingExperience] = []
-    @State private var selectedExperienceIds: Set<String> = []  
+    @State private var selectedExperienceIds: Set<String> = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var previousExperienceIds: Set<String> = []
+    @State private var newlyAddedExperienceId: String? = nil
     
     let questionId: String  //  문항 ID
     let initialSelectedIds: [String]  // 기존 선택된 경험 ID
@@ -77,6 +79,7 @@ struct ExperienceSelectionSheet: View {
             
             // 추가하기 버튼
             Button {
+                previousExperienceIds = Set(experiences.map { $0.experience.id })
                 showExperienceAddFlow = true
             } label: {
                 HStack(spacing: 8) {
@@ -100,56 +103,69 @@ struct ExperienceSelectionSheet: View {
             .padding(.bottom, 16)
             
             // 컨텐츠 영역
-            if isLoading {
-                //  로딩 상태
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
-            } else if let error = errorMessage {
-                //  에러 상태
-                VStack(spacing: 12) {
-                    Text(error)
-                        .typo(.regular_14_160)
-                        .foregroundColor(.gray200)
-                    
-                    Button("다시 시도") {
-                        Task {
-                            await loadMatchingExperiences()
-                        }
-                    }
-                    .typo(.medium_13)
-                    .foregroundColor(.primary100)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
-            } else {
-                // 경험 리스트
-                ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(
-                            experiences.sorted(by: { $0.similarityScore > $1.similarityScore }),
-                            id: \.experience.id
-                        ) { matchingExperience in
-                            SelectableExperienceCell(
-                                experience: matchingExperience.experience,
-                                similarityScore: matchingExperience.similarityScore,
-                                
-                                isSelected: selectedExperienceIds.contains(matchingExperience.experience.id),
-                                onTap: {
-                                    toggleSelection(matchingExperience.experience.id)
-                                },
-                                onMoreTapped: {
-                                    // TODO: 수정/삭제 메뉴 표시
-                                    print("더보기 버튼 클릭: \(matchingExperience.experience.title)")
+            ScrollViewReader { proxy in
+                Group {
+                    if isLoading {
+                        // 로딩 상태
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    } else if let error = errorMessage {
+                        // 에러 상태
+                        VStack(spacing: 12) {
+                            Text(error)
+                                .typo(.regular_14_160)
+                                .foregroundColor(.gray200)
+
+                            Button("다시 시도") {
+                                Task {
+                                    await loadMatchingExperiences()
                                 }
-                            )
+                            }
+                            .typo(.medium_13)
+                            .foregroundColor(.primary100)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    } else {
+                        // 경험 리스트
+                        ScrollView {
+                            VStack(spacing: 12) {
+                                ForEach(
+                                    experiences.sorted(by: { $0.similarityScore > $1.similarityScore }),
+                                    id: \.experience.id
+                                ) { matchingExperience in
+                                    SelectableExperienceCell(
+                                        experience: matchingExperience.experience,
+                                        similarityScore: matchingExperience.similarityScore,
+                                        isSelected: selectedExperienceIds.contains(matchingExperience.experience.id),
+                                        onTap: {
+                                            toggleSelection(matchingExperience.experience.id)
+                                        },
+                                        onMoreTapped: {
+                                            // TODO: 수정/삭제 메뉴 표시
+                                            print("더보기 버튼 클릭: \(matchingExperience.experience.title)")
+                                        }
+                                    )
+                                    .id(matchingExperience.experience.id)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 4)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
                 }
-                .padding(.bottom, 20)
+                .onChange(of: newlyAddedExperienceId) { id in
+                    guard let id else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            proxy.scrollTo(id, anchor: .center)
+                        }
+                        newlyAddedExperienceId = nil
+                    }
+                }
             }
+            .padding(.bottom, 20)
             
             // 하단 확인 버튼
             Button {
@@ -168,13 +184,16 @@ struct ExperienceSelectionSheet: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
         }
-        .presentationDetents([.large])
+        .background(.gray20)
+        .presentationDetents([.fraction(760 / 812)])
         .presentationDragIndicator(.hidden)
         .fullScreenCover(isPresented: $showExperienceAddFlow) {
             ExperienceFlowCoordinator {
                 print(" 경험 등록 완료 - 목록 새로고침")
                 Task {
                     await loadMatchingExperiences()
+                    let newIds = Set(experiences.map { $0.experience.id })
+                    newlyAddedExperienceId = newIds.subtracting(previousExperienceIds).first
                 }
             }
         }
@@ -274,7 +293,7 @@ struct SelectableExperienceCell: View {
             VStack(alignment: .leading, spacing: 12) {
                 //  상단: 점수 + 더보기 버튼
                 HStack {
-                    Text("\(displayScore)점")
+                    Text("공고 매칭 점수: \(displayScore)점")
                         .typo(.medium_13)
                         .foregroundColor(.primary100)
                     
@@ -299,19 +318,11 @@ struct SelectableExperienceCell: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                //  하단: 태그들 + 체크 아이콘
-                HStack(alignment: .bottom) {
-                    AdaptiveTagsView(
-                        competencyTag: displayCategory,
-                        tags: parsedTags
-                    )
-                    
-                    Spacer()
-                    
-                    Image(isSelected ? "checkmark_selected" : "checkmark_unselected")
-                        .resizable()
-                        .frame(width: 32, height: 32)
-                }
+                //  하단: 태그들
+                AdaptiveTagsView(
+                    competencyTag: displayCategory,
+                    tags: parsedTags
+                )
             }
             .padding(16)
             .background(Color.white)

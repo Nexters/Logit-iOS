@@ -9,7 +9,7 @@ import Foundation
 
 struct UserResponse: Decodable {
     let email: String
-    let fullName: String
+    let fullName: String?
     let id: String
     let oauthProvider: String
     let profileImageUrl: String?

@@ -18,6 +18,8 @@ protocol QuestionRepository {
     func updateQuestion(projectId: String, questionId: String, request: UpdateQuestionRequest) async throws -> QuestionDetailResponse
     /// 문항 삭제
     func deleteQuestion(projectId: String, questionId: String) async throws
+    /// 문항 작성완료 토글
+    func completeQuestion(projectId: String, questionId: String) async throws -> QuestionDetailResponse
 }
 
 class DefaultQuestionRepository: QuestionRepository {
@@ -64,6 +66,14 @@ class DefaultQuestionRepository: QuestionRepository {
     func deleteQuestion(projectId: String, questionId: String) async throws {
         try await networkClient.request(
             endpoint: QuestionEndpoint.deleteQuestion(projectId: projectId, questionId: questionId),
+            body: nil
+        )
+    }
+
+    // 문항 작성완료 토글
+    func completeQuestion(projectId: String, questionId: String) async throws -> QuestionDetailResponse {
+        return try await networkClient.request(
+            endpoint: QuestionEndpoint.completeQuestion(projectId: projectId, questionId: questionId),
             body: nil
         )
     }

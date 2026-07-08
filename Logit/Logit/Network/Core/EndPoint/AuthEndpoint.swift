@@ -38,4 +38,13 @@ enum AuthEndpoint: Endpoint {
             return .post
         }
     }
+
+    var requiresAuth: Bool {
+        switch self {
+        case .googleLogin, .appleLogin, .refreshToken:
+            return false  // 로그인/refresh는 토큰 없이 요청
+        case .googleCallback, .logout:
+            return true
+        }
+    }
 }

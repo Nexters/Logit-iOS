@@ -12,9 +12,8 @@ struct LoginView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = LoginViewModel()
 
-    // TODO: 실제 URL로 교체
-    private let termsOfServiceURL = URL(string: "https://your-domain.com/terms")!
-    private let privacyPolicyURL = URL(string: "https://your-domain.com/privacy")!
+    private let termsOfServiceURL = URL(string: "https://docs.logit.ai.kr/policys/tos")!
+    private let privacyPolicyURL = URL(string: "https://docs.logit.ai.kr/policys/privacy-policy")!
 
     private var termsAndPrivacyText: some View {
         var baseText = AttributedString("계속하면 ")
@@ -22,16 +21,16 @@ struct LoginView: View {
 
         var termsText = AttributedString("이용약관")
         termsText.link = termsOfServiceURL
-        termsText.foregroundColor = .blue
-        termsText.underlineStyle = Text.LineStyle(pattern: .solid, color: .blue)
+        termsText.foregroundColor = .primary100
+        termsText.underlineStyle = Text.LineStyle(pattern: .solid, color: .primary100)
 
         var dotText = AttributedString(" · ")
         dotText.foregroundColor = Color.gray300
 
         var privacyText = AttributedString("개인정보 처리방침")
         privacyText.link = privacyPolicyURL
-        privacyText.foregroundColor = .blue
-        privacyText.underlineStyle = Text.LineStyle(pattern: .solid, color: .blue)
+        privacyText.foregroundColor = .primary100
+        privacyText.underlineStyle = Text.LineStyle(pattern: .solid, color: .primary100)
 
         var endText = AttributedString("에 동의합니다.")
         endText.foregroundColor = Color.gray300
@@ -55,11 +54,12 @@ struct LoginView: View {
                     .scaledToFit()
                     .frame(width: 71.1.adjustedWidth, height: 36.adjustedHeight)
                 
-                Text("자소서가 쉬워지는곳")
+                Text("자소서가 쉬워지는 곳")
                     .typo(.semibold_18)
                     .foregroundStyle(.gray100)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .offset(y: -50)
             .ignoresSafeArea()
             
             // 하단 버튼
@@ -115,9 +115,10 @@ struct LoginView: View {
                     )
 
                 termsAndPrivacyText
+                    .padding(.top, 26)
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 63)
+            .padding(.bottom, 20)
             .frame(maxHeight: .infinity, alignment: .bottom)
 
             // 로딩 오버레이
@@ -133,7 +134,7 @@ struct LoginView: View {
         .onChange(of: viewModel.loginResult) { _, result in
             guard let result else { return }
             if result.isNewUser {
-                appState.isShowingSignUpSheet = true
+                appState.appPhase = .onboarding
             } else {
                 appState.appPhase = .main
             }

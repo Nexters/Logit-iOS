@@ -10,6 +10,7 @@ import Charts
 
 struct ReportView: View {
     @StateObject private var viewModel = ReportViewModel()
+    @State private var showExperienceAddFlow = false
 
     var body: some View {
         Group {
@@ -30,6 +31,23 @@ struct ReportView: View {
                     .foregroundStyle(Color.primary100)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.isEmpty {
+                VStack(spacing: 0) {
+                    Text("\(viewModel.userName)님의 프로파일")
+                        .typo(.bold_20)
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 10)
+                        .padding(.leading, 20)
+
+                    EmptyExperienceView {
+                        showExperienceAddFlow = true
+                    }
+                    .padding(.top, 36)
+                    .padding(.bottom, 80)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.white)
             } else {
                 contentView
             }
@@ -38,33 +56,43 @@ struct ReportView: View {
         .task {
             await viewModel.fetchExperienceSummary()
         }
+        .fullScreenCover(isPresented: $showExperienceAddFlow) {
+            ExperienceFlowCoordinator {
+                Task { await viewModel.fetchExperienceSummary() }
+            }
+        }
     }
 
     // MARK: - Main Content
 
     private var contentView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // 프로필 카드 영역
-                profileSection
+        VStack(spacing: 0) {
+            // 고정 타이틀
+            Text("\(viewModel.userName)님의 프로파일")
+                .typo(.bold_20)
+                .foregroundStyle(.black)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 10)
+                .padding(.leading, 20)
+                .background(.white)
 
-                // 그래프 카드 영역
-                graphSection
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 프로필 카드 영역
+                    profileSection
+
+                    // 그래프 카드 영역
+                    graphSection
+                }
             }
+            .scrollIndicators(.hidden)
         }
-        .scrollIndicators(.hidden)
     }
 
     // MARK: - Profile Section
 
     private var profileSection: some View {
         VStack {
-            Text("로짓님의 프로파일")
-                .typo(.bold_20)
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 10)
-                .padding(.leading, 20)
 
             if let asset = NSDataAsset(name: viewModel.topCategoryImageName),
                let uiImage = UIImage(data: asset.data) {
@@ -78,6 +106,29 @@ struct ReportView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 11)
             }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(viewModel.userName)님의 강점들을 모아봤어요")
+                    .typo(.bold_18)
+                    .foregroundStyle(.black)
+
+                Text(viewModel.categoryDescription)
+                    .typo(.regular_15)
+                    .foregroundStyle(.gray)
+
+                if !viewModel.allCategoryTags.isEmpty {
+                    FlowLayout(spacing: 8) {
+                        ForEach(viewModel.allCategoryTags, id: \.self) { tag in
+                            ExperienceTag(text: tag, icon: tag, isCompetency: true)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 20)
         }
         .background(.white)
     }
@@ -92,7 +143,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("\(viewModel.weakestCategoryDisplay)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                Text(viewModel.barChartSubDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -111,7 +162,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("자주 사용하는 키워드를 확인해보세요")
+                Text(viewModel.donutChartDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -133,7 +184,7 @@ struct ReportView: View {
                     .typo(.bold_18)
                     .foregroundStyle(.black)
 
-                Text("\(viewModel.weakestType)을 보완하면 더 균형 잡힌 역량의 인재로 보일 수 있어요!")
+                Text(viewModel.horizontalBarChartDescription)
                     .typo(.regular_15)
                     .foregroundStyle(.gray)
 
@@ -147,7 +198,7 @@ struct ReportView: View {
             .padding(.top, 16)
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 64)
+        .padding(.bottom, (49 + 40).adjustedLayout)
         .background(Color.gray20)
     }
 }
@@ -219,13 +270,22 @@ struct BarChartData: Identifiable {
 struct ReportBarChartView: View {
     let data: [BarChartData]
 
+    private let chartHeight: CGFloat = 160
+    private let domainPadding: Double = 1.2  // annotation 숫자 잘림 방지용 상단 여유
+    private var maxValue: Double { data.map { $0.value }.max() ?? 0 }
+    private var domainMax: Double { maxValue * domainPadding }
+    private var minRenderValue: Double {
+        guard maxValue > 0 else { return 0.3 }
+        return domainMax * (14.0 / chartHeight)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             Chart(data) { item in
                 BarMark(
                     x: .value("label", item.id.uuidString),
-                    y: .value("value", item.value),
-                    width: .fixed(20)
+                    y: .value("value", max(item.value, minRenderValue)),
+                    width: .fixed(18)
                 )
                 .foregroundStyle(item.color)
                 .clipShape(UnevenRoundedRectangle(
@@ -242,7 +302,8 @@ struct ReportBarChartView: View {
             }
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
-            .frame(width: 210, height: 160)
+            .chartYScale(domain: 0...domainMax)
+            .frame(width: 210, height: chartHeight)
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 40)
@@ -253,7 +314,7 @@ struct ReportBarChartView: View {
             ) {
                 ForEach(data) { item in
                     HStack(spacing: 6) {
-                        Rectangle()
+                        Circle()
                             .fill(item.color)
                             .frame(width: 10, height: 10)
                         Text(item.label)
@@ -287,10 +348,22 @@ struct ReportDonutChartView: View {
     let data: [DonutChartData]
     let total: Int
 
+    // 0 제외한 항목만 (차트 렌더링용)
+    private var nonZeroData: [DonutChartData] {
+        data.filter { $0.value > 0 }
+    }
+
     private var adjustedData: [DonutChartData] {
-        let sum = data.reduce(0) { $0 + $1.value }
+        let real = nonZeroData
+        // 데이터가 없으면 균등 분할로 도넛 형태 유지
+        if real.isEmpty {
+            return data.map { item in
+                DonutChartData(label: item.label, value: 1, color: item.color, textColor: item.textColor)
+            }
+        }
+        let sum = real.reduce(0) { $0 + $1.value }
         let minValue = sum * 0.07
-        return data.map { item in
+        return real.map { item in
             DonutChartData(
                 label: item.label,
                 value: max(item.value, minValue),
@@ -301,7 +374,42 @@ struct ReportDonutChartView: View {
     }
 
     private func originalValue(at index: Int) -> Double {
-        data[index].value
+        nonZeroData[index].value
+    }
+
+    private struct LabelInfo {
+        let point: CGPoint
+        let value: Int
+        let color: Color
+    }
+
+    private func computeLabelPositions(size: CGSize) -> [LabelInfo] {
+        let totalValue = adjustedData.reduce(0) { $0 + $1.value }
+        guard totalValue > 0 else { return [] }
+
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+        let outerRadius = min(size.width, size.height) / 2
+        let innerRadius = outerRadius * 0.68
+        let labelRadius = (outerRadius + innerRadius) / 2
+
+        var infos: [LabelInfo] = []
+        var startAngle = -Double.pi / 2  // 12시 방향부터 시작
+
+        for (index, item) in adjustedData.enumerated() {
+            let sweepAngle = (item.value / totalValue) * 2 * Double.pi
+            let midAngle = startAngle + sweepAngle / 2
+
+            let x = center.x + CGFloat(cos(midAngle)) * labelRadius
+            let y = center.y + CGFloat(sin(midAngle)) * labelRadius
+
+            infos.append(LabelInfo(
+                point: CGPoint(x: x, y: y),
+                value: Int(originalValue(at: index)),
+                color: data[index].textColor
+            ))
+            startAngle += sweepAngle
+        }
+        return infos
     }
 
     var body: some View {
@@ -315,13 +423,20 @@ struct ReportDonutChartView: View {
                     )
                     .foregroundStyle(item.color)
                     .cornerRadius(8)
-                    .annotation(position: .overlay) {
-                        Text("\(Int(originalValue(at: index)))")
-                            .typo(.bold_14)
-                            .foregroundStyle(item.textColor)
-                    }
                 }
                 .frame(size: 185)
+                .overlay {
+                    GeometryReader { geo in
+                        ForEach(Array(computeLabelPositions(size: geo.size).enumerated()), id: \.offset) { _, info in
+                            if info.value > 0 {
+                                Text("\(info.value)")
+                                    .typo(.bold_14)
+                                    .foregroundStyle(info.color)
+                                    .position(x: info.point.x, y: info.point.y)
+                            }
+                        }
+                    }
+                }
 
                 VStack(spacing: 4) {
                     Text("경험키워드")
@@ -389,7 +504,7 @@ struct ReportHorizontalBarChartView: View {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.gray100)
+                                    .fill(Color.gray20)
                                     .frame(maxWidth: .infinity)
 
                                 RoundedRectangle(cornerRadius: 6)

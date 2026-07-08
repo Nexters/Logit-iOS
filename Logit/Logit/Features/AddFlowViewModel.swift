@@ -7,10 +7,15 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let projectCreated = Notification.Name("projectCreated")
+}
+
 @MainActor
 class AddFlowViewModel: ObservableObject {
     @Published var path = NavigationPath()
     @Published var rootScreen: RootScreen = .applicationInfo
+    @Published var shouldDismissFlow = false
     
     enum RootScreen {
         case applicationInfo
@@ -23,7 +28,9 @@ class AddFlowViewModel: ObservableObject {
     @Published var jobPosition: String = ""  // 직무명
     @Published var recruitNotice: String = ""  // 채용 공고
     @Published var companyTalent: String = ""  // 기업 인재상
-    @Published var dueDate: String?
+    @Published var dueDateValue: Date?        // 마감 날짜
+    @Published var isAlwaysOpen: Bool = false // 상시 여부
+    @Published var isExampleLoaded: Bool = false
     
     
     @Published var questions: [QuestionItem] = [QuestionItem()]
@@ -41,6 +48,32 @@ class AddFlowViewModel: ObservableObject {
        
     
     
+    func loadExampleQuestions() {
+        questions = [
+            QuestionItem(
+                title: "본인의 성장 과정과 해당 직무에 지원하게 된 동기를 기술하세요.",
+                characterLimit: "1000"
+            ),
+            QuestionItem(
+                title: "직무와 관련된 경험 또는 프로젝트를 통해 발휘한 역량을 설명하세요.",
+                characterLimit: "1000"
+            ),
+            QuestionItem(
+                title: "입사 후 이루고 싶은 목표와 포부를 작성하세요.",
+                characterLimit: "500"
+            )
+        ]
+    }
+
+    func loadExampleData() {
+        companyName = "카카오"
+        jobPosition = "iOS 개발자"
+        recruitNotice = "• 주요 업무: iOS 앱 신규 기능 개발 및 유지보수, 코드 리뷰 및 기술 개선\n• 자격요건: Swift 및 SwiftUI 개발 경험 2년 이상, iOS 앱 배포 경험\n• 우대사항: 대규모 트래픽 서비스 개발 경험, 오픈소스 기여 경험"
+        dueDateValue = Date()
+        companyTalent = "도전과 창의를 즐기며, 함께 성장하는 인재를 추구합니다."
+        isExampleLoaded = true
+    }
+
     // Navigation 함수들
     
     func navigateToCoverLetterQuestions() {
@@ -60,7 +93,7 @@ class AddFlowViewModel: ObservableObject {
         let request = CreateProjectRequest(
             company: companyName,
             companyTalent: companyTalent,
-            dueDate: nil,
+            dueDate: isAlwaysOpen ? nil : dueDateValue?.toString(),
             jobPosition: jobPosition,
             questions: questions.map { question in
                 QuestionRequest(
@@ -86,9 +119,12 @@ class AddFlowViewModel: ObservableObject {
                 projectId: response.project.id,
                 questions: questions
             )
-            
+
             // 스택 초기화
             path = NavigationPath()
+
+            // 프로젝트 목록 갱신 노티
+            NotificationCenter.default.post(name: .projectCreated, object: nil)
             
         } catch {
             print(" 프로젝트 생성 실패: \(error)")

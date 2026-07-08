@@ -7,21 +7,24 @@
 
 import SwiftUI
 
-struct CustomNavigationBar: View {
+struct CustomNavigationBar<TrailingContent: View>: View {
     let title: String
     let showBackButton: Bool
     let onBackTapped: () -> Void
-    
+    let trailingContent: TrailingContent
+
     init(
         title: String,
         showBackButton: Bool = true,
-        onBackTapped: @escaping () -> Void = {}
+        onBackTapped: @escaping () -> Void = {},
+        @ViewBuilder trailingContent: () -> TrailingContent = { EmptyView() }
     ) {
         self.title = title
         self.showBackButton = showBackButton
         self.onBackTapped = onBackTapped
+        self.trailingContent = trailingContent()
     }
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // 뒤로가기 버튼
@@ -38,13 +41,16 @@ struct CustomNavigationBar: View {
                 Spacer()
                     .frame(width: 44)
             }
-            
+
             // 타이틀
             Text(title)
                 .typo(.semibold_17)
                 .foregroundColor(.black)
-            
+
             Spacer()
+
+            // 우측 커스텀 버튼
+            trailingContent
         }
         .frame(height: 44)
         .padding(.horizontal, 16)
