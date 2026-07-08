@@ -12,7 +12,9 @@ struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var isNotificationEnabled: Bool = false
     @State private var showLogoutAlert: Bool = false
+    @State private var showWithdrawAlert: Bool = false
     @State private var showFeatureToast: Bool = false
+    @State private var showInquiryPage: Bool = false
     @StateObject private var viewModel = SettingsViewModel()
 
     var body: some View {
@@ -100,7 +102,7 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 SettingsRow(title: "문의하기") {
-                    print("문의하기 클릭")
+                    showInquiryPage = true
                 }
 
                 SettingsRow(title: "로그아웃") {
@@ -108,7 +110,7 @@ struct SettingsView: View {
                 }
 
                 SettingsRow(title: "회원탈퇴") {
-                    print("회원탈퇴 클릭")
+                    showWithdrawAlert = true
                 }
             }
             .padding(.top, 14)
@@ -137,6 +139,21 @@ struct SettingsView: View {
                 )
             }
         }
+        .overlay {
+            if showWithdrawAlert {
+                LogitAlertView(
+                    message: "정말 탈퇴하시겠어요?",
+                    subMessage: "탈퇴 시 데이터는 복구할 수 없어요",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "탈퇴하기",
+                    onCancel: { showWithdrawAlert = false },
+                    onConfirm: {
+                        showWithdrawAlert = false
+                        Task { await viewModel.withdraw() }
+                    }
+                )
+            }
+        }
         .task {
             await viewModel.fetchCurrentUser()
         }
@@ -153,7 +170,26 @@ struct SettingsView: View {
                 appState.logout()
             }
         }
-        .disabled(viewModel.isLoggingOut)
+        .onChange(of: viewModel.isWithdrawn) { withdrawn in
+            if withdrawn {
+                appState.logout()
+            }
+        }
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.withdrawError != nil },
+            set: { if !$0 { viewModel.withdrawError = nil } }
+        )) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.withdrawError ?? "")
+        }
+        .disabled(viewModel.isLoggingOut || viewModel.isWithdrawing)
+        .sheet(isPresented: $showInquiryPage) {
+            if let url = URL(string: "https://bouncy-file-a93.notion.site/326ebdc3fb638030b247f247b9294bae") {
+                SafariView(url: url)
+                    .ignoresSafeArea()
+            }
+        }
     }
 }
 

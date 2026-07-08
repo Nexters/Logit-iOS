@@ -130,6 +130,7 @@ struct AddQuestionSheet: View {
         }
         .navigationBarHidden(true)
         .dismissKeyboardOnTap()
+        .preferredColorScheme(.light)
     }
 }
 
