@@ -167,6 +167,20 @@ struct SettingsView: View {
             .padding(.top, 30)
 
             VStack(spacing: 0) {
+                SettingsRow(title: "계정") {
+                    withAnimation(.spring()) { showFeatureToast = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation { showFeatureToast = false }
+                    }
+                }
+
+                SettingsRow(title: "가이드페이지") {
+                    withAnimation(.spring()) { showFeatureToast = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation { showFeatureToast = false }
+                    }
+                }
+
                 SettingsRow(title: "문의하기") {
                     showInquiryPage = true
                 }
