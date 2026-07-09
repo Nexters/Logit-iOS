@@ -10,7 +10,7 @@ import Foundation
 @MainActor
 class SettingsViewModel: ObservableObject {
     @Published var userName: String = ""
-    @Published var usedTokens: Int = 30000
+    @Published var usedTokens: Int = 3000
     @Published var totalTokens: Int = 10000
     @Published var isLoggingOut: Bool = false
     @Published var isLoggedOut: Bool = false

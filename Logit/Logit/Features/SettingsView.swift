@@ -34,6 +34,46 @@ struct SettingsView: View {
         }
     }
 
+    private var tokenProgressBar: some View {
+        let percentage = min(1.0, Double(viewModel.usedTokens) / Double(max(1, viewModel.totalTokens)))
+        let percentageText = "\(Int(percentage * 100))%"
+        return GeometryReader { geo in
+            ZStack {
+                // 채움 바
+                Rectangle()
+                    .fill(Color.primary400)
+                    .frame(width: geo.size.width * percentage)
+                    .cornerRadius(44.3286)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                // 퍼센트 텍스트 오버레이
+                Text(percentageText)
+                    .typo(.semibold_12)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 10)
+            }
+        }
+        .frame(height: 24)
+        .background(
+            LinearGradient(
+                stops: [
+                    .init(color: Color(red: 0.91, green: 0.95, blue: 1), location: 0.00),
+                    .init(color: Color(red: 0.76, green: 0.86, blue: 1), location: 1.00)
+                ],
+                startPoint: UnitPoint(x: 0, y: 0.5),
+                endPoint: UnitPoint(x: 1, y: 0.5)
+            )
+        )
+        .cornerRadius(44.3286)
+        .shadow(color: .black.opacity(0.12), radius: 1.77314, x: 3.54629, y: 0)
+        .overlay(
+            RoundedRectangle(cornerRadius: 44.3286)
+                .inset(by: 0.44)
+                .stroke(Color(red: 0.9, green: 0.94, blue: 1), lineWidth: 0.88657)
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar(
@@ -69,6 +109,10 @@ struct SettingsView: View {
             tokenUsageRow
                 .padding(.horizontal, 20)
                 .padding(.top, 30)
+
+            tokenProgressBar
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
 
             // 알림 설정
             HStack {
