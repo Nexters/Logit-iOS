@@ -10,8 +10,8 @@ import Foundation
 @MainActor
 class SettingsViewModel: ObservableObject {
     @Published var userName: String = ""
-    @Published var usedTokens: Int = 3000
-    @Published var totalTokens: Int = 10000
+    @Published var usedTokens: Int = 0
+    @Published var totalTokens: Int = 0
     @Published var isLoggingOut: Bool = false
     @Published var isLoggedOut: Bool = false
     @Published var logoutError: String?
@@ -22,13 +22,16 @@ class SettingsViewModel: ObservableObject {
 
     private let userRepository: UserRepository
     private let authRepository: AuthRepository
+    private let tokenRepository: TokenRepository
 
     init(
         userRepository: UserRepository = DefaultUserRepository(networkClient: DefaultNetworkClient()),
-        authRepository: AuthRepository = DefaultAuthRepository()
+        authRepository: AuthRepository = DefaultAuthRepository(),
+        tokenRepository: TokenRepository = DefaultTokenRepository()
     ) {
         self.userRepository = userRepository
         self.authRepository = authRepository
+        self.tokenRepository = tokenRepository
     }
 
     func fetchCurrentUser() async {
@@ -38,6 +41,17 @@ class SettingsViewModel: ObservableObject {
             print("유저 정보 조회 성공: \(user.fullName ?? "")")
         } catch {
             print("유저 정보 조회 실패: \(error)")
+        }
+    }
+
+    func fetchTokenBalance() async {
+        do {
+            let balance = try await tokenRepository.getBalance()
+            usedTokens = balance.monthlyTokens - balance.balance
+            totalTokens = balance.monthlyTokens
+            print("토큰 잔액 조회 성공: \(balance.balance) / \(balance.monthlyTokens)")
+        } catch {
+            print("토큰 잔액 조회 실패: \(error)")
         }
     }
 

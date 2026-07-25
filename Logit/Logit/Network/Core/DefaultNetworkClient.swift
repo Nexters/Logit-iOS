@@ -25,11 +25,16 @@ class DefaultNetworkClient: NetworkClient {
         body: Encodable? = nil
     ) async throws -> T {
         let data = try await performRequest(endpoint: endpoint, body: body)
-        
+
         do {
             let decoded = try JSONDecoder().decode(T.self, from: data)
             return decoded
         } catch {
+            let rawBody = String(data: data, encoding: .utf8) ?? "(디코딩 불가)"
+            print("❌ [Decoding] \(endpoint.path) 디코딩 실패")
+            print("❌ [Decoding] 타입: \(T.self)")
+            print("❌ [Decoding] 에러: \(error)")
+            print("❌ [Decoding] Raw Body: \(rawBody)")
             throw APIError.decodingError(error)
         }
     }

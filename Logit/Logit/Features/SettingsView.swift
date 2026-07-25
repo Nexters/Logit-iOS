@@ -235,6 +235,7 @@ struct SettingsView: View {
         }
         .task {
             await viewModel.fetchCurrentUser()
+            await viewModel.fetchTokenBalance()
         }
         .alert("오류", isPresented: Binding(
             get: { viewModel.logoutError != nil },
