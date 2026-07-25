@@ -14,7 +14,6 @@ struct SettingsView: View {
     @State private var showLogoutAlert: Bool = false
     @State private var showWithdrawAlert: Bool = false
     @State private var showFeatureToast: Bool = false
-    @State private var showInquiryPage: Bool = false
     @StateObject private var viewModel = SettingsViewModel()
 
     private var tokenUsageRow: some View {
@@ -168,21 +167,21 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 SettingsRow(title: "계정") {
-                    withAnimation(.spring()) { showFeatureToast = true }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        withAnimation { showFeatureToast = false }
+                    if let url = URL(string: "https://logit.ai.kr/profile") {
+                        UIApplication.shared.open(url)
                     }
                 }
 
                 SettingsRow(title: "가이드페이지") {
-                    withAnimation(.spring()) { showFeatureToast = true }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        withAnimation { showFeatureToast = false }
+                    if let url = URL(string: "https://docs.logit.ai.kr/") {
+                        UIApplication.shared.open(url)
                     }
                 }
 
                 SettingsRow(title: "문의하기") {
-                    showInquiryPage = true
+                    if let url = URL(string: "https://bouncy-file-a93.notion.site/326ebdc3fb638030b247f247b9294bae") {
+                        UIApplication.shared.open(url)
+                    }
                 }
 
                 SettingsRow(title: "로그아웃") {
@@ -264,12 +263,7 @@ struct SettingsView: View {
             Text(viewModel.withdrawError ?? "")
         }
         .disabled(viewModel.isLoggingOut || viewModel.isWithdrawing)
-        .sheet(isPresented: $showInquiryPage) {
-            if let url = URL(string: "https://bouncy-file-a93.notion.site/326ebdc3fb638030b247f247b9294bae") {
-                SafariView(url: url)
-                    .ignoresSafeArea()
-            }
-        }
+
     }
 }
 
