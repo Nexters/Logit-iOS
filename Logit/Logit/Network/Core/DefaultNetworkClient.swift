@@ -88,13 +88,13 @@ class DefaultNetworkClient: NetworkClient {
             throw APIError.badRequest(message: error)
 
         case 401:
-            if !isRetry {
+            if !isRetry && endpoint.requiresAuth {
                 print("🔐 [Auth] 401 수신 (\(endpoint.path)) → 토큰 갱신 시도")
                 try await refreshAccessToken()
                 print("🔐 [Auth] 토큰 갱신 완료 → \(endpoint.path) 재시도")
                 return try await performRequest(endpoint: endpoint, body: body, isRetry: true)
             } else {
-                print("🔐 [Auth] 재시도에서도 401 (\(endpoint.path)) → 인증 실패")
+                print("🔐 [Auth] 401 (\(endpoint.path)) → 인증 실패")
                 let error = try parseErrorResponse(from: data)
                 throw APIError.unauthorized(message: error)
             }

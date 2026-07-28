@@ -47,7 +47,8 @@ struct HomeView: View {
             Task {
                 async let projects: () = viewModel.fetchProjects()
                 async let user: () = viewModel.fetchCurrentUser()
-                _ = await (projects, user)
+                async let tokenBalance: () = viewModel.fetchTokenBalance()
+                _ = await (projects, user, tokenBalance)
             }
         }
         .onChange(of: appState.selectedProjectId) { _, newValue in

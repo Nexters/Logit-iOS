@@ -16,12 +16,15 @@ class HomeViewModel: ObservableObject {
 
     private let projectRepository: ProjectRepository
     private let userRepository: UserRepository
+    private let tokenRepository: TokenRepository
     private var projectCreatedObserver: NSObjectProtocol?
 
     init(
         projectRepository: ProjectRepository = DefaultProjectRepository(),
-        userRepository: UserRepository = DefaultUserRepository(networkClient: DefaultNetworkClient())
+        userRepository: UserRepository = DefaultUserRepository(networkClient: DefaultNetworkClient()),
+        tokenRepository: TokenRepository = DefaultTokenRepository()
     ) {
+        self.tokenRepository = tokenRepository
         self.projectRepository = projectRepository
         self.userRepository = userRepository
         projectCreatedObserver = NotificationCenter.default.addObserver(
@@ -65,6 +68,15 @@ class HomeViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    func fetchTokenBalance() async {
+        do {
+            _ = try await tokenRepository.getBalance()
+            print("토큰 잔액 조회 성공 (출석 체크)")
+        } catch {
+            print("토큰 잔액 조회 실패: \(error)")
+        }
     }
 
     func fetchCurrentUser() async {
