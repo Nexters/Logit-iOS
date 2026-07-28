@@ -201,7 +201,9 @@ class DefaultSSEClient: SSEClient {
             return .done(
                 chatId: doneEvent.chatId,
                 isDraft: doneEvent.isDraft,
-                remainingChats: doneEvent.remainingChats
+                draftLimitExceeded: doneEvent.draftLimitExceeded,
+                tokenBalance: doneEvent.tokenBalance,
+                tokensUsed: doneEvent.tokensUsed
             )
         }
         

@@ -168,12 +168,14 @@ class ChatMessagesViewModel: ObservableObject {
                       streamingMessage += text
                       print(" 스트리밍: \(text)")
                       
-                  case .done(let completedChatId, let isDraft, let remainingChats):
+                  case .done(let completedChatId, let isDraft, let draftLimitExceeded, let tokenBalance, let tokensUsed):
                       print("스트리밍 완료")
                       print("  - chatId: \(completedChatId)")
                       print("  - isDraft: \(isDraft)")
-                      print("  - remainingChats: \(remainingChats)")
-                      
+                      print("  - draftLimitExceeded: \(draftLimitExceeded)")
+                      print("  - tokenBalance: \(tokenBalance)")
+                      print("  - tokensUsed: \(tokensUsed)")
+
                       chatId = completedChatId
                       
                       // 3. 완성된 어시스턴트 메시지 추가
