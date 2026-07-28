@@ -735,6 +735,8 @@ struct ChatMessagesView: View {
     @StateObject private var viewModel: ChatMessagesViewModel
     @Binding var viewModelRef: ChatMessagesViewModel?
     @State private var anchorMessageId: String? = nil
+    @State private var showDraftToast: Bool = false
+    @State private var draftToastTokensUsed: Int = 0
     
     init(
         projectId: String,
@@ -913,6 +915,22 @@ struct ChatMessagesView: View {
         .onChange(of: viewModel.experienceIds) { newValue in
             hasSelectedExperiences = !newValue.isEmpty
             selectedExperienceIds = newValue
+        }
+        .onChange(of: viewModel.draftTokensUsed) { tokensUsed in
+            guard let tokensUsed else { return }
+            draftToastTokensUsed = tokensUsed
+            withAnimation(.spring()) { showDraftToast = true }
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                withAnimation { showDraftToast = false }
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if showDraftToast {
+                ToastView(message: "\(draftToastTokensUsed) 토큰을 사용해 초안을 생성했어요")
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 16)
+            }
         }
         .onAppear {
             viewModelRef = viewModel

@@ -17,6 +17,7 @@ class ChatMessagesViewModel: ObservableObject {
     @Published var hasMore: Bool = false
     @Published var answer: String = ""
     @Published var experienceIds: [String] = []
+    @Published var draftTokensUsed: Int? = nil
     
     private var nextCursor: String?
     private let projectId: String
@@ -177,7 +178,7 @@ class ChatMessagesViewModel: ObservableObject {
                       print("  - tokensUsed: \(tokensUsed)")
 
                       chatId = completedChatId
-                      
+
                       // 3. 완성된 어시스턴트 메시지 추가
                       let assistantMessage = ChatMessage(
                           id: completedChatId,
@@ -187,10 +188,15 @@ class ChatMessagesViewModel: ObservableObject {
                           createdAt: ISO8601DateFormatter().string(from: Date())
                       )
                       messages.append(assistantMessage)
-                      
+
                       //  4. experienceIds 업데이트 (서버에 저장된 상태)
                       self.experienceIds = experienceIds
-                      
+
+                      // 5. 초안 생성 시 토큰 사용량 알림
+                      if isDraft {
+                          draftTokensUsed = tokensUsed
+                      }
+
                       // 초기화
                       streamingMessage = ""
                       isStreaming = false
