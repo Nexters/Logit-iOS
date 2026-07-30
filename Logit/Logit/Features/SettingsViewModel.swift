@@ -47,9 +47,9 @@ class SettingsViewModel: ObservableObject {
     func fetchTokenBalance() async {
         do {
             let balance = try await tokenRepository.getBalance()
-            usedTokens = balance.monthlyTokens - balance.balance
-            totalTokens = balance.monthlyTokens
-            print("토큰 잔액 조회 성공: \(balance.balance) / \(balance.monthlyTokens)")
+            usedTokens = balance.monthlyUsed
+            totalTokens = balance.balance + balance.monthlyUsed
+            print("토큰 잔액 조회 성공: \(balance.monthlyUsed) / \(balance.balance + balance.monthlyUsed)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")
         }
