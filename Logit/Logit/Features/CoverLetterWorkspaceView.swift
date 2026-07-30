@@ -737,6 +737,8 @@ struct ChatMessagesView: View {
     @State private var anchorMessageId: String? = nil
     @State private var showDraftToast: Bool = false
     @State private var draftToastTokensUsed: Int = 0
+    @State private var showInsufficientAlert: Bool = false
+    @State private var showSettings: Bool = false
     
     init(
         projectId: String,
@@ -803,7 +805,8 @@ struct ChatMessagesView: View {
                         Task {
                             await viewModel.sendMessage(
                                 content: "선택한 경험을 바탕으로 자기소개서 초안을 작성해줘",
-                                experienceIds: selectedExperienceIds
+                                experienceIds: selectedExperienceIds,
+                                isDraftRequest: true
                             )
                         }
                     }
@@ -931,6 +934,30 @@ struct ChatMessagesView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 16)
             }
+        }
+        .onChange(of: viewModel.showInsufficientBalanceAlert) { show in
+            if show {
+                showInsufficientAlert = true
+                viewModel.showInsufficientBalanceAlert = false
+            }
+        }
+        .overlay {
+            if showInsufficientAlert {
+                LogitAlertView(
+                    message: "토큰이 부족해요",
+                    subMessage: "충전은 설정 → 계정을 통해 변경 가능해요",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "이동",
+                    onCancel: { showInsufficientAlert = false },
+                    onConfirm: {
+                        showInsufficientAlert = false
+                        showSettings = true
+                    }
+                )
+            }
+        }
+        .fullScreenCover(isPresented: $showSettings) {
+            SettingsView()
         }
         .onAppear {
             viewModelRef = viewModel
