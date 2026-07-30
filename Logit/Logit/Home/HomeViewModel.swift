@@ -13,6 +13,7 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var userName: String = ""
+    @Published var attendanceAmount: Int = 0
 
     private let projectRepository: ProjectRepository
     private let userRepository: UserRepository
@@ -72,8 +73,11 @@ class HomeViewModel: ObservableObject {
 
     func fetchTokenBalance() async {
         do {
-            _ = try await tokenRepository.getBalance()
-            print("토큰 잔액 조회 성공 (출석 체크)")
+            let balance = try await tokenRepository.getBalance()
+            if balance.attendanceAmount > 0 {
+                attendanceAmount = balance.attendanceAmount
+            }
+            print("토큰 잔액 조회 성공 (출석 체크): attendance_amount = \(balance.attendanceAmount)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")
         }
