@@ -49,6 +49,13 @@ class SettingsViewModel: ObservableObject {
             let balance = try await tokenRepository.getBalance()
             usedTokens = balance.monthlyUsed
             totalTokens = balance.balance + balance.monthlyUsed
+            if balance.attendanceAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .attendanceRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.attendanceAmount]
+                )
+            }
             print("토큰 잔액 조회 성공: \(balance.monthlyUsed) / \(balance.balance + balance.monthlyUsed)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")

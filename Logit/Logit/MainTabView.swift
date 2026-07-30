@@ -10,6 +10,8 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: Tab = .home
+    @State private var showAttendanceToast: Bool = false
+    @State private var attendanceTokens: Int = 0
     
     enum Tab {
         case home, search, add, activity, report
@@ -46,6 +48,22 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        .overlay(alignment: .bottom) {
+            if showAttendanceToast {
+                ToastView(message: "출석체크로 +\(attendanceTokens)토큰이 지급되었어요")
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 16)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .attendanceRewardReceived)) { notification in
+            guard let amount = notification.userInfo?["amount"] as? Int, amount > 0 else { return }
+            attendanceTokens = amount
+            withAnimation(.spring()) { showAttendanceToast = true }
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                withAnimation { showAttendanceToast = false }
+            }
+        }
         .overlay {
             if appState.isShowingDeleteAlert {
                 LogitAlertView(

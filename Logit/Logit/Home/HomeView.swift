@@ -11,8 +11,6 @@ struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = HomeViewModel()
     @State private var openMenuProjectId: String? = nil
-    @State private var showAttendanceToast: Bool = false
-    @State private var attendanceTokens: Int = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,22 +43,6 @@ struct HomeView: View {
             )
         }
         .background(.white)
-        .overlay(alignment: .bottom) {
-            if showAttendanceToast {
-                ToastView(message: "출석체크로 +\(attendanceTokens)토큰이 지급되었어요")
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, 16)
-            }
-        }
-        .onChange(of: viewModel.attendanceAmount) { amount in
-            guard amount > 0 else { return }
-            attendanceTokens = amount
-            withAnimation(.spring()) { showAttendanceToast = true }
-            Task {
-                try? await Task.sleep(for: .seconds(3))
-                withAnimation { showAttendanceToast = false }
-            }
-        }
         .onAppear {
             Task {
                 async let projects: () = viewModel.fetchProjects()

@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let attendanceRewardReceived = Notification.Name("attendanceRewardReceived")
+}
+
 @MainActor
 class AppState: ObservableObject {
     @Published var appPhase: AppPhase = .splash

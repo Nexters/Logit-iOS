@@ -100,6 +100,13 @@ class ChatMessagesViewModel: ObservableObject {
         do {
             let response = try await tokenRepository.getBalance()
             tokenBalance = response.balance
+            if response.attendanceAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .attendanceRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": response.attendanceAmount]
+                )
+            }
         } catch {
             print(" 토큰 잔액 조회 실패: \(error)")
         }

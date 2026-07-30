@@ -13,7 +13,6 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var userName: String = ""
-    @Published var attendanceAmount: Int = 0
 
     private let projectRepository: ProjectRepository
     private let userRepository: UserRepository
@@ -75,7 +74,11 @@ class HomeViewModel: ObservableObject {
         do {
             let balance = try await tokenRepository.getBalance()
             if balance.attendanceAmount > 0 {
-                attendanceAmount = balance.attendanceAmount
+                NotificationCenter.default.post(
+                    name: .attendanceRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.attendanceAmount]
+                )
             }
             print("토큰 잔액 조회 성공 (출석 체크): attendance_amount = \(balance.attendanceAmount)")
         } catch {
