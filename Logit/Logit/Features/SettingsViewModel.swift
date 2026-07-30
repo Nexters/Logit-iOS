@@ -56,6 +56,20 @@ class SettingsViewModel: ObservableObject {
                     userInfo: ["amount": balance.attendanceAmount]
                 )
             }
+            if balance.signupBonusAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .signupBonusReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.signupBonusAmount]
+                )
+            }
+            if balance.referralRewardAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .referralRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.referralRewardAmount]
+                )
+            }
             print("토큰 잔액 조회 성공: \(balance.monthlyUsed) / \(balance.balance + balance.monthlyUsed)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")

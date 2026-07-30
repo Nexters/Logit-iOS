@@ -10,8 +10,9 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: Tab = .home
-    @State private var showAttendanceToast: Bool = false
-    @State private var attendanceTokens: Int = 0
+    @State private var rewardToastMessage: String? = nil
+    @State private var rewardToastQueue: [String] = []
+    @State private var isShowingRewardToast: Bool = false
     
     enum Tab {
         case home, search, add, activity, report
@@ -49,20 +50,23 @@ struct MainTabView: View {
         }
         .ignoresSafeArea(.keyboard)
         .overlay(alignment: .bottom) {
-            if showAttendanceToast {
-                ToastView(message: "출석체크로 +\(attendanceTokens)토큰이 지급되었어요")
+            if isShowingRewardToast, let message = rewardToastMessage {
+                ToastView(message: message)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 16)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .attendanceRewardReceived)) { notification in
-            guard let amount = notification.userInfo?["amount"] as? Int, amount > 0 else { return }
-            attendanceTokens = amount
-            withAnimation(.spring()) { showAttendanceToast = true }
-            Task {
-                try? await Task.sleep(for: .seconds(3))
-                withAnimation { showAttendanceToast = false }
-            }
+            guard let amount = notification.userInfo?["amount"] as? Int else { return }
+            enqueueRewardToast("출석체크로 +\(amount)토큰이 지급되었어요")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .signupBonusReceived)) { notification in
+            guard let amount = notification.userInfo?["amount"] as? Int else { return }
+            enqueueRewardToast("신규 가입 보너스로 +\(amount)토큰이 지급되었어요")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .referralRewardReceived)) { notification in
+            guard let amount = notification.userInfo?["amount"] as? Int else { return }
+            enqueueRewardToast("친구 초대 보상으로 +\(amount)토큰이 지급되었어요")
         }
         .overlay {
             if appState.isShowingDeleteAlert {
@@ -91,6 +95,24 @@ struct MainTabView: View {
         }
         .fullScreenCover(isPresented: $appState.isShowingSettings) {
             SettingsView()
+        }
+    }
+
+    private func enqueueRewardToast(_ message: String) {
+        rewardToastQueue.append(message)
+        guard !isShowingRewardToast else { return }
+        showNextRewardToast()
+    }
+
+    private func showNextRewardToast() {
+        guard !rewardToastQueue.isEmpty else { return }
+        rewardToastMessage = rewardToastQueue.removeFirst()
+        withAnimation(.spring()) { isShowingRewardToast = true }
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            withAnimation { isShowingRewardToast = false }
+            try? await Task.sleep(for: .seconds(0.4))
+            showNextRewardToast()
         }
     }
 }

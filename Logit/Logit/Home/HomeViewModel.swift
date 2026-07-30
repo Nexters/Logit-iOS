@@ -80,6 +80,20 @@ class HomeViewModel: ObservableObject {
                     userInfo: ["amount": balance.attendanceAmount]
                 )
             }
+            if balance.signupBonusAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .signupBonusReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.signupBonusAmount]
+                )
+            }
+            if balance.referralRewardAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .referralRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.referralRewardAmount]
+                )
+            }
             print("토큰 잔액 조회 성공 (출석 체크): attendance_amount = \(balance.attendanceAmount)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")

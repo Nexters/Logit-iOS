@@ -107,6 +107,20 @@ class ChatMessagesViewModel: ObservableObject {
                     userInfo: ["amount": response.attendanceAmount]
                 )
             }
+            if response.signupBonusAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .signupBonusReceived,
+                    object: nil,
+                    userInfo: ["amount": response.signupBonusAmount]
+                )
+            }
+            if response.referralRewardAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .referralRewardReceived,
+                    object: nil,
+                    userInfo: ["amount": response.referralRewardAmount]
+                )
+            }
         } catch {
             print(" 토큰 잔액 조회 실패: \(error)")
         }
