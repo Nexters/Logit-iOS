@@ -29,6 +29,8 @@ struct CoverLetterWorkspaceView: View {
     @State private var completeToastMessage: String = ""
     @State private var showEditQuestions: Bool = false
     @State private var showQuestionDetail: Bool = false
+    @State private var showInsufficientAlert: Bool = false
+    @State private var showSettings: Bool = false
     @State private var editingQuestionText: String = ""
     @State private var editingMaxLength: String = ""
     @State private var overlayEditorHeight: CGFloat = 44
@@ -323,7 +325,10 @@ struct CoverLetterWorkspaceView: View {
                                     onShowExperienceSelection: {
                                         showExperienceSelection = true
                                     },
-                                    onGenerateDraft: {}
+                                    onGenerateDraft: {},
+                                    onInsufficientBalance: {
+                                        showInsufficientAlert = true
+                                    }
                                 )
                                 .id(question.id)
                             }
@@ -493,6 +498,24 @@ struct CoverLetterWorkspaceView: View {
         .navigationBarHidden(true)
         .fullScreenCover(isPresented: $showEditQuestions) {
             AddQuestionSheet(viewModel: viewModel)
+        }
+        .fullScreenCover(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .overlay {
+            if showInsufficientAlert {
+                LogitAlertView(
+                    message: "토큰이 부족해요",
+                    subMessage: "충전은 설정 → 계정을 통해 변경 가능해요",
+                    cancelTitle: "취소하기",
+                    confirmTitle: "이동",
+                    onCancel: { showInsufficientAlert = false },
+                    onConfirm: {
+                        showInsufficientAlert = false
+                        showSettings = true
+                    }
+                )
+            }
         }
         .sheet(isPresented: $showExperienceSelection) {
             if let question = currentQuestion {
@@ -731,15 +754,14 @@ struct ChatMessagesView: View {
     let onUpdateCoverLetter: () -> Void
     let onShowExperienceSelection: () -> Void
     let onGenerateDraft: () -> Void
-    
+    let onInsufficientBalance: () -> Void
+
     @StateObject private var viewModel: ChatMessagesViewModel
     @Binding var viewModelRef: ChatMessagesViewModel?
     @State private var anchorMessageId: String? = nil
     @State private var showDraftToast: Bool = false
     @State private var draftToastTokensUsed: Int = 0
-    @State private var showInsufficientAlert: Bool = false
-    @State private var showSettings: Bool = false
-    
+
     init(
         projectId: String,
         questionId: String,
@@ -748,7 +770,8 @@ struct ChatMessagesView: View {
         viewModelRef: Binding<ChatMessagesViewModel?>,
         onUpdateCoverLetter: @escaping () -> Void,
         onShowExperienceSelection: @escaping () -> Void,
-        onGenerateDraft: @escaping () -> Void
+        onGenerateDraft: @escaping () -> Void,
+        onInsufficientBalance: @escaping () -> Void
     ) {
         self.projectId = projectId
         self.questionId = questionId
@@ -758,6 +781,7 @@ struct ChatMessagesView: View {
         self.onUpdateCoverLetter = onUpdateCoverLetter
         self.onShowExperienceSelection = onShowExperienceSelection
         self.onGenerateDraft = onGenerateDraft
+        self.onInsufficientBalance = onInsufficientBalance
         _viewModel = StateObject(wrappedValue: ChatMessagesViewModel(
             projectId: projectId,
             questionId: questionId
@@ -937,27 +961,9 @@ struct ChatMessagesView: View {
         }
         .onChange(of: viewModel.showInsufficientBalanceAlert) { show in
             if show {
-                showInsufficientAlert = true
                 viewModel.showInsufficientBalanceAlert = false
+                onInsufficientBalance()
             }
-        }
-        .overlay {
-            if showInsufficientAlert {
-                LogitAlertView(
-                    message: "토큰이 부족해요",
-                    subMessage: "충전은 설정 → 계정을 통해 변경 가능해요",
-                    cancelTitle: "취소하기",
-                    confirmTitle: "이동",
-                    onCancel: { showInsufficientAlert = false },
-                    onConfirm: {
-                        showInsufficientAlert = false
-                        showSettings = true
-                    }
-                )
-            }
-        }
-        .fullScreenCover(isPresented: $showSettings) {
-            SettingsView()
         }
         .onAppear {
             viewModelRef = viewModel
