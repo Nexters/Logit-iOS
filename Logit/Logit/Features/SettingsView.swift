@@ -153,6 +153,7 @@ struct SettingsView: View {
                     .labelsHidden()
                     .tint(Color.gray100)
                     .scaleEffect(0.8)
+                    .environment(\.colorScheme, .light)
                     .onChange(of: isNotificationEnabled) { _, newValue in
                         if newValue {
                             isNotificationEnabled = false
@@ -281,6 +282,7 @@ struct SettingsView: View {
         } message: {
             Text(viewModel.withdrawError ?? "")
         }
+        .background(.white)
         .disabled(viewModel.isLoggingOut || viewModel.isWithdrawing)
 
     }
