@@ -94,6 +94,13 @@ class HomeViewModel: ObservableObject {
                     userInfo: ["amount": balance.referralRewardAmount]
                 )
             }
+            if balance.monthlyGrantAmount > 0 {
+                NotificationCenter.default.post(
+                    name: .monthlyGrantReceived,
+                    object: nil,
+                    userInfo: ["amount": balance.monthlyGrantAmount]
+                )
+            }
             print("토큰 잔액 조회 성공 (출석 체크): attendance_amount = \(balance.attendanceAmount)")
         } catch {
             print("토큰 잔액 조회 실패: \(error)")

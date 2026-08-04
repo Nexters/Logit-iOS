@@ -11,6 +11,7 @@ extension Notification.Name {
     static let attendanceRewardReceived = Notification.Name("attendanceRewardReceived")
     static let signupBonusReceived = Notification.Name("signupBonusReceived")
     static let referralRewardReceived = Notification.Name("referralRewardReceived")
+    static let monthlyGrantReceived = Notification.Name("monthlyGrantReceived")
 }
 
 @MainActor

@@ -68,6 +68,10 @@ struct MainTabView: View {
             guard let amount = notification.userInfo?["amount"] as? Int else { return }
             enqueueRewardToast("친구 초대 보상으로 +\(amount)토큰이 지급되었어요")
         }
+        .onReceive(NotificationCenter.default.publisher(for: .monthlyGrantReceived)) { notification in
+            guard let amount = notification.userInfo?["amount"] as? Int else { return }
+            enqueueRewardToast("월간 토큰 +\(amount)토큰이 지급되었어요")
+        }
         .overlay {
             if appState.isShowingDeleteAlert {
                 LogitAlertView(
