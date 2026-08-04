@@ -106,6 +106,8 @@ struct SettingsView: View {
                 Text(viewModel.userName)
                     .typo(.semibold_24)
                     .foregroundColor(Color(red: 0.15, green: 0.15, blue: 0.15))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
                 Spacer()
 
