@@ -12,6 +12,7 @@ class SettingsViewModel: ObservableObject {
     @Published var userName: String = ""
     @Published var usedTokens: Int = 0
     @Published var totalTokens: Int = 0
+    @Published var plan: String = ""
     @Published var isLoggingOut: Bool = false
     @Published var isLoggedOut: Bool = false
     @Published var logoutError: String?
@@ -49,6 +50,7 @@ class SettingsViewModel: ObservableObject {
             let balance = try await tokenRepository.getBalance()
             usedTokens = balance.monthlyUsed
             totalTokens = balance.balance + balance.monthlyUsed
+            plan = balance.plan
             if balance.attendanceAmount > 0 {
                 NotificationCenter.default.post(
                     name: .attendanceRewardReceived,

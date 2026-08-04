@@ -16,6 +16,24 @@ struct SettingsView: View {
     @State private var showFeatureToast: Bool = false
     @StateObject private var viewModel = SettingsViewModel()
 
+    private var planTagView: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Text(viewModel.plan.capitalized)
+                .font(Font.custom("Pretendard", size: 12).weight(.medium))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color(red: 0.29, green: 0.75, blue: 0.98))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 2)
+        .background(Color(red: 0.96, green: 0.98, blue: 1))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .inset(by: 0.5)
+                .stroke(Color(red: 0.29, green: 0.75, blue: 0.98), lineWidth: 1)
+        )
+    }
+
     private var tokenUsageRow: some View {
         HStack {
             Text("토큰 사용량")
@@ -86,10 +104,14 @@ struct SettingsView: View {
                     .frame(size: 48.adjustedLayout)
                 // 닉네임
                 Text(viewModel.userName)
-                    .typo(.bold_20)
-                    .foregroundColor(.gray400)
+                    .typo(.semibold_24)
+                    .foregroundColor(Color(red: 0.15, green: 0.15, blue: 0.15))
 
                 Spacer()
+
+                if !viewModel.plan.isEmpty {
+                    planTagView
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
