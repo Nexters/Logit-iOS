@@ -21,6 +21,7 @@ struct CoverLetterWorkspaceView: View {
     @State private var hasSelectedExperiences: Bool = false
     @State private var selectedExperienceIds: [String] = []
     @State private var currentChatViewModel: ChatMessagesViewModel?
+    @State private var isChatStreaming: Bool = false
     
     @State private var editingAnswer: String = ""
     @State private var originalAnswer: String = ""
@@ -191,6 +192,7 @@ struct CoverLetterWorkspaceView: View {
                     QuestionTabBar(
                         questionCount: viewModel.questionList.count,
                         selectedIndex: $selectedQuestionIndex,
+                        isStreaming: isChatStreaming,
                         onAddTapped: { showEditQuestions = true }
                     )
                     .onChange(of: selectedQuestionIndex) { oldIndex, newIndex in
@@ -241,6 +243,7 @@ struct CoverLetterWorkspaceView: View {
                     QuestionTabBar(
                         questionCount: questions.count,
                         selectedIndex: $selectedQuestionIndex,
+                        isStreaming: isChatStreaming,
                         onAddTapped: { showEditQuestions = true }
                     )
                 }
@@ -310,6 +313,9 @@ struct CoverLetterWorkspaceView: View {
                                     hasSelectedExperiences: $hasSelectedExperiences,
                                     selectedExperienceIds: $selectedExperienceIds,
                                     viewModelRef: $currentChatViewModel,
+                                    onStreamingChanged: { isStreaming in
+                                        isChatStreaming = isStreaming
+                                    },
                                     onUpdateCoverLetter: {
                                         Task {
                                             await viewModel.fetchQuestionList()
@@ -538,6 +544,7 @@ struct CoverLetterWorkspaceView: View {
 struct QuestionTabBar: View {
     let questionCount: Int
     @Binding var selectedIndex: Int
+    var isStreaming: Bool = false
     var onAddTapped: () -> Void = {}
     var showAddButton: Bool = true
 
@@ -548,6 +555,7 @@ struct QuestionTabBar: View {
                     QuestionTabButton(
                         number: index + 1,
                         isSelected: selectedIndex == index,
+                        isDisabled: isStreaming && selectedIndex != index,
                         action: { selectedIndex = index }
                     )
                 }
@@ -576,10 +584,14 @@ struct QuestionTabBar: View {
 struct QuestionTabButton: View {
     let number: Int
     let isSelected: Bool
+    var isDisabled: Bool = false
     let action: () -> Void
-    
+
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            guard !isDisabled else { return }
+            action()
+        }) {
             Text("Q\(number)")
                 .typo(isSelected ? .bold_16 : .regular_16_140)
                 .foregroundColor(isSelected ? .primary100 : .gray300)
@@ -589,6 +601,7 @@ struct QuestionTabButton: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(isSelected ? Color.primary100 : Color.gray100, lineWidth: 1)
                 )
+                .opacity(isDisabled ? 0.4 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -751,6 +764,7 @@ struct ChatMessagesView: View {
     let questionId: String
     @Binding var hasSelectedExperiences: Bool
     @Binding var selectedExperienceIds: [String]
+    let onStreamingChanged: (Bool) -> Void
     let onUpdateCoverLetter: () -> Void
     let onShowExperienceSelection: () -> Void
     let onGenerateDraft: () -> Void
@@ -768,6 +782,7 @@ struct ChatMessagesView: View {
         hasSelectedExperiences: Binding<Bool>,
         selectedExperienceIds: Binding<[String]>,
         viewModelRef: Binding<ChatMessagesViewModel?>,
+        onStreamingChanged: @escaping (Bool) -> Void,
         onUpdateCoverLetter: @escaping () -> Void,
         onShowExperienceSelection: @escaping () -> Void,
         onGenerateDraft: @escaping () -> Void,
@@ -778,6 +793,7 @@ struct ChatMessagesView: View {
         self._hasSelectedExperiences = hasSelectedExperiences
         self._selectedExperienceIds = selectedExperienceIds
         self._viewModelRef = viewModelRef
+        self.onStreamingChanged = onStreamingChanged
         self.onUpdateCoverLetter = onUpdateCoverLetter
         self.onShowExperienceSelection = onShowExperienceSelection
         self.onGenerateDraft = onGenerateDraft
@@ -967,6 +983,14 @@ struct ChatMessagesView: View {
         }
         .onAppear {
             viewModelRef = viewModel
+        }
+        .onChange(of: viewModel.isStreaming) { _, isStreaming in
+            onStreamingChanged(isStreaming)
+        }
+        .onDisappear {
+            if viewModel.isStreaming {
+                onStreamingChanged(false)
+            }
         }
     }
 }
