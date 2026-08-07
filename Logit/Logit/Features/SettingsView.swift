@@ -200,7 +200,7 @@ struct SettingsView: View {
                 }
 
                 SettingsRow(title: "문의하기") {
-                    if let url = URL(string: "https://bouncy-file-a93.notion.site/326ebdc3fb638030b247f247b9294bae") {
+                    if let url = URL(string: "https://pf.kakao.com/_eGnxnX/chat") {
                         UIApplication.shared.open(url)
                     }
                 }
