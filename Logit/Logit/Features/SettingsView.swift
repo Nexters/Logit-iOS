@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) var scenePhase
     @EnvironmentObject var appState: AppState
     @State private var isNotificationEnabled: Bool = false
     @State private var showLogoutAlert: Bool = false
@@ -257,6 +258,14 @@ struct SettingsView: View {
         .task {
             await viewModel.fetchCurrentUser()
             await viewModel.fetchTokenBalance()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task {
+                    await viewModel.fetchCurrentUser()
+                    await viewModel.fetchTokenBalance()
+                }
+            }
         }
         .alert("오류", isPresented: Binding(
             get: { viewModel.logoutError != nil },
